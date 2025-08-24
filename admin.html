@@ -210,7 +210,7 @@
         const sppGlobalTotalSizeSpan = document.getElementById('sppGlobalTotalSize');
         const sppGlobalSizePercentageSpan = document.getElementById('sppGlobalSizePercentage');
         
-        window.logout = function() { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
+        window.logout = function() { signOut(auth).then(() => { window.location.href = 'index.html'; }); };
         
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -226,16 +226,16 @@
                     } else {
                         alert("Akses ditolak. Anda bukan admin atau data Anda tidak ditemukan.");
                         await signOut(auth);
-                        window.location.href = 'login.html';
+                        window.location.href = 'index.html';
                     }
                 } catch (error) {
                     console.error("Terjadi error saat verifikasi admin:", error);
                     alert("Terjadi kesalahan saat otentikasi. Periksa console untuk detail.");
                     await signOut(auth);
-                    window.location.href = 'login.html';
+                    window.location.href = 'index.html';
                 }
             } else {
-                window.location.href = 'login.html';
+                window.location.href = 'index.html';
             }
         });
 
@@ -856,4 +856,5 @@
         }
     </script>
 </body>
+
 </html>
