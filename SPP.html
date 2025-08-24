@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembayaran SPP</title>
+    <style>
+        /* ... CSS asli Anda dari file V6 ... */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-bg: #f8f9fa;
+            --dark-text: #212529;
+            --light-text: #fff;
+            --border-color: #ddd;
+            --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            display: none;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: var(--light-text);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: var(--box-shadow);
+        }
+        h1, h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        h1 {
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .logout-btn, .refresh-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+        .logout-btn {
+            background-color: var(--danger-color);
+            color: var(--light-text);
+        }
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+        .content-block {
+            margin-top: 40px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--light-bg);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label {
+            font-weight: 600;
+            color: var(--dark-text);
+        }
+        input[type="number"], select, textarea, input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        select:focus, input:focus, textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+        #studentSelector option {
+            padding: 5px;
+        }
+        #paymentYear {
+            width: auto;
+        }
+        .month-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .month-selector label {
+            font-weight: normal;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 5px;
+            background-color: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: background-color 0.2s ease;
+        }
+        .month-selector input[type="checkbox"] {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 1px solid var(--secondary-color);
+            border-radius: 3px;
+            position: relative;
+            cursor: pointer;
+            margin: 0;
+            flex-shrink: 0;
+        }
+        .month-selector input[type="checkbox"]:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .month-selector input[type="checkbox"]:checked::after {
+            content: '✔';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            color: var(--light-text);
+        }
+        .month-selector label:hover {
+            background-color: #dee2e6;
+        }
+        #addPaymentBtn {
+            padding: 12px 25px;
+            background-color: var(--success-color);
+            color: var(--light-text);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: background-color 0.2s ease;
+        }
+        #addPaymentBtn:hover {
+            background-color: #218838;
+        }
+        .bank-color {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 5px;
+            border: 1px solid #ccc;
+        }
+        .legend {
+            margin-top: 10px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            font-size: 0.9em;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+        #statusMessage, #otherStatusMessage {
+            margin-top: 15px;
+            font-weight: 600;
+        }
+        .spp-table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .spp-table-controls .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .spp-table-container {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .spp-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .spp-table th, .spp-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 14px;
+            min-width: 90px;
+        }
+        .spp-table th {
+            font-weight: 600;
+            background-color: #e9ecef;
+        }
+        .spp-table thead th {
+            position: sticky;
+            z-index: 10;
+        }
+        .spp-table thead tr:first-child th {
+            top: 0;
+        }
+        .spp-table thead tr:nth-child(2) th {
+            top: 48px;
+            background-color: #e9ecef;
+        }
+        .spp-table thead tr:first-child th:first-child,
+        .spp-table tbody td:first-child {
+            position: sticky;
+            left: 0;
+            background-color: var(--light-bg);
+            z-index: 20;
+            min-width: 170px;
+            text-align: left;
+            border-right: 2px solid #ccc;
+        }
+        .spp-table thead tr:first-child th:first-child {
+            z-index: 30;
+        }
+        .spp-table td {
+            position: relative;
+        }
+        .payment-info {
+            background-color: #fff;
+            padding: 8px;
+            border-radius: 5px;
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .payment-info .payment-level {
+            font-size: 0.75em;
+            color: var(--secondary-color);
+            margin-top: 5px;
+        }
+        .payment-date {
+            font-size: 0.75em;
+            color: var(--secondary-color);
+            margin-top: 5px;
+        }
+        .payment-amount {
+            font-weight: 700;
+        }
+        .payment-bank-color {
+            display: block;
+            width: 100%;
+            height: 4px;
+            border-radius: 5px 5px 0 0;
+        }
+        .attachment-link {
+            display: inline-block;
+            margin-top: 5px;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        .attachment-link:hover {
+            color: #0056b3;
+        }
+        .btn-export {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+        .btn-export:hover {
+            background-color: #0056b3;
+        }
+        .btn-whatsapp {
+            background-color: #25D366;
+            color: var(--light-text);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+        .btn-whatsapp:hover {
+            background-color: #128C7E;
+        }
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .pagination-controls button {
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .pagination-controls button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .no-data {
+            color: #888;
+            font-style: italic;
+        }
+        .student-status {
+            font-size: 0.8em;
+            color: var(--secondary-color);
+            margin-top: 5px;
+            display: block;
+        }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
+        .modal-content { background-color: var(--light-bg); margin: auto; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); width: 90%; max-width: 600px; position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
+        .modal-header h3 { margin: 0; color: var(--dark-text); }
+        .modal-body { display: flex; flex-direction: column; gap: 5px; }
+        .modal-body p { margin: 5px 0; }
+        .modal-body strong { color: var(--primary-color); }
+        .close-btn { color: var(--dark-text); font-size: 30px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
+        .close-btn:hover { color: var(--secondary-color); }
+        .attachment-preview { max-width: 100%; height: auto; display: block; margin-top: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .attachment-iframe { width: 100%; height: 500px; border: 1px solid var(--border-color); border-radius: 8px; }
+        .back-button { background-color: var(--secondary-color); color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
+        .payment-keterangan-modal { font-size: 1em; color: var(--dark-text); white-space: pre-wrap; text-align: left; padding-top: 10px; }
+        .btn-reset {
+            background-color: var(--secondary-color);
+            color: var(--light-text);
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+        .btn-reset:hover {
+            background-color: #5a6268;
+        }
+        #addOtherPaymentBtn {
+            background-color: var(--info-color);
+        }
+        #addOtherPaymentBtn:hover {
+            background-color: #138496;
+        }
+        .spp-table .checkbox-cell {
+            width: 40px;
+            min-width: 40px;
+            padding: 5px;
+        }
+
+        /* --- CSS BARU UNTUK ADDON STATUS READ --- */
+        #readStatusIndicator {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: #212529;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: monospace;
+            z-index: 2000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        #readStatusIndicator:hover {
+            opacity: 1;
+        }
+        #readStatusIndicator button {
+            margin-left: 10px;
+            padding: 2px 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div id="readStatusIndicator">Reads Sesi Ini: 0</div>
+
+    <div class="container">
+        <div class="header-section">
+            <h1>Pembayaran SPP Siswa</h1>
+            <div class="header-buttons">
+                <button class="btn-export" onclick="openWhatsappSettings()">Pengaturan WhatsApp Templates</button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+        <div class="content-block">
+            <h3>Input Pembayaran Baru</h3>
+            <form id="sppPaymentForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="studentSelector">Nama & Status Siswa</label>
+                        <select id="studentSelector" required></select>
+                    </div>
+                    <div class="form-group"><label for="nominal">Nominal (Rp)</label><input type="number" id="nominal" required min="0"></div>
+                    <div class="form-group">
+                        <label for="bankSelector">Bank</label>
+                        <select id="bankSelector" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentDate">Tanggal Bayar</label>
+                        <input type="date" id="paymentDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentYear">Tahun Pembayaran</label>
+                        <input type="number" id="paymentYear" required min="2000" value="2025">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Bulan yang Dibayar</label>
+                        <div class="month-selector" id="monthSelector"></div>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;"><label for="keterangan">Keterangan</label><textarea id="keterangan" rows="2"></textarea></div>
+                    <div class="form-group" style="grid-column: 1 / -1;"><label for="attachment">Upload Bukti Bayar</label><input type="file" id="attachment" accept="image/*,.pdf"></div>
+                </div>
+                <button type="submit" id="addPaymentBtn">Simpan Pembayaran</button>
+                <div id="statusMessage"></div>
+            </form>
+        </div>
+        <div class="content-block">
+            <h3>Riwayat Pembayaran</h3>
+            <div class="spp-table-controls">
+                <div class="filter-group">
+                    <label for="studentFilter">Nama Siswa:</label>
+                    <select id="studentFilter"></select>
+                </div>
+                <div class="filter-group">
+                    <label for="yearFilter">Tahun:</label>
+                    <select id="yearFilter"></select>
+                </div>
+                <div class="legend" id="bankLegend"></div>
+                <button class="btn-whatsapp" onclick="generateAndSendPaymentProof()">Kirim Bukti Bayar via WhatsApp</button>
+                <button class="btn-export" onclick="exportToExcel()">Export ke Excel</button>
+            </div>
+            <div class="spp-table-container">
+                <table class="spp-table" id="sppTable">
+                    <thead>
+                        <tr id="tableHeader"></tr>
+                        <tr id="tableSubHeader"></tr>
+                    </thead>
+                    <tbody id="sppTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination-controls">
+                <button id="prevBtn" disabled>&laquo; Sebelumnya</button>
+                <span>Halaman <b id="currentPageDisplay">1</b> dari <b id="totalPagesDisplay">1</b></span>
+                <button id="nextBtn" disabled>Berikutnya &raquo;</button>
+            </div>
+        </div>
+
+        <div class="content-block">
+            <h3>Input Laporan Non-SPP</h3>
+            <form id="otherPaymentForm">
+                <div class="form-grid">
+                    <div class="form-group"><label for="otherStudentSelector">Nama Siswa</label><select id="otherStudentSelector" required></select></div>
+                    <div class="form-group"><label for="otherNominal">Nominal (Rp)</label><input type="number" id="otherNominal" required min="0"></div>
+                    <div class="form-group"><label for="otherBankSelector">Bank</label><select id="otherBankSelector" required></select></div>
+                    <div class="form-group"><label for="otherPaymentDate">Tanggal Bayar</label><input type="date" id="otherPaymentDate" required></div>
+                    <div class="form-group" style="grid-column: 1 / -1;"><label for="otherKeterangan">Keterangan</label><textarea id="otherKeterangan" rows="2" required></textarea></div>
+                </div>
+                <button type="submit" id="addOtherPaymentBtn">Simpan Laporan</button>
+                <div id="otherStatusMessage"></div>
+            </form>
+        </div>
+
+        <div class="content-block">
+            <h3>Riwayat Laporan Non-SPP</h3>
+            <div class="spp-table-controls">
+                <div class="filter-group"><label for="otherStudentFilter">Siswa:</label><select id="otherStudentFilter"></select></div>
+                <div class="filter-group"><label for="otherYearFilter">Tahun:</label><select id="otherYearFilter"></select></div>
+            </div>
+            <div class="spp-table-container">
+                <table class="spp-table" id="otherPaymentsTable">
+                    <thead><tr><th class="checkbox-cell"><input type="checkbox" id="selectAllCheckbox" title="Pilih Semua"></th><th>Tanggal</th><th>Nama Siswa</th><th>Keterangan</th><th>Bank</th><th>Nominal</th></tr></thead>
+                    <tbody id="otherPaymentsTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination-controls">
+                <button id="otherPrevBtn" disabled>&laquo; Sebelumnya</button>
+                <span>Halaman <b id="otherCurrentPageDisplay">1</b> dari <b id="otherTotalPagesDisplay">1</b></span>
+                <button id="otherNextBtn" disabled>Berikutnya &raquo;</button>
+            </div>
+            <button class="btn-whatsapp" onclick="generateAndSendSelectedOtherPaymentProof()" style="margin-top: 20px;">Kirim Laporan Terpilih via WhatsApp</button>
+        </div>
+        </div>
+    <div id="singleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Detail Pembayaran</h3>
+                <span class="close-btn" onclick="singleModal.style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBodyContent"></div>
+        </div>
+    </div>
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="settingsModalTitle">Pengaturan Template WhatsApp</h3>
+                <span class="close-btn" onclick="settingsModal.style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Edit teks template di bawah ini. Gunakan placeholder <code>{nama_siswa}</code>, <code>{tahun_bayar}</code>, <code>{rincian_pembayaran}</code>, <code>{total_nominal_formatted}</code>, dan <code>{nama_file}</code> untuk data dinamis.</p>
+                <textarea id="whatsappTemplateTextarea" rows="10" style="width:100%;"></textarea>
+                <div style="display: flex; justify-content: space-between; margin-top: 10px; align-items: center;">
+                    <button class="btn-export" onclick="saveWhatsappTemplate()">Simpan Template</button>
+                    <button class="btn-reset" onclick="resetWhatsappTemplate()">Reset ke Awal</button>
+                </div>
+                <div id="settingsStatusMessage" style="margin-top:10px;"></div>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, addDoc, updateDoc, query, where, Timestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBm3SkLLtl9LvczDDht-OQ6-R4OYLPYAJQ",
+            authDomain: "progres-report-5d199.firebaseapp.com",
+            projectId: "progres-report-5d199",
+            storageBucket: "progres-report-5d199.firebasestorage.app",
+            messagingSenderId: "363573365137",
+            appId: "1:363573365137:web:98f32d5ff8fae05617b230",
+            measurementId: "G-CPX04R69F5"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- ADDON: LOGIKA BARU UNTUK STATUS READ ---
+        let sessionReadCount = 0;
+        const readStatusElement = document.getElementById('readStatusIndicator');
+        function updateReadStatus() {
+            if(readStatusElement) readStatusElement.innerHTML = `Reads Sesi Ini: ${sessionReadCount} <button onclick="window.resetReadCount()">Reset</button>`;
+        }
+        window.resetReadCount = function() {
+            sessionReadCount = 0;
+            updateReadStatus();
+        }
+        // --- ADDON: AKHIR LOGIKA BARU ---
+
+        let allStudents = [];
+        let allYearsWithPayments = [];
+        let currentPage = 1;
+        const rowsPerPage = 5;
+        let bankColors = {};
+        let currentBendaharaName = '';
+        let brandSettings = {};
+        let whatsappTemplateText = '';
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        
+        let allOtherPayments = [];
+        let otherCurrentPage = 1;
+        const otherRowsPerPage = 10;
+
+        window.logout = function() { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
+        const singleModal = document.getElementById('singleModal');
+        const modalBodyContent = document.getElementById('modalBodyContent');
+        const modalTitle = document.getElementById('modalTitle');
+        const settingsModal = document.getElementById('settingsModal');
+        const whatsappTemplateTextarea = document.getElementById('whatsappTemplateTextarea');
+        const settingsStatusMessage = document.getElementById('settingsStatusMessage');
+        const defaultWhatsappTemplate = `Halo Bapak/Ibu, ini adalah bukti pembayaran SPP untuk *{nama_siswa}* tahun *{tahun_bayar}*.
+Pembayaran yang tercatat:
+{rincian_pembayaran}
+Total nominal yang tercatat adalah: *{total_nominal_formatted}*
+Laporan PDF sudah kami kirimkan ke folder unduhan Anda dengan nama "{nama_file}". Mohon dilampirkan dan dicek.
+Terima kasih.`;
+
+        window.onclick = function(event) {
+            if (event.target == singleModal) {
+                singleModal.style.display = 'none';
+            }
+            if (event.target == settingsModal) {
+                settingsModal.style.display = 'none';
+            }
+        }
+        
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                updateReadStatus(); // Inisialisasi tampilan addon
+                const docRef = doc(db, "users", user.email);
+                const docSnap = await getDoc(docRef);
+                sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
+
+                if (docSnap.exists() && docSnap.data().role === 'bendahara') {
+                    document.body.style.display = 'block';
+                    document.getElementById('paymentDate').valueAsDate = new Date();
+                    document.getElementById('paymentYear').value = new Date().getFullYear();
+                    currentBendaharaName = docSnap.data().name || 'Bendahara';
+                    
+                    await loadBrandSettings();
+                    await loadBanks();
+                    await loadAllStudents();
+                    await loadWhatsappTemplate();
+                    setupEventListeners();
+                    populateMonths();
+
+                    initializeNonSppModule();
+
+                } else {
+                    alert("Akses ditolak. Halaman ini hanya untuk Bendahara.");
+                    await signOut(auth);
+                    window.location.href = 'login.html';
+                }
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        // ======================================================================
+        // --- SEMUA FUNGSI INTI SPP (UTUH DARI FILE STABIL V6) ---
+        // ======================================================================
+
+        window.showPaymentDetails = function(detailsJsonEncoded) {
+            const detailsJson = decodeURIComponent(detailsJsonEncoded);
+            const details = JSON.parse(detailsJson);
+            modalTitle.textContent = 'Detail Pembayaran SPP';
+            const nominalFormatted = new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(details.nominal);
+            let contentHTML = `
+                <p><strong>ID Pembayaran:</strong> ${details.paymentId}</p>
+                <p><strong>Tanggal Bayar:</strong> ${details.date}</p>
+                <p><strong>Nominal:</strong> ${nominalFormatted}</p>
+                <p><strong>Bank:</strong> ${details.bank}</p>
+                <p><strong>Level Siswa (saat bayar):</strong> ${details.studentLevel}</p>
+            `;
+            if (details.keterangan) {
+                contentHTML += `
+                    <div style="margin-top:15px;">
+                        <p><strong>Keterangan:</strong></p>
+                        <p style="white-space: pre-wrap; margin-top: 5px;">${details.keterangan}</p>
+                    </div>
+                `;
+            }
+            if (details.attachmentBase64) {
+                const mimeType = details.attachmentBase64.split(';')[0].split(':')[1];
+                contentHTML += `
+                    <div style="margin-top: 15px;">
+                        <p><strong>Bukti Pembayaran (Snapshot):</strong></p>
+                `;
+                if (mimeType.startsWith('image/')) {
+                    contentHTML += `<img src="${details.attachmentBase64}" alt="Bukti Pembayaran" class="attachment-preview">`;
+                } else if (mimeType === 'application/pdf') {
+                    contentHTML += `<iframe src="${details.attachmentBase64}" class="attachment-iframe"></iframe>`;
+                }
+                contentHTML += `</div>`;
+            }
+            if (!details.keterangan && !details.attachmentBase64) {
+                contentHTML += `<p style="margin-top:15px;"><em>Tidak ada keterangan atau bukti bayar tambahan.</em></p>`;
+            }
+            modalBodyContent.innerHTML = contentHTML;
+            singleModal.style.display = 'flex';
+        };
+
+        async function loadWhatsappTemplate() {
+            try {
+                const docSnap = await getDoc(doc(db, "settings", "whatsapp_templates"));
+                sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
+                if (docSnap.exists()) {
+                    whatsappTemplateText = docSnap.data().paymentProof || '';
+                } else {
+                    whatsappTemplateText = defaultWhatsappTemplate;
+                }
+            } catch (error) {
+                console.error("Gagal memuat template WhatsApp:", error);
+                whatsappTemplateText = defaultWhatsappTemplate;
+            }
+        }
+
+        async function loadBrandSettings() {
+            try {
+                const docSnap = await getDoc(doc(db, "settings", "brand"));
+                sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
+                if (docSnap.exists()) {
+                    brandSettings = docSnap.data();
+                } else {
+                    brandSettings = {};
+                }
+            } catch (error) {
+                console.error("Gagal memuat pengaturan brand:", error);
+                brandSettings = {};
+            }
+        }
+
+        async function loadAllStudents() {
+            try {
+                const q = query(collection(db, "students"), where("status", "==", "active"));
+                const querySnapshot = await getDocs(q);
+                sessionReadCount += querySnapshot.size; updateReadStatus(); // ADDON: Menghitung read
+
+                allStudents = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                populateStudentSelector();
+                populateYearFilter();
+                populateStudentFilter();
+                renderSppTable();
+            } catch (error) {
+                console.error("Error loading students:", error);
+            }
+        }
+
+        async function loadBanks() {
+            try {
+                const banksCollection = collection(db, "banks");
+                const banksSnapshot = await getDocs(banksCollection);
+                sessionReadCount += banksSnapshot.size; updateReadStatus(); // ADDON: Menghitung read
+
+                bankColors = {};
+                banksSnapshot.docs.forEach(doc => {
+                    if (doc.data().status === 'active' || !doc.data().status) {
+                        bankColors[doc.data().bankName] = doc.data().color;
+                    }
+                });
+                populateBankLegend();
+                populateBankSelector();
+            } catch (error) {
+                console.error("Gagal memuat data bank:", error);
+            }
+        }
+
+        function populateStudentSelector() {
+            const selector = document.getElementById('studentSelector');
+            selector.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+            allStudents.forEach(student => {
+                const studentStatus = student.status || 'inactive';
+                const studentLevel = student.studentLevel || 'Level belum diatur';
+                selector.innerHTML += `<option value="${student.id}">${student.name} (${studentLevel} - ${studentStatus})</option>`;
+            });
+        }
+
+        function populateStudentFilter() {
+            const filter = document.getElementById('studentFilter');
+            filter.innerHTML = '<option value="all">Semua Siswa</option>';
+            allStudents.forEach(student => {
+                filter.innerHTML += `<option value="${student.id}">${student.name}</option>`;
+            });
+        }
+
+        function populateBankSelector() {
+            const selector = document.getElementById('bankSelector');
+            selector.innerHTML = '<option value="">Pilih Bank</option>';
+            for (const bankName in bankColors) {
+                selector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
+            }
+        }
+
+        function populateMonths() {
+            const monthSelector = document.getElementById('monthSelector');
+            monthSelector.innerHTML = '';
+            monthNames.forEach((month, index) => {
+                monthSelector.innerHTML += `
+                    <label><input type="checkbox" name="month" value="${index}"> ${month}</label>
+                `;
+            });
+        }
+
+        function populateBankLegend() {
+            const legendDiv = document.getElementById('bankLegend');
+            legendDiv.innerHTML = '';
+            for (const bank in bankColors) {
+                legendDiv.innerHTML += `
+                    <div class="legend-item"><span class="bank-color" style="background-color: ${bankColors[bank]};"></span>${bank}</div>
+                `;
+            }
+        }
+
+        function populateYearFilter() {
+            const yearFilter = document.getElementById('yearFilter');
+            const years = new Set();
+            allStudents.forEach(student => {
+                if (student.spp) {
+                    Object.keys(student.spp).forEach(key => {
+                        const year = key.split('-')[0];
+                        if (year) {
+                            years.add(parseInt(year));
+                        }
+                    });
+                }
+            });
+            allYearsWithPayments = Array.from(years).sort((a, b) => a - b);
+            yearFilter.innerHTML = '<option value="all">Semua Tahun</option>';
+            allYearsWithPayments.forEach(year => {
+                yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
+            });
+            if (allYearsWithPayments.length > 0) {
+                yearFilter.value = Math.max(...allYearsWithPayments);
+            } else {
+                yearFilter.value = 'all';
+            }
+        }
+        
+        async function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+        
+        async function compressImage(file, quality = 0.1) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const maxWidth = 800;
+                        const maxHeight = 600;
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height *= maxWidth / width;
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width *= maxHeight / height;
+                                height = maxHeight;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                        resolve(compressedBase64);
+                    };
+                    img.onerror = error => reject(error);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        async function handleAddPayment(e) {
+            e.preventDefault();
+            const studentId = document.getElementById('studentSelector').value;
+            const nominal = parseFloat(document.getElementById('nominal').value);
+            const bank = document.getElementById('bankSelector').value;
+            const paymentDate = document.getElementById('paymentDate').value;
+            const paymentYear = document.getElementById('paymentYear').value;
+            const keterangan = document.getElementById('keterangan').value;
+            const attachmentFile = document.getElementById('attachment').files[0];
+            const monthsPaid = Array.from(document.querySelectorAll('input[name="month"]:checked')).map(cb => parseInt(cb.value));
+            const statusMessageDiv = document.getElementById('statusMessage');
+
+            if (!studentId || isNaN(nominal) || nominal <= 0 || !bank || !paymentDate || isNaN(paymentYear) || monthsPaid.length === 0 || !attachmentFile) {
+                statusMessageDiv.textContent = 'Semua field wajib diisi, termasuk bukti bayar.';
+                statusMessageDiv.style.color = 'red';
+                return;
+            }
+            statusMessageDiv.textContent = 'Menyimpan pembayaran...';
+            statusMessageDiv.style.color = 'blue';
+
+            try {
+                let attachmentBase64 = '';
+                if (attachmentFile) {
+                    if (attachmentFile.size > 3 * 1024 * 1024) {
+                        statusMessageDiv.textContent = 'Error: Ukuran file terlalu besar. Maksimum 3MB.';
+                        statusMessageDiv.style.color = 'red';
+                        return;
+                    }
+                    if (attachmentFile.type.startsWith('image/')) {
+                        attachmentBase64 = await compressImage(attachmentFile);
+                    } else if (attachmentFile.type === 'application/pdf') {
+                        attachmentBase64 = await getBase64(attachmentFile);
+                    } else {
+                        statusMessageDiv.textContent = 'Error: Jenis file tidak didukung.';
+                        statusMessageDiv.style.color = 'red';
+                        return;
+                    }
+                }
+
+                const studentRef = doc(db, "students", studentId);
+                const studentSnap = await getDoc(studentRef);
+                sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
+
+                if (!studentSnap.exists()) {
+                    statusMessageDiv.textContent = 'Error: Data siswa tidak ditemukan.';
+                    statusMessageDiv.style.color = 'red';
+                    return;
+                }
+
+                const studentData = studentSnap.data();
+                const updatedSppData = { ...studentData.spp };
+                const paymentUniqueId = crypto.randomUUID();
+                
+                const existingMonths = monthsPaid.filter(monthIndex => {
+                    const key = `${paymentYear}-${monthIndex}`;
+                    return updatedSppData[key] !== undefined;
+                });
+
+                if (existingMonths.length > 0) {
+                    const existingMonthsNames = existingMonths.map(i => monthNames[i]).join(', ');
+                    statusMessageDiv.textContent = `Error: Pembayaran untuk bulan ${existingMonthsNames} pada tahun ${paymentYear} sudah ada.`;
+                    statusMessageDiv.style.color = 'red';
+                    return;
+                }
+
+                monthsPaid.forEach(monthIndex => {
+                    const key = `${paymentYear}-${monthIndex}`;
+                    updatedSppData[key] = {
+                        nominal: nominal,
+                        bank: bank,
+                        date: Timestamp.fromDate(new Date(paymentDate)),
+                        keterangan: keterangan,
+                        attachmentBase64: attachmentBase64,
+                        paymentId: paymentUniqueId,
+                        studentLevel: studentData.studentLevel || 'Level belum diatur'
+                    };
+                });
+
+                await updateDoc(studentRef, {
+                    spp: updatedSppData
+                });
+
+                statusMessageDiv.textContent = 'Pembayaran berhasil disimpan!';
+                document.getElementById('sppPaymentForm').reset();
+                document.getElementById('paymentDate').valueAsDate = new Date();
+                document.getElementById('paymentYear').value = new Date().getFullYear();
+                await loadAllStudents();
+            } catch (error) {
+                statusMessageDiv.textContent = `Error: ${error.message}`;
+                statusMessageDiv.style.color = 'red';
+                console.error("Error storing payment:", error);
+            }
+        }
+        
+        function renderSppTable() {
+            const tableHeader = document.getElementById('tableHeader');
+            const tableSubHeader = document.getElementById('tableSubHeader');
+            const tableBody = document.getElementById('sppTableBody');
+            const selectedStudentId = document.getElementById('studentFilter').value;
+            const selectedYear = document.getElementById('yearFilter').value;
+            
+            let studentsToDisplay = allStudents.filter(student => {
+                let matchesStudent = selectedStudentId === 'all' || student.id === selectedStudentId;
+                if (selectedYear === 'all') {
+                    return matchesStudent && student.spp && Object.keys(student.spp).length > 0;
+                } else {
+                    return matchesStudent && Object.keys(student.spp || {}).some(key => key.startsWith(selectedYear));
+                }
+            });
+            const totalPages = Math.ceil(studentsToDisplay.length / rowsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages || 1;
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedStudents = studentsToDisplay.slice(start, end);
+
+            tableHeader.innerHTML = '';
+            tableSubHeader.innerHTML = '';
+
+            if (allYearsWithPayments.length === 0 && selectedYear === 'all') {
+                tableBody.innerHTML = `<tr><td colspan="${monthNames.length + 1}" class="no-data">Belum ada data pembayaran SPP sama sekali.</td></tr>`;
+                updatePaginationControls(0, 1);
+                return;
+            }
+            
+            const yearsToDisplay = selectedYear === 'all' ? allYearsWithPayments : [selectedYear];
+            tableHeader.innerHTML = `<th rowspan="2">Nama Siswa</th>`;
+            yearsToDisplay.forEach(year => {
+                tableHeader.innerHTML += `<th colspan="12">${year}</th>`;
+            });
+
+            yearsToDisplay.forEach(year => {
+                 monthNames.forEach(month => {
+                    tableSubHeader.innerHTML += `<th>${month.substring(0,3).toUpperCase()}</th>`;
+                });
+            });
+
+            tableBody.innerHTML = '';
+            if (paginatedStudents.length === 0) {
+                const colspan = 1 + (yearsToDisplay.length * 12);
+                tableBody.innerHTML = `<tr><td colspan="${colspan}">Tidak ada data untuk filter ini.</td></tr>`;
+                updatePaginationControls(0, 1);
+            } else {
+                 paginatedStudents.forEach(student => {
+                    const row = tableBody.insertRow();
+                    const studentNameCell = row.insertCell();
+                    const studentStatus = student.status || 'inactive';
+                    studentNameCell.innerHTML = `${student.name}<span class="student-status">${studentStatus.toUpperCase()}</span>`;
+            
+                    const studentSpp = student.spp || {};
+                    yearsToDisplay.forEach(year => {
+                        monthNames.forEach((month, monthIndex) => {
+                            const cell = row.insertCell();
+                            const key = `${year}-${monthIndex}`;
+                            const paymentData = studentSpp[key];
+                            if (paymentData) {
+                                const bankColor = bankColors[paymentData.bank] || '#ccc';
+                                const nominalFormatted = new Intl.NumberFormat('id-ID').format(paymentData.nominal);
+                                const paymentDate = (paymentData.date && typeof paymentData.date.toDate === 'function') ? paymentData.date.toDate() : new Date(paymentData.date);
+                                const dateFormatted = paymentDate.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                                const studentLevel = paymentData.studentLevel || 'Level tidak tersedia';
+                                cell.innerHTML = `
+                                    <div class="payment-bank-color" style="background-color: ${bankColor};"></div>
+                                    <div class="payment-info">
+                                        <span class="payment-amount">Rp ${nominalFormatted}</span>
+                                        <span class="payment-date">${dateFormatted}</span>
+                                        <span class="payment-level">${studentLevel}</span>
+                                    </div>
+                                `;
+                                const details = {
+                                    paymentId: paymentData.paymentId || 'ID tidak tersedia',
+                                    nominal: paymentData.nominal || 0,
+                                    bank: paymentData.bank || 'N/A',
+                                    date: paymentDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
+                                    studentLevel: paymentData.studentLevel || 'N/A',
+                                    keterangan: paymentData.keterangan || '',
+                                    attachmentBase64: paymentData.attachmentBase64 || ''
+                                };
+                                const detailsJson = encodeURIComponent(JSON.stringify(details));
+                                if (details.keterangan || details.attachmentBase64) {
+                                    cell.innerHTML += `<a href="#" onclick="event.preventDefault(); showPaymentDetails('${detailsJson}')" class="attachment-link">Detail</a>`;
+                                }
+                            } else {
+                                cell.innerHTML = '';
+                            }
+                        });
+                    });
+                });
+            }
+            updatePaginationControls(currentPage, totalPages);
+        }
+
+        function updatePaginationControls(current, total) {
+            document.getElementById('currentPageDisplay').textContent = current;
+            document.getElementById('totalPagesDisplay').textContent = total;
+            document.getElementById('prevBtn').disabled = current <= 1;
+            document.getElementById('nextBtn').disabled = current >= total || total === 0;
+        }
+
+        function setupEventListeners() {
+            document.getElementById('sppPaymentForm').addEventListener('submit', handleAddPayment);
+            document.getElementById('yearFilter').addEventListener('change', () => {
+                currentPage = 1;
+                renderSppTable();
+            });
+            document.getElementById('studentFilter').addEventListener('change', () => {
+                currentPage = 1;
+                renderSppTable();
+            });
+            document.getElementById('prevBtn').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderSppTable();
+                }
+            });
+            document.getElementById('nextBtn').addEventListener('click', () => {
+                const totalPages = parseInt(document.getElementById('totalPagesDisplay').textContent);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderSppTable();
+                }
+            });
+        }
+        
+        function formatPhoneNumber(number) {
+            number = String(number).replace(/\s/g, '');
+            if (number.startsWith('0')) {
+                number = '62' + number.slice(1);
+            } else if (number.startsWith('+')) {
+                number = number.slice(1);
+            }
+            if (!number.startsWith('62')) {
+                number = '62' + number;
+            }
+            return number;
+        }
+
+        window.generateAndSendPaymentProof = function() {
+            const studentFilter = document.getElementById('studentFilter');
+            const yearFilter = document.getElementById('yearFilter');
+            if (studentFilter.value === 'all' || yearFilter.value === 'all') {
+                alert("Harap pilih satu siswa dan satu tahun spesifik untuk membuat bukti pembayaran.");
+                return;
+            }
+            const studentId = studentFilter.value;
+            const student = allStudents.find(s => s.id === studentId);
+            const selectedYear = yearFilter.value;
+
+            if (!student || !student.phone) {
+                alert("Nomor telepon siswa tidak ditemukan. Harap perbarui data siswa di Panel Admin.");
+                return;
+            }
+            const studentName = student.name;
+            const phoneNumber = formatPhoneNumber(student.phone);
+            const paymentsForYear = allStudents.find(s => s.id === studentId)?.spp;
+            
+            if (!paymentsForYear || Object.keys(paymentsForYear).filter(k=>k.startsWith(selectedYear)).length === 0) {
+                alert("Tidak ada data pembayaran untuk siswa ini pada tahun yang dipilih.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let yPos = 15;
+
+            const addContent = () => {
+                if (brandSettings && brandSettings.companyName) {
+                    doc.setFontSize(12);
+                    doc.setFont("helvetica", "normal");
+                    doc.text(brandSettings.companyName, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
+                    yPos += 8;
+                }
+                
+                doc.setFontSize(16);
+                doc.setFont("helvetica", "bold");
+                doc.text(`Bukti Pembayaran SPP`, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
+                yPos += 10;
+                
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+                doc.text(`Tahun: ${selectedYear}`, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
+                yPos += 15;
+                
+                doc.text(`Nama Siswa: ${studentName}`, 15, yPos);
+                yPos += 10;
+                
+                const paidMonths = Object.keys(paymentsForYear)
+                    .filter(key => key.startsWith(selectedYear))
+                    .sort((a,b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]))
+                    .map(key => ({monthIndex: parseInt(key.split('-')[1]), data: paymentsForYear[key]}));
+
+                const tableData = paidMonths.map(p => {
+                    const nominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(p.data.nominal);
+                    return [monthNames[p.monthIndex], nominalFormatted, p.data.bank];
+                });
+
+                const totalNominal = paidMonths.reduce((sum, p) => sum + p.data.nominal, 0);
+
+                doc.autoTable({
+                    startY: yPos,
+                    head: [['Bulan', 'Nominal', 'Bank']],
+                    body: tableData,
+                });
+                
+                yPos = doc.autoTable.previous.finalY + 10;
+                doc.text(`Total Terbayar: ${new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal)}`, 14, yPos);
+
+                const fileName = `Bukti_Bayar_SPP_${studentName.replace(/ /g, '_')}_${selectedYear}.pdf`;
+                
+                const totalNominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal);
+                const rincianPembayaran = paidMonths.map(p => `• ${monthNames[p.monthIndex]}: ${new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(p.data.nominal)}`).join('\n');
+                
+                let message = whatsappTemplateText
+                    .replace(/{nama_siswa}/g, studentName)
+                    .replace(/{tahun_bayar}/g, selectedYear)
+                    .replace(/{total_nominal_formatted}/g, totalNominalFormatted)
+                    .replace(/{rincian_pembayaran}/g, rincianPembayaran)
+                    .replace(/{nama_file}/g, fileName);
+
+                const encodedMessage = encodeURIComponent(message);
+                const whatsappUrl = `https://web.whatsapp.com/send/?phone=${phoneNumber}&text=${encodedMessage}`;
+                
+                doc.save(fileName);
+                window.open(whatsappUrl, '_blank');
+                alert(`Bukti pembayaran PDF untuk ${studentName} (${selectedYear}) telah diunduh. Silakan lampirkan secara manual di chat WhatsApp yang terbuka.`);
+            };
+
+            if (brandSettings && brandSettings.logoBase64) {
+                const img = new Image();
+                img.src = brandSettings.logoBase64;
+                img.onload = () => {
+                    const desiredLogoHeight = 20;
+                    const aspectRatio = img.width / img.height;
+                    const calculatedLogoWidth = desiredLogoHeight * aspectRatio;
+                    doc.addImage(img, 'PNG', (doc.internal.pageSize.getWidth() - calculatedLogoWidth) / 2, yPos, calculatedLogoWidth, desiredLogoHeight);
+                    yPos += desiredLogoHeight + 10;
+                    addContent();
+                };
+                img.onerror = () => addContent();
+            } else {
+                addContent();
+            }
+        }
+        
+        window.exportToExcel = function() {
+            const selectedStudentId = document.getElementById('studentFilter').value;
+            const selectedYear = document.getElementById('yearFilter').value;
+            let fileName = `Laporan_SPP_${selectedYear === 'all' ? 'Semua_Tahun' : selectedYear}`;
+
+            const filteredStudents = allStudents.filter(student => {
+                let matchesStudent = selectedStudentId === 'all' || student.id === selectedStudentId;
+                if (selectedYear === 'all') {
+                    return matchesStudent && student.spp && Object.keys(student.spp).length > 0;
+                } else {
+                    return matchesStudent && Object.keys(student.spp || {}).some(key => key.startsWith(selectedYear));
+                }
+            });
+
+            if (selectedStudentId !== 'all') {
+                const studentName = allStudents.find(s => s.id === selectedStudentId)?.name || 'Siswa_Tidak_Ditemukan';
+                fileName = `Laporan_SPP_${studentName}_${selectedYear === 'all' ? 'Semua_Tahun' : selectedYear}`;
+            }
+
+            const yearsToExport = selectedYear === 'all' ? allYearsWithPayments : [selectedYear];
+            const headerNames = ['Nama Siswa'];
+            yearsToExport.forEach(year => {
+                monthNames.forEach(month => {
+                    headerNames.push(`${month} ${year}`);
+                });
+            });
+
+            const bodyData = filteredStudents.map(student => {
+                const rowData = [];
+                rowData.push(student.name);
+                const studentSpp = student.spp || {};
+
+                yearsToExport.forEach(year => {
+                    monthNames.forEach((month, monthIndex) => {
+                        const key = `${year}-${monthIndex}`;
+                        const paymentData = studentSpp[key];
+                        if (paymentData) {
+                            const nominalFormatted = new Intl.NumberFormat('id-ID').format(paymentData.nominal);
+                            const paymentDate = (paymentData.date && typeof paymentData.date.toDate === 'function') ? paymentData.date.toDate() : new Date(paymentData.date);
+                            const dateFormatted = paymentDate.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                            rowData.push(`Rp ${nominalFormatted} (${dateFormatted})`);
+                        } else {
+                            rowData.push('');
+                        }
+                    });
+                });
+                return rowData;
+            });
+            
+            const table = document.createElement('table');
+            const thead = table.createTHead();
+            const headerRow = thead.insertRow();
+            headerNames.forEach(headerText => {
+                const th = document.createElement('th');
+                th.textContent = headerText;
+                headerRow.appendChild(th);
+            });
+
+            const tbody = table.createTBody();
+            bodyData.forEach(rowData => {
+                const row = tbody.insertRow();
+                rowData.forEach(cellData => {
+                    const cell = row.insertCell();
+                    cell.textContent = cellData;
+                });
+            });
+            
+            const uri = 'data:application/vnd.ms-excel;base64,';
+            const template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table>' + table.innerHTML + '</table></body></html>';
+            const base64 = btoa(unescape(encodeURIComponent(template)));
+
+            const link = document.createElement('a');
+            link.href = uri + base64;
+            link.download = `${fileName}.xls`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        window.openWhatsappSettings = async function() {
+            settingsModal.style.display = 'flex';
+            settingsStatusMessage.textContent = 'Memuat template...';
+            await loadWhatsappTemplate();
+            whatsappTemplateTextarea.value = whatsappTemplateText;
+            settingsStatusMessage.textContent = '';
+        }
+
+        window.saveWhatsappTemplate = async function() {
+            settingsStatusMessage.textContent = 'Menyimpan template...';
+            settingsStatusMessage.style.color = 'blue';
+            const newTemplateText = whatsappTemplateTextarea.value;
+            try {
+                const templateDocRef = doc(db, "settings", "whatsapp_templates");
+                await updateDoc(templateDocRef, {
+                    paymentProof: newTemplateText
+                });
+                whatsappTemplateText = newTemplateText;
+                settingsStatusMessage.textContent = 'Template berhasil disimpan!';
+                settingsStatusMessage.style.color = 'green';
+            } catch (error) {
+                console.error("Gagal menyimpan template:", error);
+                settingsStatusMessage.textContent = `Error: ${error.message}`;
+                settingsStatusMessage.style.color = 'red';
+            }
+        }
+
+        window.resetWhatsappTemplate = async function() {
+            if (confirm("Apakah Anda yakin ingin mengembalikan template ke pengaturan awal? Ini tidak bisa dibatalkan.")) {
+                whatsappTemplateTextarea.value = defaultWhatsappTemplate;
+                await saveWhatsappTemplate();
+            }
+        }
+
+        // ======================================================================
+        // --- MODUL NON-SPP (IMPLEMENTASI BARU YANG TERISOLASI) ---
+        // ======================================================================
+        
+        function initializeNonSppModule() {
+            loadNonSppData();
+            setupNonSppEventListeners();
+        }
+
+        async function loadNonSppData() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "other_payments"));
+                sessionReadCount += querySnapshot.size; updateReadStatus(); // ADDON: Menghitung read
+                
+                allOtherPayments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                populateNonSppSelectors();
+                renderOtherPaymentsTable(filterNonSppData());
+            } catch (error) {
+                console.error("Error loading Non-SPP data:", error);
+            }
+        }
+        
+        function populateNonSppSelectors() {
+            const studentSelector = document.getElementById('otherStudentSelector');
+            const studentFilter = document.getElementById('otherStudentFilter');
+            const bankSelector = document.getElementById('otherBankSelector');
+            const yearFilter = document.getElementById('otherYearFilter');
+
+            studentSelector.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+            studentFilter.innerHTML = '<option value="all">Semua Siswa</option>';
+            allStudents.forEach(student => {
+                const optionHTML = `<option value="${student.id}">${student.name} (${student.studentLevel || 'N/A'} - ${student.status})</option>`;
+                studentSelector.innerHTML += optionHTML;
+                studentFilter.innerHTML += `<option value="${student.id}">${student.name}</option>`;
+            });
+
+            bankSelector.innerHTML = '<option value="">Pilih Bank</option>';
+            for (const bankName in bankColors) {
+                bankSelector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
+            }
+
+            const years = new Set(allOtherPayments
+                .filter(p => p.timestamp && typeof p.timestamp.toDate === 'function')
+                .map(p => p.timestamp.toDate().getFullYear())
+            );
+            const sortedYears = Array.from(years).sort((a,b) => b-a);
+            yearFilter.innerHTML = '<option value="all">Semua Tahun</option>';
+            sortedYears.forEach(year => {
+                yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
+            });
+        }
+
+        function setupNonSppEventListeners() {
+            document.getElementById('otherPaymentForm').addEventListener('submit', handleAddOtherPayment);
+            document.getElementById('otherStudentFilter').addEventListener('change', () => { otherCurrentPage = 1; renderOtherPaymentsTable(filterNonSppData()); });
+            document.getElementById('otherYearFilter').addEventListener('change', () => { otherCurrentPage = 1; renderOtherPaymentsTable(filterNonSppData()); });
+            document.getElementById('otherPrevBtn').addEventListener('click', () => { if (otherCurrentPage > 1) { otherCurrentPage--; renderOtherPaymentsTable(filterNonSppData()); } });
+            document.getElementById('otherNextBtn').addEventListener('click', () => {
+                const totalPages = parseInt(document.getElementById('otherTotalPagesDisplay').textContent);
+                if (otherCurrentPage < totalPages) { otherCurrentPage++; renderOtherPaymentsTable(filterNonSppData()); }
+            });
+            document.getElementById('selectAllCheckbox').addEventListener('change', (e) => {
+                document.querySelectorAll('#otherPaymentsTableBody .report-checkbox').forEach(checkbox => {
+                    checkbox.checked = e.target.checked;
+                });
+            });
+        }
+        
+        async function handleAddOtherPayment(e) {
+            e.preventDefault();
+            const studentId = document.getElementById('otherStudentSelector').value;
+            const studentName = document.getElementById('otherStudentSelector').selectedOptions[0].text;
+            const nominal = parseFloat(document.getElementById('otherNominal').value);
+            const bank = document.getElementById('otherBankSelector').value;
+            const paymentDate = document.getElementById('otherPaymentDate').value;
+            const keterangan = document.getElementById('otherKeterangan').value;
+            const statusMessageDiv = document.getElementById('otherStatusMessage');
+
+            if (!studentId || isNaN(nominal) || !bank || !paymentDate || !keterangan) {
+                statusMessageDiv.textContent = 'Semua field harus diisi.';
+                statusMessageDiv.style.color = 'red';
+                return;
+            }
+            statusMessageDiv.textContent = 'Menyimpan laporan...';
+            statusMessageDiv.style.color = 'blue';
+
+            try {
+                const docData = {
+                    timestamp: Timestamp.fromDate(new Date(paymentDate)),
+                    studentId, siswa: studentName, keterangan, bank, nominal,
+                    bendaharaEmail: auth.currentUser.email
+                };
+                await addDoc(collection(db, "other_payments"), docData);
+                statusMessageDiv.textContent = 'Laporan berhasil disimpan!';
+                statusMessageDiv.style.color = 'green';
+                document.getElementById('otherPaymentForm').reset();
+                document.getElementById('otherPaymentDate').valueAsDate = new Date();
+                
+                await loadNonSppData();
+            } catch (error) {
+                statusMessageDiv.textContent = `Error: ${error.message}`;
+                statusMessageDiv.style.color = 'red';
+            }
+        }
+
+        function filterNonSppData() {
+            const studentId = document.getElementById('otherStudentFilter').value;
+            const year = document.getElementById('otherYearFilter').value;
+            return allOtherPayments.filter(p => {
+                const matchesStudent = (studentId === 'all' || p.studentId === studentId);
+                let matchesYear = true;
+                if (year !== 'all') {
+                    if (p.timestamp && typeof p.timestamp.toDate === 'function') {
+                        matchesYear = p.timestamp.toDate().getFullYear() == year;
+                    } else {
+                        matchesYear = false; 
+                    }
+                }
+                return matchesStudent && matchesYear;
+            });
+        }
+        
+        function renderOtherPaymentsTable(data) {
+            const tableBody = document.getElementById('otherPaymentsTableBody');
+            const totalPages = Math.ceil(data.length / otherRowsPerPage);
+            otherCurrentPage = Math.min(otherCurrentPage, totalPages || 1);
+            const paginatedData = data.slice((otherCurrentPage - 1) * otherRowsPerPage, otherCurrentPage * otherRowsPerPage);
+
+            tableBody.innerHTML = '';
+            if (paginatedData.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="no-data">Tidak ada laporan yang cocok dengan filter.</td></tr>';
+            } else {
+                paginatedData
+                    .sort((a, b) => {
+                        const dateA = a.timestamp && typeof a.timestamp.toDate === 'function' ? a.timestamp.toDate() : new Date(0);
+                        const dateB = b.timestamp && typeof b.timestamp.toDate === 'function' ? b.timestamp.toDate() : new Date(0);
+                        return dateB - dateA;
+                    })
+                    .forEach(item => {
+                        const dateString = (item.timestamp && typeof item.timestamp.toDate === 'function')
+                            ? item.timestamp.toDate().toLocaleDateString('id-ID')
+                            : '<i style="color:red;">Tgl Invalid</i>';
+                        const row = tableBody.insertRow();
+                        row.innerHTML = `
+                            <td class="checkbox-cell"><input type="checkbox" class="report-checkbox" data-id="${item.id}"></td>
+                            <td>${dateString}</td>
+                            <td>${item.siswa || '-'}</td>
+                            <td>${item.keterangan || '-'}</td>
+                            <td>${item.bank || '-'}</td>
+                            <td>Rp ${new Intl.NumberFormat('id-ID').format(item.nominal || 0)}</td>
+                        `;
+                    });
+            }
+            document.getElementById('otherCurrentPageDisplay').textContent = otherCurrentPage;
+            document.getElementById('otherTotalPagesDisplay').textContent = totalPages;
+            document.getElementById('otherPrevBtn').disabled = otherCurrentPage <= 1;
+            document.getElementById('otherNextBtn').disabled = otherCurrentPage >= totalPages;
+            document.getElementById('selectAllCheckbox').checked = false;
+        }
+
+        window.generateAndSendSelectedOtherPaymentProof = async function() {
+            const selectedCheckboxes = document.querySelectorAll('.report-checkbox:checked');
+            if (selectedCheckboxes.length === 0) return alert('Harap centang setidaknya satu laporan.');
+            
+            const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+            const selectedReports = allOtherPayments.filter(p => selectedIds.includes(p.id));
+            const studentIds = new Set(selectedReports.map(p => p.studentId));
+
+            if (studentIds.size > 1) return alert('Hanya bisa mengirim laporan untuk satu siswa dalam satu waktu.');
+
+            const studentId = [...studentIds][0];
+            const student = allStudents.find(s => s.id === studentId);
+            if (!student || !student.phone) return alert("Nomor telepon siswa tidak ditemukan.");
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(16).text('Laporan Non-SPP', 105, 15, { align: 'center' });
+            doc.setFontSize(12).text(`Nama Siswa: ${student.name}`, 14, 25);
+
+            doc.autoTable({
+                startY: 30,
+                head: [['Tanggal', 'Keterangan', 'Bank', 'Nominal']],
+                body: selectedReports.map(p => {
+                    const dateString = (p.timestamp && typeof p.timestamp.toDate === 'function')
+                        ? p.timestamp.toDate().toLocaleDateString('id-ID')
+                        : 'Tgl Invalid';
+                    return [dateString, p.keterangan, p.bank, `Rp ${new Intl.NumberFormat('id-ID').format(p.nominal)}`];
+                })
+            });
+            
+            const fileName = `Laporan_Non-SPP_${student.name.replace(/ /g, '_')}.pdf`;
+            doc.save(fileName);
+            
+            const message = `Halo, ini rincian laporan non-SPP untuk *${student.name}*.\n\n*Mohon lampirkan file PDF "${fileName}" yang baru saja Anda unduh.*`;
+            const whatsappUrl = `https://web.whatsapp.com/send/?phone=${formatPhoneNumber(student.phone)}&text=${encodeURIComponent(message)}`;
+            
+            window.open(whatsappUrl, '_blank');
+            alert(`PDF telah diunduh: "${fileName}"\n\nSilakan lampirkan file tersebut di chat WhatsApp yang terbuka.`);
+        }
+
+    </script>
+</body>
+</html>

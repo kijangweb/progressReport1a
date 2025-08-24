@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; display: none; }
+        .admin-container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        h1 { text-align: center; color: #007bff; }
+        h3, h4 { color: #333; }
+        .logout-btn { float: right; padding: 8px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .user-table, .bank-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .user-table th, .user-table td, .bank-table th, .bank-table td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: middle; }
+        .user-table th, .bank-table th { background-color: #f2f2f2; }
+        .action-btn-disable { background-color: #ffc107; color: black; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px; }
+        .action-btn-enable { background-color: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px; }
+        .action-btn-edit { background-color: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .add-user-section, .reset-password-section, .transfer-section, .curriculum-section, .bank-management-section, .spp-management-section { margin-top: 30px; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .add-user-section input, .add-user-section select, .reset-password-section select, .transfer-section select, .bank-management-section input, .bank-management-section select { padding: 8px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .add-user-section button, .reset-password-section button, .transfer-section button, .bank-management-section button, .spp-management-section button { padding: 8px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #statusMessage, #resetPasswordStatusMessage, #studentStatusMessage, #transferStatusMessage, #bankStatusMessage, #sppDeleteStatusMessage, #sppSizeInfo, #sppGlobalStats { margin-top: 15px; font-weight: bold; }
+        .bulk-action-container { margin-top: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9; }
+        .bulk-action-container select, .pagination-controls select, .filter-controls select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        .bulk-action-container button, .pagination-controls button { padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
+        .filter-controls { margin: 15px 0 5px 0; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+        .disabled-row td { text-decoration: line-through; color: #999; background-color: #f8f9fa !important; }
+        .pagination-controls { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+        .pagination-controls button:disabled { background-color: #ccc; cursor: not-allowed; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .modal-header h2 { margin: 0; color: #007bff; }
+        .close-btn { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: black; }
+        .modal-body { padding-top: 20px; }
+        .modal-body .form-group { margin-bottom: 15px; }
+        .modal-body label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .modal-body input, .modal-body select { width: 100%; padding: 8px; box-sizing: border-box; border-radius: 4px; border: 1px solid #ccc; }
+        .modal-footer { text-align: right; padding-top: 20px; border-top: 1px solid #eee; }
+        .modal-footer button { background-color: #007bff; }
+        .curriculum-editor { border: 1px solid #ddd; padding: 15px; margin-top: 10px; border-radius: 6px; max-height: 400px; overflow-y: auto; }
+        .lesson-input-group { margin-bottom: 10px; display: flex; align-items: center; }
+        .lesson-input-group label { font-weight: bold; display: inline-block; width: 90px; }
+        .lesson-input-group input { width: calc(100% - 100px); padding: 5px; }
+        .add-lesson-btn { background-color: #17a2b8; color: white; border: none; padding: 8px 12px; margin-top: 15px; border-radius: 4px; cursor: pointer; }
+        .btn-delete-attachments { background-color: #ffc107; color: black; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+        .spp-stats-info { margin-top: 20px; padding: 15px; background-color: #e2eafc; border-radius: 8px; border: 1px solid #b3cbe8; }
+        .spp-stats-info p { margin: 5px 0; }
+        .global-spp-stats { margin-top: 20px; padding: 15px; background-color: #e9f5e9; border-radius: 8px; border: 1px solid #c3e6cb; text-align: center; }
+        .global-spp-stats p { margin: 5px 0; }
+        .global-spp-stats span { font-size: 1.2em; font-weight: bold; color: #28a745; }
+        .filter-spp-options { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .filter-spp-options select { min-width: 120px; }
+        .filter-spp-options button { margin-left: auto; }
+
+        /* --- CSS BARU UNTUK ADDON STATUS READ --- */
+        #readStatusIndicator {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: #212529;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: monospace;
+            z-index: 2000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        #readStatusIndicator:hover {
+            opacity: 1;
+        }
+        #readStatusIndicator button {
+            margin-left: 10px;
+            padding: 2px 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="readStatusIndicator">Reads Sesi Ini: 0</div>
+
+    <div class="admin-container">
+        <button type="button" class="logout-btn" onclick="logout()">Logout</button>
+        <h1>Panel Admin</h1>
+        <p>Kelola pengguna dan siswa aplikasi sempoa.</p>
+        <div class="user-list">
+            <h3>Daftar Pengguna</h3>
+            <div class="filter-controls"><div><input type="checkbox" id="showDisabledUsers"><label for="showDisabledUsers">Tampilkan Pengguna Nonaktif</label></div><div><input type="checkbox" id="showCoachesOnly"><label for="showCoachesOnly">Hanya Tampilkan Coach</label></div><button type="button" id="syncCountBtn" style="background-color: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Sinkronkan Jumlah Siswa</button></div>
+            <table class="user-table" id="usersTable"><thead><tr><th>Email</th><th>Nama</th><th>Jml. Siswa</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="usersTableBody"></tbody></table>
+            <div class="pagination-controls" id="userPagination"><select id="userRowsPerPage"><option value="5" selected>5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option></select><div><button type="button" id="userPrevBtn" disabled>&laquo; Sebelumnya</button><span style="margin: 0 10px;">Halaman <b id="userCurrentPage">1</b> dari <b id="userTotalPages">1</b></span><button type="button" id="userNextBtn" disabled>Berikutnya &raquo;</button></div></div>
+        </div>
+        <div class="add-user-section">
+            <h4>Tambah Pengguna Baru</h4>
+            <form id="addUserForm"><input type="email" id="newUserEmail" placeholder="Email" required><input type="text" id="newUserName" placeholder="Nama" required><input type="password" id="newUserPassword" placeholder="Kata Sandi" required><select id="newUserRole" required><option value="user">Coach</option><option value="bendahara">Bendahara</option></select><button type="submit">Tambah Pengguna</button><div id="statusMessage"></div></form>
+        </div>
+        <div class="reset-password-section">
+            <h4>Reset Password</h4>
+            <form id="resetPasswordForm"><select id="resetEmailSelector" required style="width: 300px;"></select><button type="submit">Kirim Email Reset</button><div id="resetPasswordStatusMessage"></div></form>
+        </div>
+        <hr style="margin: 40px 0;">
+        <div class="add-user-section">
+            <h4>Tambah Siswa Baru</h4>
+            <form id="addStudentForm"><input type="text" id="newStudentName" placeholder="Nama Lengkap Siswa" required style="width: 300px;"><input type="tel" id="newStudentPhone" placeholder="No. Telepon (cth: 0812...)" style="width: 300px;"><select id="coachForStudentSelector" required style="width: 300px;"></select><button type="submit">Tambah Siswa</button><div id="studentStatusMessage"></div></form>
+        </div>
+        <div class="user-list" style="margin-top: 30px;">
+            <h3>Daftar Siswa (Pembagian Coach)</h3>
+            <div class="filter-controls"><div><input type="checkbox" id="showDisabledStudents"><label for="showDisabledStudents">Tampilkan Siswa Nonaktif</label></div><div><label for="coachFilterSelector">Filter berdasarkan Coach:</label><select id="coachFilterSelector"></select></div></div>
+            <table class="user-table" id="studentsTable"><thead><tr><th style="width: 5%;"><input type="checkbox" id="selectAllCheckbox"></th><th>Nama Siswa</th><th>Coach Saat Ini</th><th>Level Siswa</th><th style="width: 15%;">Aksi</th></tr></thead><tbody id="studentsTableBody"></tbody></table>
+            <div class="pagination-controls" id="studentPagination"><select id="studentRowsPerPage"><option value="5" selected>5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option></select><div><button type="button" id="studentPrevBtn" disabled>&laquo; Sebelumnya</button><span style="margin: 0 10px;">Halaman <b id="studentCurrentPage">1</b> dari <b id="studentTotalPages">1</b></span><button type="button" id="studentNextBtn" disabled>Berikutnya &raquo;</button></div></div>
+        </div>
+        <div class="bulk-action-container"><h3>Aksi Massal untuk Siswa Terpilih</h3><label for="bulkCoachSelector">Ganti coach ke:</label><select id="bulkCoachSelector"></select><button type="button" id="bulkChangeCoachBtn">Terapkan Perubahan</button></div>
+        <div class="transfer-section"><h3>Pindahkan Massal Siswa Antar Coach</h3><div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;"><div><label for="sourceCoachSelector">Dari Coach:</label><br><select id="sourceCoachSelector" style="min-width: 250px;"></select></div><div><label for="destinationCoachSelector">Ke Coach:</label><br><select id="destinationCoachSelector" style="min-width: 250px;"></select></div><div style="align-self: flex-end;"><button type="button" id="transferStudentsBtn" style="background-color: #17a2b8;">Pindahkan Siswa</button></div></div><div id="transferStatusMessage"></div></div>
+        <hr style="margin: 40px 0;">
+        <div class="curriculum-section">
+            <h3>Manajemen Kurikulum</h3>
+            <div class="add-user-section"><h4>Tambah Level Kurikulum Baru</h4><form id="addLevelForm"><input type="text" id="newLevelName" placeholder="Nama Level Baru (cth: Foundation 3)" required><button type="submit">Tambah Level</button></form></div>
+            <div class="add-user-section" style="margin-top: 20px;"><h4>Edit Level Kurikulum yang Ada</h4><label for="levelEditorSelector">Pilih Level untuk Diedit:</label><select id="levelEditorSelector"></select><div id="curriculumEditor" class="curriculum-editor" style="display: none;"><p>Masukkan daftar aktivitas untuk setiap lesson, pisahkan dengan koma (,). Contoh: A,B,C,D</p><form id="editCurriculumForm"></form><button type="button" id="addLessonBtn" class="add-lesson-btn">(+) Tambah Lesson Baru</button><hr style="margin: 20px 0;"><button type="button" id="saveCurriculumBtn" style="background-color: #007bff; margin-top: 15px;">Simpan Perubahan Kurikulum</button></div></div>
+        </div>
+        <hr style="margin: 40px 0;">
+        <div class="bank-management-section">
+            <h3>Manajemen Bank</h3>
+            <form id="addBankForm"><input type="text" id="newBankName" placeholder="Nama Bank (cth: BCA)" required><input type="color" id="newBankColor" value="#007bff"><button type="submit">Tambah Bank</button></form><div id="bankStatusMessage"></div>
+            <h4 style="margin-top: 20px;">Daftar Bank</h4><table class="bank-table"><thead><tr><th>Nama Bank</th><th>Warna</th><th>Aksi</th></tr></thead><tbody id="bankTableBody"></tbody></table>
+        </div>
+        <hr style="margin: 40px 0;">
+        <div class="spp-management-section">
+            <h3>Manajemen SPP</h3>
+            <div id="sppGlobalStats" class="global-spp-stats">
+                <p><strong>Total Ukuran Base64 (Semua Tahun):</strong> <span id="sppGlobalTotalSize">--</span></p>
+                <p><strong>Persentase Terpakai dari 1GB:</strong> <span id="sppGlobalSizePercentage">--</span></p>
+            </div>
+            <p style="margin-top:20px;">Kelola data lampiran pembayaran SPP untuk mengontrol ukuran database Anda.</p>
+            <div class="filter-spp-options">
+                <div>
+                    <label for="sppYearToDelete">Pilih Tahun:</label>
+                    <select id="sppYearToDelete">
+                        <option value="">-- Pilih Tahun --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="sppMonthToDelete">Pilih Bulan:</label>
+                    <select id="sppMonthToDelete">
+                        <option value="">-- Pilih Bulan --</option>
+                    </select>
+                </div>
+                <button class="action-button" onclick="calculateSppAttachmentSize()" style="background-color: #007bff; margin-left: 10px;">Hitung Ukuran Lampiran</button>
+            </div>
+            <div id="sppSizeInfo" class="spp-stats-info" style="display: none;">
+                <p><strong>Jumlah Lampiran:</strong> <span id="sppFileCount">0</span></p>
+                <p><strong>Total Ukuran:</strong> <span id="sppTotalSize">0 KB</span></p>
+                <p><strong>Persentase dari 1GB:</strong> <span id="sppSizePercentage">0.00%</span></p>
+                <p><em>Diperbarui: <span id="sppTimestamp">--</span></em></p>
+            </div>
+            <hr style="margin: 20px 0;">
+            <p>Hapus lampiran bukti bayar untuk mengurangi ukuran database. Tindakan ini permanen.</p>
+            <button class="action-button btn-delete-attachments" onclick="deleteSppAttachmentsByYearAndMonth()">Hapus Lampiran</button>
+            <div id="sppDeleteStatusMessage" class="status-message"></div>
+        </div>
+    </div>
+    <div id="editUserModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Pengguna</h2><span class="close-btn">&times;</span></div><form id="editUserForm"><div class="modal-body"><p>Email: <strong id="editUserEmail"></strong></p><input type="hidden" id="editUserId"><div class="form-group"><label for="editFullName">Nama Lengkap</label><input type="text" id="editFullName" placeholder="Masukkan nama lengkap"></div><div class="form-group"><label for="editPhoneNumber">No. Telepon</label><input type="tel" id="editPhoneNumber" placeholder="Contoh: 08123456789"></div><div class="form-group" id="editUserLevelGroup"><label for="editUserLevel">Level (untuk Coach)</label><input type="text" id="editUserLevel" placeholder="Contoh: Master"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
+    <div id="editStudentModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Siswa</h2><span class="close-btn">&times;</span></div><form id="editStudentForm"><div class="modal-body"><input type="hidden" id="editStudentId"><div class="form-group"><label for="editStudentName">Nama Siswa</label><input type="text" id="editStudentName" required></div><div class="form-group"><label for="editStudentLevel">Level Siswa</label><select id="editStudentLevel"></select></div><div class="form-group"><label for="editStudentCoach">Pindahkan ke Coach</label><select id="editStudentCoach" required></select></div><div class="form-group"><label for="editStudentPhone">No. Telepon</label><input type="tel" id="editStudentPhone" placeholder="Contoh: 08123456789"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
+    <div id="editBankModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Bank</h2><span class="close-btn">&times;</span></div><form id="editBankForm"><div class="modal-body"><input type="hidden" id="editBankId"><div class="form-group"><label for="editBankName">Nama Bank</label><input type="text" id="editBankName" required></div><div class="form-group"><label for="editBankColor">Warna</label><input type="color" id="editBankColor"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, query, where, updateDoc, writeBatch, increment, deleteDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+        
+        const firebaseConfig = { apiKey: "AIzaSyBm3SkLLtl9LvczDDht-OQ6-R4OYLPYAJQ", authDomain: "progres-report-5d199.firebaseapp.com", projectId: "progres-report-5d199", storageBucket: "progres-report-5d199.firebasestorage.app", messagingSenderId: "363573365137", appId: "1:363573365137:web:98f32d5ff8fae05617b230", measurementId: "G-CPX04R69F5" };
+        
+        const mainApp = initializeApp(firebaseConfig);
+        const secondaryApp = initializeApp(firebaseConfig, "secondary");
+        const auth = getAuth(mainApp);
+        const secondaryAuth = getAuth(secondaryApp);
+        const db = getFirestore(mainApp);
+
+        // --- ADDON: LOGIKA BARU UNTUK STATUS READ ---
+        let sessionReadCount = 0;
+        const readStatusElement = document.getElementById('readStatusIndicator');
+        function updateReadStatus() {
+            if(readStatusElement) readStatusElement.innerHTML = `Reads Sesi Ini: ${sessionReadCount} <button onclick="window.resetReadCount()">Reset</button>`;
+        }
+        window.resetReadCount = function() {
+            sessionReadCount = 0;
+            updateReadStatus();
+        }
+        // --- ADDON: AKHIR LOGIKA BARU ---
+
+        let allUsers = [], allStudents = [], allBanks = {}, allLevels = [];
+        let userCurrentPage = 1, studentCurrentPage = 1;
+        const sppYearToDeleteSelect = document.getElementById('sppYearToDelete');
+        const sppMonthToDeleteSelect = document.getElementById('sppMonthToDelete');
+        const sppDeleteStatusMessageDiv = document.getElementById('sppDeleteStatusMessage');
+        const statusMessageDiv = document.getElementById('statusMessage');
+        const resetPasswordStatusMessageDiv = document.getElementById('resetPasswordStatusMessage');
+        const studentStatusMessageDiv = document.getElementById('studentStatusMessage');
+        const transferStatusMessageDiv = document.getElementById('transferStatusMessage');
+        const bankStatusMessageDiv = document.getElementById('bankStatusMessage');
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const sppSizeInfoDiv = document.getElementById('sppSizeInfo');
+        const sppFileCountSpan = document.getElementById('sppFileCount');
+        const sppTotalSizeSpan = document.getElementById('sppTotalSize');
+        const sppTimestampSpan = document.getElementById('sppTimestamp');
+        const sppSizePercentageSpan = document.getElementById('sppSizePercentage');
+        const sppGlobalTotalSizeSpan = document.getElementById('sppGlobalTotalSize');
+        const sppGlobalSizePercentageSpan = document.getElementById('sppGlobalSizePercentage');
+        
+        window.logout = function() { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
+        
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                updateReadStatus(); // ADDON: Inisialisasi tampilan
+                try {
+                    const docRef = doc(db, "users", user.email);
+                    const docSnap = await getDoc(docRef);
+                    sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
+
+                    if (docSnap.exists() && docSnap.data().role === 'admin') {
+                        document.body.style.display = 'block';
+                        await loadAllData();
+                    } else {
+                        alert("Akses ditolak. Anda bukan admin atau data Anda tidak ditemukan.");
+                        await signOut(auth);
+                        window.location.href = 'login.html';
+                    }
+                } catch (error) {
+                    console.error("Terjadi error saat verifikasi admin:", error);
+                    alert("Terjadi kesalahan saat otentikasi. Periksa console untuk detail.");
+                    await signOut(auth);
+                    window.location.href = 'login.html';
+                }
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        async function loadAllData() {
+            try {
+                const userSnapshot = await getDocs(collection(db, "users"));
+                sessionReadCount += userSnapshot.size;
+                
+                const studentSnapshot = await getDocs(collection(db, "students"));
+                sessionReadCount += studentSnapshot.size;
+                
+                const bankSnapshot = await getDocs(collection(db, "banks"));
+                sessionReadCount += bankSnapshot.size;
+                
+                const curriculumSnapshot = await getDocs(collection(db, "kurikulum"));
+                sessionReadCount += curriculumSnapshot.size;
+                updateReadStatus();
+
+                allUsers = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allStudents = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allBanks = {};
+                bankSnapshot.forEach(doc => { allBanks[doc.id] = {id: doc.id, ...doc.data()}; });
+                allLevels = curriculumSnapshot.docs.map(doc => doc.id).sort();
+
+                renderUserTable();
+                renderStudentTable();
+                renderBankTable();
+                populateCoachDropdowns();
+                populateLevelDropdowns();
+                loadSppYearsForDeletion();
+                calculateGlobalSppAttachmentSize();
+                setupEventListeners();
+            } catch (error) {
+                console.error("ERROR di dalam loadAllData:", error);
+                alert("Gagal memuat data utama. Kemungkinan ada masalah dengan Security Rules. Periksa console (F12).");
+            }
+        }
+
+        async function syncStudentCount() {
+            if (!confirm('Yakin ingin menyinkronkan jumlah siswa? Ini akan memperbaiki jumlah yang salah.')) return;
+            alert('Proses sinkronisasi dimulai...');
+            try {
+                const studentSnapshot = await getDocs(query(collection(db, "students"), where("status", "==", "active")));
+                sessionReadCount += studentSnapshot.size; updateReadStatus();
+                
+                const studentCounts = {};
+                studentSnapshot.forEach(studentDoc => {
+                    const coachEmail = studentDoc.data().coachEmail;
+                    if (coachEmail) {
+                        studentCounts[coachEmail] = (studentCounts[coachEmail] || 0) + 1;
+                    }
+                });
+                const batch = writeBatch(db);
+                for (const coachEmail in studentCounts) {
+                    batch.update(doc(db, "users", coachEmail), { studentCount: studentCounts[coachEmail] });
+                }
+                const allCoaches = allUsers.filter(u => u.role === 'user').map(u => u.id);
+                allCoaches.forEach(coachEmail => {
+                    if (!studentCounts.hasOwnProperty(coachEmail)) {
+                        batch.update(doc(db, "users", coachEmail), { studentCount: 0 });
+                    }
+                });
+                await batch.commit();
+                alert('Sinkronisasi jumlah siswa berhasil!');
+                await loadAllData();
+            } catch (error) {
+                console.error("Gagal menyinkronkan jumlah siswa:", error);
+                alert('Gagal menyinkronkan jumlah siswa. Periksa console untuk detail.');
+            }
+        }
+        
+        async function handleLevelSelect(e) {
+            const level = e.target.value;
+            const editor = document.getElementById('curriculumEditor');
+            const form = document.getElementById('editCurriculumForm');
+            form.innerHTML = '';
+            if (!level) { editor.style.display = 'none'; return; }
+            const docSnap = await getDoc(doc(db, "kurikulum", level));
+            sessionReadCount++; updateReadStatus();
+            if (docSnap.exists()) {
+                const lessons = docSnap.data().lessons || {};
+                const sortedKeys = Object.keys(lessons).sort((a,b) => parseInt(a.split(' ')[1]) - parseInt(b.split(' ')[1]));
+                sortedKeys.forEach(key => {
+                    const activities = lessons[key].join(',');
+                    form.innerHTML += `<div class="lesson-input-group"><label>${key}:</label><input type="text" value="${activities}" data-lesson-name="${key}">`;
+                });
+            }
+            editor.style.display = 'block';
+        }
+
+        window.deleteSppAttachmentsByYearAndMonth = async function() {
+            const yearToDelete = sppYearToDeleteSelect.value;
+            const monthToDelete = sppMonthToDeleteSelect.value;
+            if (!yearToDelete) {
+                sppDeleteStatusMessageDiv.textContent = 'Harap pilih tahun untuk menghapus lampiran.';
+                sppDeleteStatusMessageDiv.style.color = 'red';
+                return;
+            }
+            let confirmMessage = `Apakah Anda yakin ingin menghapus semua lampiran (bukti bayar Base64) untuk tahun ${yearToDelete}`;
+            if (monthToDelete) {
+                confirmMessage += ` bulan ${monthNames[monthToDelete]}`;
+            }
+            confirmMessage += `? Tindakan ini tidak bisa dibatalkan.`;
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            sppDeleteStatusMessageDiv.textContent = `Menghapus lampiran untuk tahun ${yearToDelete}...`;
+            sppDeleteStatusMessageDiv.style.color = 'blue';
+            try {
+                const studentsRef = collection(db, "students");
+                const querySnapshot = await getDocs(studentsRef);
+                sessionReadCount += querySnapshot.size; updateReadStatus();
+
+                const updates = [];
+                querySnapshot.forEach(docSnapshot => {
+                    const studentRef = doc(db, "students", docSnapshot.id);
+                    const studentData = docSnapshot.data();
+                    const updatedSpp = { ...studentData.spp };
+                    let hasAttachmentsToDelete = false;
+                    Object.keys(updatedSpp).forEach(key => {
+                        const [paymentYear, paymentMonth] = key.split('-');
+                        if (paymentYear == yearToDelete && (!monthToDelete || paymentMonth == monthToDelete)) {
+                            if (updatedSpp[key].attachmentBase64) {
+                                delete updatedSpp[key].attachmentBase64;
+                                hasAttachmentsToDelete = true;
+                            }
+                        }
+                    });
+                    if (hasAttachmentsToDelete) {
+                        updates.push(updateDoc(studentRef, { spp: updatedSpp }));
+                    }
+                });
+                if (updates.length > 0) {
+                    await Promise.all(updates);
+                    await loadAllData();
+                    sppDeleteStatusMessageDiv.textContent = `Semua lampiran untuk tahun ${yearToDelete} berhasil dihapus. Total dokumen diperbarui: ${updates.length}.`;
+                    sppDeleteStatusMessageDiv.style.color = 'green';
+                } else {
+                    sppDeleteStatusMessageDiv.textContent = `Tidak ada lampiran yang ditemukan untuk tahun ${yearToDelete}.`;
+                    sppDeleteStatusMessageDiv.style.color = 'orange';
+                }
+            } catch (error) {
+                sppDeleteStatusMessageDiv.textContent = `Error saat menghapus lampiran: ${error.message}`;
+                sppDeleteStatusMessageDiv.style.color = 'red';
+                console.error("Error deleting old attachments:", error);
+            }
+        }
+        
+        // --- SISA FUNGSI-FUNGSI DARI FILE ASLI ANDA ---
+        // Semua fungsi di bawah ini adalah salinan utuh dari file V6 Anda
+        // dan tidak diubah, karena tidak melakukan operasi 'read' baru.
+
+        function loadSppYearsForDeletion() {
+            const years = new Set();
+            allStudents.forEach(student => {
+                if (student.spp) {
+                    Object.keys(student.spp).forEach(key => {
+                        const year = key.split('-')[0];
+                        if (year) {
+                            years.add(parseInt(year));
+                        }
+                    });
+                }
+            });
+            const sortedYears = Array.from(years).sort((a, b) => b - a);
+            sppYearToDeleteSelect.innerHTML = '<option value="">-- Pilih Tahun --</option>';
+            sortedYears.forEach(year => {
+                sppYearToDeleteSelect.innerHTML += `<option value="${year}">${year}</option>`;
+            });
+        }
+        async function updateCoachStudentCount(coachEmail, value) {
+            if (!coachEmail) return;
+            const coachRef = doc(db, "users", coachEmail);
+            try {
+                await updateDoc(coachRef, { studentCount: increment(value) });
+            } catch (error) {
+                if (error.code && (error.code.includes('not-found') || error.code.includes('no-document-to-update'))) {
+                     await setDoc(coachRef, { studentCount: value > 0 ? value : 0 }, { merge: true });
+                } else {
+                    console.error(`Gagal update studentCount untuk ${coachEmail}:`, error);
+                }
+            }
+        }
+        function renderUserTable() {
+            const tableBody = document.getElementById('usersTableBody');
+            const showDisabled = document.getElementById('showDisabledUsers').checked;
+            const showCoachesOnly = document.getElementById('showCoachesOnly').checked;
+            let filteredUsers = allUsers;
+            if (!showDisabled) { filteredUsers = filteredUsers.filter(u => (u.status || 'active') === 'active'); }
+            if (showCoachesOnly) { filteredUsers = filteredUsers.filter(u => u.role === 'user'); }
+            const rowsPerPage = parseInt(document.getElementById('userRowsPerPage').value, 10);
+            const totalItems = filteredUsers.length;
+            const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
+            if (userCurrentPage > totalPages) userCurrentPage = totalPages;
+            const start = (userCurrentPage - 1) * rowsPerPage;
+            const paginatedUsers = filteredUsers.slice(start, start + rowsPerPage);
+            tableBody.innerHTML = '';
+            paginatedUsers.forEach(userData => {
+                const row = tableBody.insertRow();
+                let studentCountCell = '<td>-</td>';
+                if (userData.role === 'user') {
+                    const studentCount = userData.studentCount || 0;
+                    studentCountCell = `<td style="text-align: center;">${studentCount}</td>`;
+                }
+                const formatRoleName = (role) => (role === 'user' ? 'Coach' : (role ? role.charAt(0).toUpperCase() + role.slice(1) : ''));
+                if (userData.role === 'admin') {
+                    row.innerHTML = `<td>${userData.id}</td><td><strong>${userData.name || 'ADMIN'}</strong></td><td>-</td><td>Admin</td><td>Aktif</td><td>-</td>`;
+                } else {
+                    const status = userData.status || 'active';
+                    row.className = status === 'disabled' ? 'disabled-row' : '';
+                    const buttonText = status === 'active' ? 'Disable' : 'Enable';
+                    const buttonClass = status === 'active' ? 'action-btn-disable' : 'action-btn-enable';
+                    row.innerHTML = `<td>${userData.id}</td><td>${userData.name || ''}</td>${studentCountCell}<td>${formatRoleName(userData.role)}</td><td>${status}</td><td style="white-space: nowrap;"><button type="button" class="${buttonClass}" onclick="toggleUserStatus('${userData.id}','${status}')">${buttonText}</button><button type="button" class="action-btn-edit" onclick="openEditModal('${userData.id}')">Detail</button></td>`;
+                }
+            });
+            updateUserPagination(totalItems);
+        }
+        function updateUserPagination(totalItems) {
+            const rowsPerPage = parseInt(document.getElementById('userRowsPerPage').value, 10);
+            const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
+            document.getElementById('userCurrentPage').textContent = userCurrentPage;
+            document.getElementById('userTotalPages').textContent = totalPages;
+            document.getElementById('userPrevBtn').disabled = userCurrentPage === 1;
+            document.getElementById('userNextBtn').disabled = userCurrentPage === totalPages;
+        }
+        function renderStudentTable() {
+            const tableBody = document.getElementById('studentsTableBody');
+            const showDisabled = document.getElementById('showDisabledStudents').checked;
+            const coachFilter = document.getElementById('coachFilterSelector').value;
+            let filteredStudents = allStudents;
+            if (coachFilter) { filteredStudents = filteredStudents.filter(s => s.coachEmail === coachFilter); }
+            if (!showDisabled) { filteredStudents = filteredStudents.filter(s => (s.status || 'active') === 'active'); }
+            const rowsPerPage = parseInt(document.getElementById('studentRowsPerPage').value, 10);
+            const totalItems = filteredStudents.length;
+            const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
+            if (studentCurrentPage > totalPages) studentCurrentPage = totalPages;
+            const start = (studentCurrentPage - 1) * rowsPerPage;
+            const paginatedStudents = filteredStudents.slice(start, start + rowsPerPage);
+            tableBody.innerHTML = '';
+            if (paginatedStudents.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5">Tidak ada siswa yang cocok dengan filter.</td></tr>';
+            } else {
+                paginatedStudents.forEach(student => {
+                    const coachData = allUsers.find(u => u.id === student.coachEmail);
+                    const coachName = coachData ? coachData.name : (student.coachEmail || 'N/A');
+                    const status = student.status || 'active';
+                    const studentLevel = student.studentLevel || '';
+                    const row = tableBody.insertRow();
+                    row.className = status === 'disabled' ? 'disabled-row' : '';
+                    const buttonText = status === 'active' ? 'Disable' : 'Enable';
+                    const buttonClass = status === 'active' ? 'action-btn-disable' : 'action-btn-enable';
+                    row.innerHTML = `<td><input type="checkbox" class="student-checkbox" value="${student.id}" data-coach="${student.coachEmail}"></td><td>${student.name}</td><td>${coachName}</td><td>${studentLevel}</td><td style="white-space: nowrap;"><button type="button" class="${buttonClass}" onclick="toggleStudentStatus('${student.id}','${status}')">${buttonText}</button> <button type="button" class="action-btn-edit" onclick="openStudentEditModal('${student.id}')">Edit</button></td>`;
+                });
+            }
+            updateStudentPagination(totalItems);
+        }
+        function updateStudentPagination(totalItems) {
+            const rowsPerPage = parseInt(document.getElementById('studentRowsPerPage').value, 10);
+            const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
+            document.getElementById('studentCurrentPage').textContent = studentCurrentPage;
+            document.getElementById('studentTotalPages').textContent = totalPages;
+            document.getElementById('studentPrevBtn').disabled = studentCurrentPage === 1;
+            document.getElementById('studentNextBtn').disabled = studentCurrentPage === totalPages;
+        }
+        function renderBankTable() {
+            const tableBody = document.getElementById('bankTableBody');
+            tableBody.innerHTML = '';
+            Object.values(allBanks).forEach(bank => {
+                const status = bank.status || 'active';
+                const row = tableBody.insertRow();
+                row.className = status === 'disabled' ? 'disabled-row' : '';
+                const buttonText = status === 'active' ? 'Disable' : 'Enable';
+                const buttonClass = status === 'active' ? 'action-btn-disable' : 'action-btn-enable';
+                row.innerHTML = `<td>${bank.bankName}</td><td><div style="width:20px; height:20px; background-color:${bank.color}; border:1px solid #ccc;"></div></td><td style="white-space:nowrap;"><button class="${buttonClass}" onclick="toggleBankStatus('${bank.id}', '${status}')">${buttonText}</button> <button class="action-btn-edit" onclick="openEditBankModal('${bank.id}')">Edit</button></td>`;
+            });
+        }
+        function setupEventListeners() {
+            document.getElementById('userRowsPerPage').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
+            document.getElementById('userPrevBtn').addEventListener('click', () => { if (userCurrentPage > 1) { userCurrentPage--; renderUserTable(); } });
+            document.getElementById('userNextBtn').addEventListener('click', () => { const totalPages = parseInt(document.getElementById('userTotalPages').textContent); if (userCurrentPage < totalPages) { userCurrentPage++; renderUserTable(); } });
+            document.getElementById('showDisabledUsers').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
+            document.getElementById('showCoachesOnly').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
+            document.getElementById('studentRowsPerPage').addEventListener('change', () => { studentCurrentPage = 1; renderStudentTable(); });
+            document.getElementById('studentPrevBtn').addEventListener('click', () => { if (studentCurrentPage > 1) { studentCurrentPage--; renderStudentTable(); } });
+            document.getElementById('studentNextBtn').addEventListener('click', () => { const totalPages = parseInt(document.getElementById('studentTotalPages').textContent); if (studentCurrentPage < totalPages) { studentCurrentPage++; renderStudentTable(); } });
+            document.getElementById('showDisabledStudents').addEventListener('change', () => { studentCurrentPage = 1; renderStudentTable(); });
+            document.getElementById('coachFilterSelector').addEventListener('change', () => { studentCurrentPage = 1; renderStudentTable(); });
+            document.getElementById('addUserForm').addEventListener('submit', handleAddUser);
+            document.getElementById('resetPasswordForm').addEventListener('submit', handleResetPassword);
+            document.getElementById('addStudentForm').addEventListener('submit', handleAddStudent);
+            document.getElementById('selectAllCheckbox').addEventListener('click', (e) => {
+                document.querySelectorAll('.student-checkbox').forEach(checkbox => {
+                    if (checkbox.closest('tr').style.display !== 'none') checkbox.checked = e.target.checked;
+                });
+            });
+            document.getElementById('bulkChangeCoachBtn').addEventListener('click', handleBulkChange);
+            document.getElementById('transferStudentsBtn').addEventListener('click', handleTransfer);
+            document.getElementById('syncCountBtn').addEventListener('click', syncStudentCount);
+            document.querySelector('#editUserModal .close-btn').onclick = () => document.getElementById('editUserModal').style.display = 'none';
+            document.querySelector('#editStudentModal .close-btn').onclick = () => document.getElementById('editStudentModal').style.display = 'none';
+            document.querySelector('#editBankModal .close-btn').onclick = () => document.getElementById('editBankModal').style.display = 'none';
+            window.onclick = (event) => {
+                const modals = document.getElementsByClassName('modal');
+                for (let i = 0; i < modals.length; i++) {
+                    if (event.target == modals[i]) modals[i].style.display = "none";
+                }
+            };
+            document.getElementById('editUserForm').addEventListener('submit', handleEditUser);
+            document.getElementById('editStudentForm').addEventListener('submit', handleEditStudent);
+            document.getElementById('addLevelForm').addEventListener('submit', handleAddLevel);
+            document.getElementById('levelEditorSelector').addEventListener('change', handleLevelSelect);
+            document.getElementById('saveCurriculumBtn').addEventListener('click', handleSaveCurriculum);
+            document.getElementById('addBankForm').addEventListener('submit', handleAddBank);
+            document.getElementById('editBankForm').addEventListener('submit', handleEditBank);
+            document.getElementById('addLessonBtn').addEventListener('click', addNewLessonInput);
+            sppYearToDeleteSelect.addEventListener('change', () => {
+                sppSizeInfoDiv.style.display = 'none';
+                sppDeleteStatusMessageDiv.textContent = '';
+            });
+            sppYearToDeleteSelect.addEventListener('change', populateSppMonthsForDeletion);
+        }
+        async function handleAddUser(e) {
+            e.preventDefault();
+            const email = document.getElementById('newUserEmail').value;
+            const name = document.getElementById('newUserName').value;
+            const password = document.getElementById('newUserPassword').value;
+            const role = document.getElementById('newUserRole').value;
+            const statusMessageDiv = document.getElementById('statusMessage');
+            statusMessageDiv.textContent = 'Memproses...';
+            try {
+                await createUserWithEmailAndPassword(secondaryAuth, email, password);
+                const userData = { email, name, role, status: 'active' };
+                if (role === 'user') { userData.studentCount = 0; }
+                await setDoc(doc(db, "users", email), userData);
+                statusMessageDiv.textContent = `User ${name} (${email}) berhasil ditambahkan!`;
+                await loadAllData();
+            } catch (error) { statusMessageDiv.textContent = `Error: ${error.message}`; }
+        }
+        async function handleAddStudent(e) {
+            e.preventDefault();
+            const studentName = document.getElementById('newStudentName').value.trim();
+            const studentPhone = document.getElementById('newStudentPhone').value.trim();
+            const coachEmail = document.getElementById('coachForStudentSelector').value;
+            const statusMessageDiv = document.getElementById('studentStatusMessage');
+            if (!studentName || !coachEmail) { statusMessageDiv.textContent = 'Nama & coach harus diisi.'; return; }
+            try {
+                await addDoc(collection(db, "students"), { name: studentName, phone: studentPhone, coachEmail: coachEmail, status: 'active' });
+                await updateCoachStudentCount(coachEmail, 1);
+                alert('Siswa berhasil ditambahkan.');
+                document.getElementById('addStudentForm').reset();
+                await loadAllData();
+            } catch (error) { alert(`Error: ${error.message}`); }
+        }
+        async function handleEditStudent(e) {
+            e.preventDefault();
+            const studentId = document.getElementById('editStudentId').value;
+            const studentBefore = allStudents.find(s => s.id === studentId);
+            const oldCoachEmail = studentBefore.coachEmail;
+            const newCoachEmail = document.getElementById('editStudentCoach').value;
+            const updatedData = {
+                name: document.getElementById('editStudentName').value,
+                studentLevel: document.getElementById('editStudentLevel').value,
+                coachEmail: newCoachEmail,
+                phone: document.getElementById('editStudentPhone').value 
+            };
+            try {
+                await updateDoc(doc(db, "students", studentId), updatedData);
+                if (oldCoachEmail !== newCoachEmail) {
+                    if (oldCoachEmail) await updateCoachStudentCount(oldCoachEmail, -1);
+                    if (newCoachEmail) await updateCoachStudentCount(newCoachEmail, 1);
+                }
+                alert('Detail siswa berhasil diperbarui!');
+                document.getElementById('editStudentModal').style.display = 'none';
+                await loadAllData();
+            } catch(error) { alert('Gagal menyimpan.'); }
+        }
+        window.toggleUserStatus = async function(email, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
+            if (confirm(`Yakin ingin ${newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan'} pengguna: ${email}?`)) {
+                await updateDoc(doc(db, "users", email), { status: newStatus });
+                await loadAllData();
+            }
+        };
+        window.toggleStudentStatus = async function(studentId, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
+            if (confirm(`Yakin ingin ${newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan'} siswa ini?`)) {
+                await updateDoc(doc(db, "students", studentId), { status: newStatus });
+                const student = allStudents.find(s => s.id === studentId);
+                if (student.coachEmail) {
+                    const countChange = newStatus === 'active' ? 1 : -1;
+                    await updateCoachStudentCount(student.coachEmail, countChange);
+                }
+                await loadAllData();
+            }
+        };
+        window.toggleBankStatus = async function(bankId, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
+            if (confirm(`Yakin ingin ${newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan'} bank ini?`)) {
+                await updateDoc(doc(db, "banks", bankId), { status: newStatus });
+                await loadAllData();
+            }
+        };
+        async function handleBulkChange() {
+            const allSelectedCheckboxes = document.querySelectorAll('.student-checkbox:checked');
+            const newCoachEmail = document.getElementById('bulkCoachSelector').value;
+            if (allSelectedCheckboxes.length === 0 || !newCoachEmail) return alert('Pilih siswa dan coach tujuan.');
+            const batch = writeBatch(db);
+            const coachCountChanges = new Map();
+            allSelectedCheckboxes.forEach(checkbox => {
+                const studentId = checkbox.value;
+                const oldCoachEmail = checkbox.dataset.coach;
+                if (oldCoachEmail !== newCoachEmail) {
+                    if (oldCoachEmail) coachCountChanges.set(oldCoachEmail, (coachCountChanges.get(oldCoachEmail) || 0) - 1);
+                    coachCountChanges.set(newCoachEmail, (coachCountChanges.get(newCoachEmail) || 0) + 1);
+                    batch.update(doc(db, "students", studentId), { coachEmail: newCoachEmail });
+                }
+            });
+            if (coachCountChanges.size === 0) return alert('Tidak ada perubahan diperlukan.');
+            coachCountChanges.forEach((change, coachEmail) => {
+                batch.update(doc(db, "users", coachEmail), { studentCount: increment(change) });
+            });
+            await batch.commit();
+            alert('Coach berhasil diganti.');
+            await loadAllData();
+        }
+        async function handleTransfer() {
+            const sourceCoachEmail = document.getElementById('sourceCoachSelector').value;
+            const destCoachEmail = document.getElementById('destinationCoachSelector').value;
+            if (!sourceCoachEmail || !destCoachEmail || sourceCoachEmail === destCoachEmail) return alert('Coach sumber dan tujuan harus berbeda.');
+            const studentQuery = query(collection(db, "students"), where("coachEmail", "==", sourceCoachEmail), where("status", "==", "active"));
+            const studentSnapshot = await getDocs(studentQuery);
+            const studentCount = studentSnapshot.size;
+            if (studentCount === 0) return alert('Coach sumber tidak memiliki siswa aktif.');
+            if (confirm(`Yakin memindahkan ${studentCount} siswa dari coach sumber ke coach tujuan?`)) {
+                const batch = writeBatch(db);
+                studentSnapshot.forEach(studentDoc => { batch.update(studentDoc.ref, { coachEmail: destCoachEmail }); });
+                batch.update(doc(db, "users", sourceCoachEmail), { studentCount: increment(-studentCount) });
+                batch.update(doc(db, "users", destCoachEmail), { studentCount: increment(studentCount) });
+                await batch.commit();
+                alert(`Sukses! ${studentCount} siswa telah dipindahkan.`);
+                await loadAllData();
+            }
+        }
+        async function populateCoachDropdowns() {
+            const selectors = [
+                document.getElementById('coachForStudentSelector'),
+                document.getElementById('bulkCoachSelector'),
+                document.getElementById('sourceCoachSelector'),
+                document.getElementById('destinationCoachSelector'),
+                document.getElementById('coachFilterSelector'),
+                document.getElementById('editStudentCoach')
+            ];
+            const resetSelector = document.getElementById('resetEmailSelector');
+            const activeCoaches = allUsers.filter(u => u.role === 'user' && (u.status || 'active') === 'active');
+            let coachOptions = '<option value="">-- Pilih Coach --</option>';
+            activeCoaches.forEach(coach => {
+                coachOptions += `<option value="${coach.id}">${coach.name}</option>`;
+            });
+            selectors.forEach(selector => {
+                if (!selector) return;
+                const currentVal = selector.value;
+                if (selector.id === 'coachFilterSelector') {
+                    selector.innerHTML = '<option value="">-- Semua Coach --</option>' + coachOptions.replace('<option value="">-- Pilih Coach --</option>', '');
+                } else {
+                    selector.innerHTML = coachOptions;
+                }
+                selector.value = currentVal;
+            });
+            resetSelector.innerHTML = '<option value="">-- Pilih Pengguna --</option>';
+            const allActiveUsers = allUsers.filter(u => u.role !== 'admin' && (u.status || 'active') === 'active');
+            allActiveUsers.forEach(user => {
+                const roleName = user.role === 'user' ? 'Coach' : 'Bendahara';
+                resetSelector.innerHTML += `<option value="${user.id}">${user.name} (${roleName})</option>`;
+            });
+        }
+        function populateLevelDropdowns() {
+            const selectors = [
+                document.getElementById('editStudentLevel'),
+                document.getElementById('levelEditorSelector')
+            ];
+            selectors.forEach(selector => {
+                if (!selector) return;
+                const currentVal = selector.value;
+                let options = '<option value="">-- Pilih Level --</option>';
+                allLevels.forEach(level => {
+                    options += `<option value="${level}">${level}</option>`;
+                });
+                selector.innerHTML = options;
+                selector.value = currentVal;
+            });
+        }
+        async function handleResetPassword(e) {
+            e.preventDefault();
+            const email = document.getElementById('resetEmailSelector').value;
+            const statusMessageDiv = document.getElementById('resetPasswordStatusMessage');
+            if (!email) { statusMessageDiv.textContent = 'Pilih pengguna.'; return; }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                statusMessageDiv.textContent = `Email reset password telah dikirim ke ${email}.`;
+            } catch (error) { statusMessageDiv.textContent = `Error: ${error.message}`; }
+        }
+        async function handleEditUser(e) {
+            e.preventDefault();
+            const userId = document.getElementById('editUserId').value;
+            const updatedData = {
+                name: document.getElementById('editFullName').value,
+                phone: document.getElementById('editPhoneNumber').value,
+                level: document.getElementById('editUserLevel').value,
+            };
+            try {
+                await updateDoc(doc(db, "users", userId), updatedData);
+                alert('Detail pengguna diperbarui!');
+                document.getElementById('editUserModal').style.display = 'none';
+                await loadAllData();
+            } catch(error) { alert('Gagal menyimpan.'); }
+        }
+        window.openEditModal = function(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            document.getElementById('editUserEmail').textContent = user.id;
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editFullName').value = user.name || '';
+            document.getElementById('editPhoneNumber').value = user.phone || '';
+            document.getElementById('editUserLevelGroup').style.display = user.role === 'user' ? 'block' : 'none';
+            document.getElementById('editUserLevel').value = user.level || '';
+            document.getElementById('editUserModal').style.display = 'block';
+        };
+        window.openStudentEditModal = function(studentId) {
+            const student = allStudents.find(s => s.id === studentId);
+            if (!student) return;
+            document.getElementById('editStudentId').value = studentId;
+            document.getElementById('editStudentName').value = student.name;
+            const levelSelector = document.getElementById('editStudentLevel');
+            levelSelector.value = student.studentLevel || "";
+            const coachSelector = document.getElementById('editStudentCoach');
+            coachSelector.value = student.coachEmail;
+            document.getElementById('editStudentPhone').value = student.phone || '';
+            document.getElementById('editStudentModal').style.display = 'block';
+        };
+        window.openEditBankModal = function(bankId) {
+            const bank = allBanks[bankId];
+            if (!bank) return;
+            document.getElementById('editBankId').value = bankId;
+            document.getElementById('editBankName').value = bank.bankName;
+            document.getElementById('editBankColor').value = bank.color;
+            document.getElementById('editBankModal').style.display = 'block';
+        };
+        async function handleAddLevel(e) { e.preventDefault(); const name = document.getElementById('newLevelName').value.trim(); if (!name) return; await setDoc(doc(db, "kurikulum", name), {lessons: {}}); alert('Level berhasil dibuat'); await loadAllData(); }
+        async function handleAddBank(e) { e.preventDefault(); const name = document.getElementById('newBankName').value.trim(); const color = document.getElementById('newBankColor').value; if (!name) return; await addDoc(collection(db, "banks"), {bankName: name, color: color, status: 'active'}); alert('Bank berhasil ditambah'); await loadAllData(); }
+        async function handleEditBank(e) { e.preventDefault(); const id = document.getElementById('editBankId').value; const name = document.getElementById('editBankName').value; const color = document.getElementById('editBankColor').value; await updateDoc(doc(db, "banks", id), {bankName: name, color: color}); alert('Bank berhasil diupdate'); document.getElementById('editBankModal').style.display = 'none'; await loadAllData(); }
+        function addNewLessonInput() { const form = document.getElementById('editCurriculumForm'); const nextNum = form.children.length + 1; const newDiv = document.createElement('div'); newDiv.className = 'lesson-input-group'; newDiv.innerHTML = `<label>Lesson ${nextNum}:</label><input type="text" data-lesson-name="Lesson ${nextNum}">`; form.appendChild(newDiv); }
+        async function handleSaveCurriculum() { const level = document.getElementById('levelEditorSelector').value; if (!level) return; const lessons = {}; document.querySelectorAll('#editCurriculumForm input').forEach(input => { lessons[input.dataset.lessonName] = input.value.split(',').map(s => s.trim()).filter(Boolean); }); await updateDoc(doc(db, "kurikulum", level), { lessons }); alert('Kurikulum berhasil disimpan'); }
+        window.calculateGlobalSppAttachmentSize = function() {
+            let totalSize = 0;
+            const oneGigabyte = 1073741824;
+            allStudents.forEach(student => {
+                if (student.spp) {
+                    for (const key in student.spp) {
+                        if (student.spp[key].attachmentBase64) {
+                            const base64String = student.spp[key].attachmentBase64;
+                            totalSize += (base64String.length / 4) * 3; 
+                        }
+                    }
+                }
+            });
+            sppGlobalTotalSizeSpan.textContent = formatFileSize(totalSize);
+            const percentage = (totalSize / oneGigabyte) * 100;
+            sppGlobalSizePercentageSpan.textContent = percentage.toFixed(2) + '%';
+        }
+        window.calculateSppAttachmentSize = function() {
+            const year = sppYearToDeleteSelect.value;
+            const month = sppMonthToDeleteSelect.value;
+            if (!year) {
+                sppDeleteStatusMessageDiv.textContent = 'Harap pilih tahun.';
+                sppDeleteStatusMessageDiv.style.color = 'red';
+                return;
+            }
+            let totalSize = 0;
+            let fileCount = 0;
+            const oneGigabyte = 1073741824;
+            allStudents.forEach(student => {
+                if (student.spp) {
+                    for (const key in student.spp) {
+                        const [paymentYear, paymentMonth] = key.split('-');
+                        if (paymentYear == year && (!month || paymentMonth == month)) {
+                            if (student.spp[key].attachmentBase64) {
+                                fileCount++;
+                                const base64String = student.spp[key].attachmentBase64;
+                                totalSize += (base64String.length / 4) * 3;
+                            }
+                        }
+                    }
+                }
+            });
+            sppFileCountSpan.textContent = fileCount;
+            sppTotalSizeSpan.textContent = formatFileSize(totalSize);
+            const percentage = (totalSize / oneGigabyte) * 100;
+            sppSizePercentageSpan.textContent = percentage.toFixed(2) + '%';
+            sppTimestampSpan.textContent = new Date().toLocaleString('id-ID');
+            sppSizeInfoDiv.style.display = 'block';
+            sppDeleteStatusMessageDiv.textContent = '';
+        }
+        function formatFileSize(bytes, decimalPoint) {
+            if (bytes == 0) return '0 Bytes';
+            const k = 1024,
+                dm = decimalPoint || 2,
+                sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+                i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function populateSppMonthsForDeletion() {
+            const monthSelector = document.getElementById('sppMonthToDelete');
+            monthSelector.innerHTML = '<option value="">-- Semua Bulan --</option>';
+            monthNames.forEach((month, index) => {
+                monthSelector.innerHTML += `<option value="${index}">${month}</option>`;
+            });
+        }
+    </script>
+</body>
+</html>
