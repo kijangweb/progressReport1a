@@ -174,7 +174,7 @@ Terima kasih.`;
         window.logout = function() {
             sessionStorage.clear();
             localStorage.clear();
-            signOut(auth).then(() => { window.location.href = 'login.html'; });
+            signOut(auth).then(() => { window.location.href = 'index.html'; });
         };
 
         const saveToCache = (key, data) => {
@@ -224,10 +224,10 @@ Terima kasih.`;
                 } else {
                     alert("Akses ditolak.");
                     await signOut(auth);
-                    window.location.href = 'login.html';
+                    window.location.href = 'index.html';
                 }
             } else { 
-                window.location.href = 'login.html'; 
+                window.location.href = 'index.html'; 
             }
         });
 

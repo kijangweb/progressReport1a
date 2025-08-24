@@ -594,7 +594,7 @@
         let otherCurrentPage = 1;
         const otherRowsPerPage = 10;
 
-        window.logout = function() { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
+        window.logout = function() { signOut(auth).then(() => { window.location.href = 'index.html'; }); };
         const singleModal = document.getElementById('singleModal');
         const modalBodyContent = document.getElementById('modalBodyContent');
         const modalTitle = document.getElementById('modalTitle');
@@ -642,10 +642,10 @@ Terima kasih.`;
                 } else {
                     alert("Akses ditolak. Halaman ini hanya untuk Bendahara.");
                     await signOut(auth);
-                    window.location.href = 'login.html';
+                    window.location.href = 'index.html';
                 }
             } else {
-                window.location.href = 'login.html';
+                window.location.href = 'index.html';
             }
         });
 
