@@ -514,6 +514,24 @@
                     <label for="yearFilter">Tahun:</label>
                     <select id="yearFilter"></select>
                 </div>
+                <div class="filter-group">
+                    <label for="monthFilter">Bulan:</label>
+                    <select id="monthFilter">
+                        <option value="all">Semua Bulan</option>
+                        <option value="0">Januari</option>
+                        <option value="1">Februari</option>
+                        <option value="2">Maret</option>
+                        <option value="3">April</option>
+                        <option value="4">Mei</option>
+                        <option value="5">Juni</option>
+                        <option value="6">Juli</option>
+                        <option value="7">Agustus</option>
+                        <option value="8">September</option>
+                        <option value="9">Oktober</option>
+                        <option value="10">November</option>
+                        <option value="11">Desember</option>
+                    </select>
+                </div>
                 <div class="legend" id="bankLegend"></div>
                 <button class="btn-whatsapp" onclick="generateAndSendPaymentProof()">Kirim Bukti Bayar via WhatsApp</button>
                 <button class="btn-export" onclick="exportToExcel()">Export ke Excel</button>
@@ -1005,8 +1023,8 @@ Terima kasih.`;
             });
             yearsToDisplay.forEach(year => {
                  monthNames.forEach(month => {
-                    tableSubHeader.innerHTML += `<th>${month.substring(0,3).toUpperCase()}</th>`;
-                });
+                     tableSubHeader.innerHTML += `<th>${month.substring(0,3).toUpperCase()}</th>`;
+                 });
             });
             tableBody.innerHTML = '';
             if (paginatedStudents.length === 0) {
@@ -1015,49 +1033,49 @@ Terima kasih.`;
                 updatePaginationControls(0, 1);
             } else {
                  paginatedStudents.forEach(student => {
-                    const row = tableBody.insertRow();
-                    const studentNameCell = row.insertCell();
-                    const studentStatus = student.status || 'inactive';
-                    studentNameCell.innerHTML = `${student.name}<span class="student-status">${studentStatus.toUpperCase()}</span>`;
-                    const studentSpp = student.spp || {};
-                    yearsToDisplay.forEach(year => {
-                        monthNames.forEach((month, monthIndex) => {
-                            const cell = row.insertCell();
-                            const key = `${year}-${monthIndex}`;
-                            const paymentData = studentSpp[key];
-                            if (paymentData) {
-                                const bankColor = bankColors[paymentData.bank] || '#ccc';
-                                const nominalFormatted = new Intl.NumberFormat('id-ID').format(paymentData.nominal);
-                                const paymentDate = (paymentData.date && typeof paymentData.date.toDate === 'function') ? paymentData.date.toDate() : new Date(paymentData.date);
-                                const dateFormatted = paymentDate.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                                const studentLevel = paymentData.studentLevel || 'Level tidak tersedia';
-                                cell.innerHTML = `
-                                    <div class="payment-bank-color" style="background-color: ${bankColor};"></div>
-                                    <div class="payment-info">
-                                        <span class="payment-amount">Rp ${nominalFormatted}</span>
-                                        <span class="payment-date">${dateFormatted}</span>
-                                        <span class="payment-level">${studentLevel}</span>
-                                    </div>
-                                `;
-                                const details = {
-                                    paymentId: paymentData.paymentId || 'ID tidak tersedia',
-                                    nominal: paymentData.nominal || 0,
-                                    bank: paymentData.bank || 'N/A',
-                                    date: paymentDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
-                                    studentLevel: paymentData.studentLevel || 'N/A',
-                                    keterangan: paymentData.keterangan || '',
-                                    attachmentBase64: paymentData.attachmentBase64 || ''
-                                };
-                                const detailsJson = encodeURIComponent(JSON.stringify(details));
-                                if (details.keterangan || details.attachmentBase64) {
-                                    cell.innerHTML += `<a href="#" onclick="event.preventDefault(); showPaymentDetails('${detailsJson}')" class="attachment-link">Detail</a>`;
-                                }
-                            } else {
-                                cell.innerHTML = '';
-                            }
-                        });
-                    });
-                });
+                     const row = tableBody.insertRow();
+                     const studentNameCell = row.insertCell();
+                     const studentStatus = student.status || 'inactive';
+                     studentNameCell.innerHTML = `${student.name}<span class="student-status">${studentStatus.toUpperCase()}</span>`;
+                     const studentSpp = student.spp || {};
+                     yearsToDisplay.forEach(year => {
+                         monthNames.forEach((month, monthIndex) => {
+                             const cell = row.insertCell();
+                             const key = `${year}-${monthIndex}`;
+                             const paymentData = studentSpp[key];
+                             if (paymentData) {
+                                 const bankColor = bankColors[paymentData.bank] || '#ccc';
+                                 const nominalFormatted = new Intl.NumberFormat('id-ID').format(paymentData.nominal);
+                                 const paymentDate = (paymentData.date && typeof paymentData.date.toDate === 'function') ? paymentData.date.toDate() : new Date(paymentData.date);
+                                 const dateFormatted = paymentDate.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                                 const studentLevel = paymentData.studentLevel || 'Level tidak tersedia';
+                                 cell.innerHTML = `
+                                     <div class="payment-bank-color" style="background-color: ${bankColor};"></div>
+                                     <div class="payment-info">
+                                         <span class="payment-amount">Rp ${nominalFormatted}</span>
+                                         <span class="payment-date">${dateFormatted}</span>
+                                         <span class="payment-level">${studentLevel}</span>
+                                     </div>
+                                 `;
+                                 const details = {
+                                     paymentId: paymentData.paymentId || 'ID tidak tersedia',
+                                     nominal: paymentData.nominal || 0,
+                                     bank: paymentData.bank || 'N/A',
+                                     date: paymentDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
+                                     studentLevel: paymentData.studentLevel || 'N/A',
+                                     keterangan: paymentData.keterangan || '',
+                                     attachmentBase64: paymentData.attachmentBase64 || ''
+                                 };
+                                 const detailsJson = encodeURIComponent(JSON.stringify(details));
+                                 if (details.keterangan || details.attachmentBase64) {
+                                     cell.innerHTML += `<a href="#" onclick="event.preventDefault(); showPaymentDetails('${detailsJson}')" class="attachment-link">Detail</a>`;
+                                 }
+                             } else {
+                                 cell.innerHTML = '';
+                             }
+                         });
+                     });
+                 });
             }
             updatePaginationControls(currentPage, totalPages);
         }
@@ -1103,9 +1121,13 @@ Terima kasih.`;
             }
             return number;
         }
+
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
         window.generateAndSendPaymentProof = function() {
             const studentFilter = document.getElementById('studentFilter');
             const yearFilter = document.getElementById('yearFilter');
+            const monthFilter = document.getElementById('monthFilter');
             if (studentFilter.value === 'all' || yearFilter.value === 'all') {
                 alert("Harap pilih satu siswa dan satu tahun spesifik untuk membuat bukti pembayaran.");
                 return;
@@ -1113,6 +1135,7 @@ Terima kasih.`;
             const studentId = studentFilter.value;
             const student = allStudents.find(s => s.id === studentId);
             const selectedYear = yearFilter.value;
+            const selectedMonth = monthFilter.value;
             if (!student || !student.phone) {
                 alert("Nomor telepon siswa tidak ditemukan. Harap perbarui data siswa di Panel Admin.");
                 return;
@@ -1120,10 +1143,53 @@ Terima kasih.`;
             const studentName = student.name;
             const phoneNumber = formatPhoneNumber(student.phone);
             const paymentsForYear = allStudents.find(s => s.id === studentId)?.spp;
-            if (!paymentsForYear || Object.keys(paymentsForYear).filter(k=>k.startsWith(selectedYear)).length === 0) {
-                alert("Tidak ada data pembayaran untuk siswa ini pada tahun yang dipilih.");
-                return;
+            
+            let paymentsToPrint = [];
+            let fileNameSuffix;
+            let title;
+            let message = '';
+
+            if (selectedMonth === 'all') {
+                paymentsToPrint = Object.keys(paymentsForYear)
+                    .filter(key => key.startsWith(selectedYear))
+                    .sort((a,b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]))
+                    .map(key => ({monthIndex: parseInt(key.split('-')[1]), data: paymentsForYear[key]}));
+                if (paymentsToPrint.length === 0) {
+                    alert("Tidak ada data pembayaran untuk siswa ini pada tahun yang dipilih.");
+                    return;
+                }
+                fileNameSuffix = `${selectedYear}`;
+                title = `Bukti Pembayaran SPP Tahun ${selectedYear}`;
+                const totalNominal = paymentsToPrint.reduce((sum, p) => sum + p.data.nominal, 0);
+                const totalNominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal);
+                const rincianPembayaran = paymentsToPrint.map(p => `• ${monthNames[p.monthIndex]}: ${new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(p.data.nominal)}`).join('\n');
+                
+                message = whatsappTemplateText
+                    .replace(/{nama_siswa}/g, studentName)
+                    .replace(/{tahun_bayar}/g, selectedYear)
+                    .replace(/{total_nominal_formatted}/g, totalNominalFormatted)
+                    .replace(/{rincian_pembayaran}/g, rincianPembayaran);
+            } else {
+                const key = `${selectedYear}-${selectedMonth}`;
+                const paymentData = paymentsForYear[key];
+                if (!paymentData) {
+                    alert(`Tidak ada pembayaran untuk bulan ${monthNames[selectedMonth]} tahun ${selectedYear}.`);
+                    return;
+                }
+                paymentsToPrint = [{
+                    monthIndex: parseInt(selectedMonth),
+                    data: paymentData
+                }];
+                fileNameSuffix = `${monthNames[selectedMonth]}_${selectedYear}`;
+                title = `Bukti Pembayaran SPP Bulan ${monthNames[selectedMonth]} ${selectedYear}`;
+                const totalNominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(paymentData.nominal);
+                
+                message = `Halo Bapak/Ibu, ini adalah bukti pembayaran SPP untuk *${studentName}* untuk bulan *${monthNames[selectedMonth]}* tahun *${selectedYear}*.
+Nominal yang tercatat adalah: *${totalNominalFormatted}*
+Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
+`;
             }
+
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             let yPos = 15;
@@ -1136,7 +1202,7 @@ Terima kasih.`;
                 }
                 doc.setFontSize(16);
                 doc.setFont("helvetica", "bold");
-                doc.text(`Bukti Pembayaran SPP`, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
+                doc.text(title, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
                 yPos += 10;
                 doc.setFontSize(10);
                 doc.setFont("helvetica", "normal");
@@ -1144,15 +1210,12 @@ Terima kasih.`;
                 yPos += 15;
                 doc.text(`Nama Siswa: ${studentName}`, 15, yPos);
                 yPos += 10;
-                const paidMonths = Object.keys(paymentsForYear)
-                    .filter(key => key.startsWith(selectedYear))
-                    .sort((a,b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]))
-                    .map(key => ({monthIndex: parseInt(key.split('-')[1]), data: paymentsForYear[key]}));
-                const tableData = paidMonths.map(p => {
+                
+                const tableData = paymentsToPrint.map(p => {
                     const nominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(p.data.nominal);
                     return [monthNames[p.monthIndex], nominalFormatted, p.data.bank];
                 });
-                const totalNominal = paidMonths.reduce((sum, p) => sum + p.data.nominal, 0);
+                const totalNominal = paymentsToPrint.reduce((sum, p) => sum + p.data.nominal, 0);
                 doc.autoTable({
                     startY: yPos,
                     head: [['Bulan', 'Nominal', 'Bank']],
@@ -1160,19 +1223,19 @@ Terima kasih.`;
                 });
                 yPos = doc.autoTable.previous.finalY + 10;
                 doc.text(`Total Terbayar: ${new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal)}`, 14, yPos);
-                const fileName = `Bukti_Bayar_SPP_${studentName.replace(/ /g, '_')}_${selectedYear}.pdf`;
-                const totalNominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal);
-                const rincianPembayaran = paidMonths.map(p => `• ${monthNames[p.monthIndex]}: ${new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(p.data.nominal)}`).join('\n');
-                let message = whatsappTemplateText
-                    .replace(/{nama_siswa}/g, studentName)
-                    .replace(/{tahun_bayar}/g, selectedYear)
-                    .replace(/{total_nominal_formatted}/g, totalNominalFormatted)
-                    .replace(/{rincian_pembayaran}/g, rincianPembayaran)
-                    .replace(/{nama_file}/g, fileName);
+                const fileName = `Bukti_Bayar_SPP_${studentName.replace(/ /g, '_')}_${fileNameSuffix}.pdf`;
+                
+                message = message.replace(/{nama_file}/g, fileName);
+                
                 const encodedMessage = encodeURIComponent(message);
                 const whatsappUrl = `https://web.whatsapp.com/send/?phone=${phoneNumber}&text=${encodedMessage}`;
+                
                 doc.save(fileName, { returnPromise: true }).then(() => {
-                    alert(`Bukti pembayaran PDF untuk ${studentName} (${selectedYear}) telah diunduh. Silakan lampirkan secara manual di chat WhatsApp yang terbuka.`);
+                    if (isMobile) {
+                        alert(`Bukti pembayaran PDF untuk ${studentName} telah diunduh dengan nama "${fileName}".\n\nSilakan lampirkan file ini dari folder Unduhan Anda ke chat WhatsApp yang terbuka. `);
+                    } else {
+                        alert(`Bukti pembayaran PDF untuk ${studentName} telah diunduh dengan nama "${fileName}". Silakan lampirkan secara manual di chat WhatsApp yang terbuka.`);
+                    }
                     window.open(whatsappUrl, '_blank');
                 });
             };
