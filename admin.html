@@ -31,7 +31,7 @@
         .action-btn-enable { background-color: #28a745; color: white; }
         .action-btn-edit { background-color: #007bff; color: white; }
 
-        .add-user-section, .reset-password-section, .transfer-section, .curriculum-section, .bank-management-section, .spp-management-section { margin-top: 30px; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .add-user-section, .reset-password-section, .transfer-section, .curriculum-section, .bank-management-section, .spp-management-section, .branding-management-section { margin-top: 30px; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
         
         .form-row { display: flex; flex-direction: column; gap: 10px; }
         .form-row > div { flex: 1; }
@@ -39,23 +39,24 @@
         .add-user-section input, .add-user-section select, 
         .reset-password-section select, .transfer-section select, 
         .bank-management-section input, .bank-management-section select,
-        .filter-spp-options select, .filter-spp-options button {
-            padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; 
+        .filter-spp-options select, .filter-spp-options button,
+        .branding-management-section input {
+            padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 50%; box-sizing: border-box; 
         }
 
         .add-user-section button, .reset-password-section button, 
         .transfer-section button, .bank-management-section button, 
         .spp-management-section button, .add-user-section .btn,
         .bulk-action-container button, .pagination-controls button,
-        .filter-controls button { 
+        .filter-controls button, .branding-management-section button { 
             padding: 8px 15px; background-color: #28a745; color: white; 
             border: none; border-radius: 4px; cursor: pointer; 
-            width: 50%; text-align: center;
+            width: 100%; text-align: center;
         }
         
         h3, h4 { text-align: left; }
 
-        #statusMessage, #resetPasswordStatusMessage, #studentStatusMessage, #transferStatusMessage, #bankStatusMessage, #sppDeleteStatusMessage, #sppSizeInfo, #sppGlobalStats { margin-top: 15px; font-weight: bold; }
+        #statusMessage, #resetPasswordStatusMessage, #studentStatusMessage, #transferStatusMessage, #bankStatusMessage, #sppDeleteStatusMessage, #sppSizeInfo, #sppGlobalStats, #brandingStatusMessage { margin-top: 15px; font-weight: bold; }
         
         .bulk-action-container { margin-top: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9; display: flex; flex-direction: column; align-items: stretch; gap: 15px; }
         .bulk-action-container label { text-align: left; }
@@ -361,6 +362,31 @@
             <button class="action-button btn-delete-attachments" onclick="deleteSppAttachmentsByYearAndMonth()">Hapus Lampiran</button>
             <div id="sppDeleteStatusMessage" class="status-message"></div>
         </div>
+        <hr style="margin: 40px 0;">
+        <div class="branding-management-section">
+            <h3>Manajemen Branding</h3>
+            <form id="brandingForm">
+                <div class="form-row">
+                    <div>
+                        <label for="companyNameInput">Nama Perusahaan</label>
+                        <input type="text" id="companyNameInput" placeholder="Nama Perusahaan (cth: SEMPOA SIP TC PARADUTA OPI)" required>
+                    </div>
+                    <div>
+                        <label for="logoFileInput">Logo (PNG, JPG, dll.)</label>
+                        <input type="file" id="logoFileInput" accept="image/*">
+                    </div>
+                </div>
+                <div class="form-row" style="margin-top: 15px;">
+                    <div style="flex: 1;"><button type="submit" class="btn">Simpan Branding</button></div>
+                </div>
+                <div id="brandingStatusMessage" style="margin-top: 10px;"></div>
+            </form>
+            <div style="margin-top: 20px;">
+                <h4>Pratinjau Logo</h4>
+                <img id="logoPreview" style="max-width: 150px; border: 1px solid #ccc; padding: 5px;">
+                <p id="companyNamePreview" style="font-size: 1.2em; font-weight: bold; margin-top: 5px;"></p>
+            </div>
+        </div>
     </div>
     <div id="editUserModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Pengguna</h2><span class="close-btn">&times;</span></div><form id="editUserForm"><div class="modal-body"><p>Email: <strong id="editUserEmail"></strong></p><input type="hidden" id="editUserId"><div class="form-group"><label for="editFullName">Nama Lengkap</label><input type="text" id="editFullName" placeholder="Masukkan nama lengkap"></div><div class="form-group"><label for="editPhoneNumber">No. Telepon</label><input type="tel" id="editPhoneNumber" placeholder="Contoh: 08123456789"></div><div class="form-group" id="editUserLevelGroup"><label for="editUserLevel">Level (untuk Coach)</label><input type="text" id="editUserLevel" placeholder="Contoh: Master"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
     <div id="editStudentModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Siswa</h2><span class="close-btn">&times;</span></div><form id="editStudentForm"><div class="modal-body"><input type="hidden" id="editStudentId"><div class="form-group"><label for="editStudentName">Nama Siswa</label><input type="text" id="editStudentName" required></div><div class="form-group"><label for="editStudentLevel">Level Siswa</label><select id="editStudentLevel"></select></div><div class="form-group"><label for="editStudentCoach">Pindahkan ke Coach</label><select id="editStudentCoach" required></select></div><div class="form-group"><label for="editStudentPhone">No. Telepon</label><input type="tel" id="editStudentPhone" placeholder="Contoh: 08123456789"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
@@ -465,10 +491,92 @@
                 loadSppYearsForDeletion();
                 calculateGlobalSppAttachmentSize();
                 setupEventListeners();
+                loadBranding();
             } catch (error) {
                 console.error("ERROR di dalam loadAllData:", error);
                 alert("Gagal memuat data utama. Kemungkinan ada masalah dengan Security Rules. Periksa console (F12).");
             }
+        }
+
+        async function loadBranding() {
+            const brandingForm = document.getElementById('brandingForm');
+            const companyNameInput = document.getElementById('companyNameInput');
+            const logoPreview = document.getElementById('logoPreview');
+            const companyNamePreview = document.getElementById('companyNamePreview');
+            const brandingStatusMessage = document.getElementById('brandingStatusMessage');
+        
+            try {
+                const docRef = doc(db, "settings", "brand");
+                const docSnap = await getDoc(docRef);
+                sessionReadCount++; updateReadStatus();
+        
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.companyName) {
+                        companyNameInput.value = data.companyName;
+                        companyNamePreview.textContent = data.companyName.toUpperCase();
+                    }
+                    if (data.logoBase64) {
+                        logoPreview.src = data.logoBase64;
+                        logoPreview.style.display = 'inline-block';
+                    } else {
+                        logoPreview.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error("Gagal memuat branding:", error);
+                brandingStatusMessage.textContent = 'Gagal memuat data branding.';
+                brandingStatusMessage.style.color = 'red';
+            }
+        
+            brandingForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                brandingStatusMessage.textContent = 'Menyimpan...';
+                brandingStatusMessage.style.color = 'blue';
+                const companyName = companyNameInput.value;
+                const logoFile = document.getElementById('logoFileInput').files[0];
+                let logoBase64 = logoPreview.src;
+        
+                if (logoFile) {
+                    const reader = new FileReader();
+                    reader.onload = async function() {
+                        logoBase64 = reader.result;
+                        await saveBranding(companyName, logoBase64);
+                    };
+                    reader.readAsDataURL(logoFile);
+                } else {
+                    await saveBranding(companyName, logoBase64);
+                }
+            });
+        
+            async function saveBranding(companyName, logoBase64) {
+                try {
+                    await setDoc(doc(db, "settings", "brand"), {
+                        companyName: companyName,
+                        logoBase64: logoBase64
+                    });
+                    brandingStatusMessage.textContent = 'Branding berhasil disimpan!';
+                    brandingStatusMessage.style.color = 'green';
+                    logoPreview.src = logoBase64;
+                    logoPreview.style.display = 'inline-block';
+                    companyNamePreview.textContent = companyName.toUpperCase();
+                    await loadAllData();
+                } catch (error) {
+                    brandingStatusMessage.textContent = `Gagal menyimpan: ${error.message}`;
+                    brandingStatusMessage.style.color = 'red';
+                }
+            }
+        
+            document.getElementById('logoFileInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        logoPreview.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
         }
 
         async function syncStudentCount() {
