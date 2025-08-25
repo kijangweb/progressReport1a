@@ -26,6 +26,8 @@
         h1 {
             color: #007bff;
             margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-transform: uppercase;
         }
         .input-group {
             margin-bottom: 20px;
@@ -61,11 +63,26 @@
             font-weight: bold;
             color: red;
         }
+        .brand-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .brand-logo {
+            max-width: 100px;
+        }
+        .creator-sign {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #888;
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <h1>Login Aplikasi</h1>
+        <div class="brand-container">
+            <img id="brandLogo" class="brand-logo" src="" alt="Logo">
+            <h1 id="brandTitle">Login Aplikasi</h1>
+        </div>
         <form id="loginForm">
             <div class="input-group">
                 <label for="email">Email</label>
@@ -78,6 +95,9 @@
             <button type="submit">Login</button>
             <p id="loginStatus"></p>
         </form>
+        <div class="creator-sign">
+            progress report v1 by kijangweb 2025
+        </div>
     </div>
 
     <script type="module">
@@ -101,6 +121,37 @@
 
         const loginForm = document.getElementById('loginForm');
         const loginStatus = document.getElementById('loginStatus');
+        const brandLogo = document.getElementById('brandLogo');
+        const brandTitle = document.getElementById('brandTitle');
+
+        async function loadBranding() {
+            try {
+                const docRef = doc(db, "settings", "brand");
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.logoBase64) {
+                        brandLogo.src = data.logoBase64;
+                        brandLogo.style.display = 'inline-block';
+                    } else {
+                        brandLogo.style.display = 'none';
+                    }
+                    if (data.companyName) {
+                        brandTitle.textContent = data.companyName.toUpperCase();
+                    }
+                } else {
+                    brandLogo.style.display = 'none';
+                    brandTitle.textContent = 'PROGRESS REPORT V1';
+                }
+            } catch (error) {
+                console.error("Failed to load branding:", error);
+                brandLogo.style.display = 'none';
+                brandTitle.textContent = 'PROGRESS REPORT V1';
+            }
+        }
+        
+        loadBranding();
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -131,7 +182,7 @@
                         loginStatus.style.color = 'green';
                         window.location.href = 'admin.html';
                     } else if (userData.role === 'user') {
-                        loginStatus.textContent = 'Login sebagai coach berhasil! Mengarahkan...';
+                        loginStatus.textContent = 'Login sebagai user berhasil! Mengarahkan...';
                         loginStatus.style.color = 'green';
                         window.location.href = 'dashboard.html'; 
                     } else if (userData.role === 'bendahara') {
