@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Sistem Manajemen</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,78 +13,35 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            text-align: center;
         }
-        .login-container {
-            background: #fff;
-            padding: 40px;
+        .container {
+            max-width: 600px;
+            padding: 20px;
+            background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
         }
         h1 {
             color: #007bff;
-            margin-bottom: 20px;
         }
-        .input-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .input-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #loginStatus {
-            margin-top: 15px;
-            font-weight: bold;
-            color: red;
+        p {
+            color: #6c757d;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h1>Login Aplikasi</h1>
-        <form id="loginForm">
-            <div class="input-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" required>
-            </div>
-            <div class="input-group">
-                <label for="password">Kata Sandi</label>
-                <input type="password" id="password" required>
-            </div>
-            <button type="submit">Login</button>
-            <p id="loginStatus"></p>
-        </form>
+    <div class="container">
+        <h1>Memeriksa Status...</h1>
+        <p>Mohon tunggu sebentar. Anda akan diarahkan ke halaman yang sesuai.</p>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
+        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyBm3SkLLtl9LvczDDht-OQ6-R4OYLPYAJQ",
             authDomain: "progres-report-5d199.firebaseapp.com",
@@ -94,67 +51,35 @@
             appId: "1:363573365137:web:98f32d5ff8fae05617b230",
             measurementId: "G-CPX04R69F5"
         };
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const loginForm = document.getElementById('loginForm');
-        const loginStatus = document.getElementById('loginStatus');
-
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            loginStatus.textContent = 'Memproses...';
-            loginStatus.style.color = '#007bff';
-
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
                 const docRef = doc(db, "users", user.email);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
-                    
                     if (userData.status === 'disabled') {
-                        loginStatus.textContent = 'Akun Anda telah dinonaktifkan. Hubungi admin.';
-                        loginStatus.style.color = 'red';
-                        await signOut(auth);
+                        window.location.href = 'login.html';
                         return;
                     }
-                    
                     if (userData.role === 'admin') {
-                        loginStatus.textContent = 'Login sebagai admin berhasil! Mengarahkan...';
-                        loginStatus.style.color = 'green';
                         window.location.href = 'admin.html';
                     } else if (userData.role === 'user') {
-                        loginStatus.textContent = 'Login sebagai coach berhasil! Mengarahkan...';
-                        loginStatus.style.color = 'green';
-                        window.location.href = 'dashboard.html'; 
+                        window.location.href = 'dashboard.html';
                     } else if (userData.role === 'bendahara') {
-                        loginStatus.textContent = 'Login sebagai bendahara berhasil! Mengarahkan...';
-                        loginStatus.style.color = 'green';
                         window.location.href = 'spp.html';
                     } else {
-                        loginStatus.textContent = 'Error: Peran pengguna tidak ditemukan.';
-                        auth.signOut();
+                        window.location.href = 'login.html';
                     }
                 } else {
-                    loginStatus.textContent = 'Error: Data pengguna tidak ditemukan di database.';
-                    auth.signOut();
+                    window.location.href = 'login.html';
                 }
-            } catch (error) {
-                if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                    loginStatus.textContent = 'Email atau kata sandi salah.';
-                    loginStatus.style.color = 'red';
-                } else {
-                    loginStatus.textContent = `Error: ${error.message}`;
-                    loginStatus.style.color = 'red';
-                }
-                console.error("Login Error:", error);
+            } else {
+                window.location.href = 'login.html';
             }
         });
     </script>

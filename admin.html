@@ -7,28 +7,71 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; display: none; }
         .admin-container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
-        h1 { text-align: center; color: #007bff; }
+        
+        .main-header { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 10px; }
+        h1 { margin: 0; color: #007bff; }
+        .logout-btn { padding: 8px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; text-align: center; }
+
         h3, h4 { color: #333; }
-        .logout-btn { float: right; padding: 8px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .user-table, .bank-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .user-table th, .user-table td, .bank-table th, .bank-table td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: middle; }
-        .user-table th, .bank-table th { background-color: #f2f2f2; }
-        .action-btn-disable { background-color: #ffc107; color: black; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px; }
-        .action-btn-enable { background-color: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px; }
-        .action-btn-edit { background-color: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .user-table, .bank-table, .student-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+        .user-table th, .user-table td, .bank-table th, .bank-table td, .student-table th, .student-table td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: middle; word-wrap: break-word; }
+        .user-table th, .bank-table th, .student-table th { background-color: #f2f2f2; }
+        
+        .action-btn-disable, .action-btn-enable, .action-btn-edit {
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+            margin-right: 5px;
+            white-space: nowrap;
+            width: auto;
+        }
+
+        .action-btn-disable { background-color: #ffc107; color: black; }
+        .action-btn-enable { background-color: #28a745; color: white; }
+        .action-btn-edit { background-color: #007bff; color: white; }
+
         .add-user-section, .reset-password-section, .transfer-section, .curriculum-section, .bank-management-section, .spp-management-section { margin-top: 30px; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-        .add-user-section input, .add-user-section select, .reset-password-section select, .transfer-section select, .bank-management-section input, .bank-management-section select { padding: 8px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        .add-user-section button, .reset-password-section button, .transfer-section button, .bank-management-section button, .spp-management-section button { padding: 8px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        
+        .form-row { display: flex; flex-direction: column; gap: 10px; }
+        .form-row > div { flex: 1; }
+        
+        .add-user-section input, .add-user-section select, 
+        .reset-password-section select, .transfer-section select, 
+        .bank-management-section input, .bank-management-section select,
+        .filter-spp-options select, .filter-spp-options button {
+            padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; 
+        }
+
+        .add-user-section button, .reset-password-section button, 
+        .transfer-section button, .bank-management-section button, 
+        .spp-management-section button, .add-user-section .btn,
+        .bulk-action-container button, .pagination-controls button,
+        .filter-controls button { 
+            padding: 8px 15px; background-color: #28a745; color: white; 
+            border: none; border-radius: 4px; cursor: pointer; 
+            width: 100%; text-align: center;
+        }
+        
+        h3, h4 { text-align: left; }
+
         #statusMessage, #resetPasswordStatusMessage, #studentStatusMessage, #transferStatusMessage, #bankStatusMessage, #sppDeleteStatusMessage, #sppSizeInfo, #sppGlobalStats { margin-top: 15px; font-weight: bold; }
-        .bulk-action-container { margin-top: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9; }
-        .bulk-action-container select, .pagination-controls select, .filter-controls select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
-        .bulk-action-container button, .pagination-controls button { padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
-        .filter-controls { margin: 15px 0 5px 0; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+        
+        .bulk-action-container { margin-top: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9; display: flex; flex-direction: column; align-items: stretch; gap: 15px; }
+        .bulk-action-container label { text-align: left; }
+        .bulk-action-container select, .bulk-action-container button { width: 100%; }
+        
+        .pagination-controls select { width: auto; }
+        .pagination-controls button { width: auto; }
+
+        .filter-controls { margin: 15px 0 5px 0; display: flex; flex-direction: column; gap: 10px; align-items: stretch; flex-wrap: wrap; }
         .disabled-row td { text-decoration: line-through; color: #999; background-color: #f8f9fa !important; }
-        .pagination-controls { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+        
+        .pagination-controls { margin-top: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; }
         .pagination-controls button:disabled { background-color: #ccc; cursor: not-allowed; }
+        
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; }
+        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 8px; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .modal-header h2 { margin: 0; color: #007bff; }
         .close-btn { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
@@ -40,9 +83,9 @@
         .modal-footer { text-align: right; padding-top: 20px; border-top: 1px solid #eee; }
         .modal-footer button { background-color: #007bff; }
         .curriculum-editor { border: 1px solid #ddd; padding: 15px; margin-top: 10px; border-radius: 6px; max-height: 400px; overflow-y: auto; }
-        .lesson-input-group { margin-bottom: 10px; display: flex; align-items: center; }
-        .lesson-input-group label { font-weight: bold; display: inline-block; width: 90px; }
-        .lesson-input-group input { width: calc(100% - 100px); padding: 5px; }
+        .lesson-input-group { margin-bottom: 10px; display: flex; flex-direction: column; align-items: stretch; }
+        .lesson-input-group label { font-weight: bold; display: inline-block; width: auto; margin-bottom: 5px; }
+        .lesson-input-group input { width: 100%; padding: 5px; }
         .add-lesson-btn { background-color: #17a2b8; color: white; border: none; padding: 8px 12px; margin-top: 15px; border-radius: 4px; cursor: pointer; }
         .btn-delete-attachments { background-color: #ffc107; color: black; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
         .spp-stats-info { margin-top: 20px; padding: 15px; background-color: #e2eafc; border-radius: 8px; border: 1px solid #b3cbe8; }
@@ -50,82 +93,239 @@
         .global-spp-stats { margin-top: 20px; padding: 15px; background-color: #e9f5e9; border-radius: 8px; border: 1px solid #c3e6cb; text-align: center; }
         .global-spp-stats p { margin: 5px 0; }
         .global-spp-stats span { font-size: 1.2em; font-weight: bold; color: #28a745; }
-        .filter-spp-options { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .filter-spp-options select { min-width: 120px; }
-        .filter-spp-options button { margin-left: auto; }
+        .filter-spp-options { display: flex; flex-direction: column; gap: 10px; align-items: stretch; margin-bottom: 10px; }
+        .filter-spp-options select, .filter-spp-options button { min-width: auto; width: 100%; }
+        #readStatusIndicator { position: fixed; bottom: 10px; right: 10px; background-color: #212529; color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-family: monospace; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.3); opacity: 0.8; transition: opacity 0.3s; }
+        #readStatusIndicator:hover { opacity: 1; }
+        #readStatusIndicator button { margin-left: 10px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
+        
+        .transfer-section > .form-row { display: flex; flex-direction: column; gap: 10px; }
+        .transfer-section select { width: 100%; }
+        .transfer-section button { align-self: stretch; margin-top: 10px; }
 
-        /* --- CSS BARU UNTUK ADDON STATUS READ --- */
-        #readStatusIndicator {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background-color: #212529;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-family: monospace;
-            z-index: 2000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            opacity: 0.8;
-            transition: opacity 0.3s;
+        .bulk-action-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
-        #readStatusIndicator:hover {
-            opacity: 1;
+        
+        @media (min-width: 768px) {
+            .main-header { flex-direction: row; align-items: center; }
+            h1 { text-align: left; }
+            .logout-btn { width: auto; }
+            
+            .user-table th:first-child, .user-table td:first-child { width: 25%; }
+            .user-table th:nth-child(2), .user-table td:nth-child(2) { width: 20%; }
+            .user-table th:nth-child(3), .user-table td:nth-child(3) { width: 10%; }
+            .user-table th:nth-child(4), .user-table td:nth-child(4) { width: 15%; }
+            .user-table th:nth-child(5), .user-table td:nth-child(5) { width: 10%; }
+            .user-table th:last-child, .user-table td:last-child { width: 20%; }
+            .user-table td:last-child { text-align: left; }
+
+            .filter-controls { flex-direction: row; gap: 20px; align-items: center; }
+            .pagination-controls { flex-direction: row; justify-content: space-between; align-items: center; gap: 10px; }
+            
+            .form-row { flex-direction: row; align-items: flex-end; justify-content: flex-start; gap: 10px; }
+            .form-row > div { flex: 1; min-width: 150px; }
+            .form-row button { width: auto; align-self: flex-end; }
+            
+            .transfer-section > .form-row { 
+                flex-direction: row;
+                align-items: flex-end;
+                gap: 15px;
+                justify-content: flex-start;
+            }
+            .transfer-section .form-row > div {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .transfer-section button { width: auto; margin-top: 0; }
+            
+            .filter-spp-options { flex-direction: row; gap: 10px; align-items: center; }
+            .filter-spp-options select { min-width: 120px; width: auto; }
+            .filter-spp-options button { margin-left: auto; width: auto; }
+            
+            .bulk-action-container { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .bulk-action-content {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-end;
+                gap: 10px;
+            }
+            .bulk-action-content .form-group {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 0;
+            }
+            .bulk-action-content select {
+                width: 250px;
+            }
+            .bulk-action-content button {
+                width: auto;
+                margin-top: 0;
+            }
+
+            .user-table th, .user-table td, .bank-table th, .bank-table td, .student-table th, .student-table td { padding: 12px; }
+            
+            .lesson-input-group { flex-direction: row; align-items: center; }
+            .lesson-input-group label { width: 90px; margin-bottom: 0; }
+            .lesson-input-group input { width: calc(100% - 100px); }
+            
+            #userRowsPerPage, #studentRowsPerPage { width: auto; }
+            #userPagination > div, #studentPagination > div {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            /* Perbaikan khusus untuk form tambah pengguna agar sejajar di layar menengah */
+            #addUserForm .form-row {
+                display: flex;
+                flex-wrap: wrap; /* Mengizinkan wrap */
+                align-items: flex-start;
+                gap: 10px;
+            }
+            #addUserForm .form-row > div {
+                flex: 1 1 200px; /* Fleksibel dengan lebar dasar 200px */
+            }
+            #addUserForm .form-row button {
+                width: auto;
+                align-self: auto;
+                margin-top: 20px;
+            }
         }
-        #readStatusIndicator button {
-            margin-left: 10px;
-            padding: 2px 8px;
-            font-size: 12px;
-            cursor: pointer;
+        @media (min-width: 900px) {
+            /* Penyesuaian untuk layar yang lebih besar */
+            #addUserForm .form-row > div {
+                flex: 1; /* Distribusi ruang yang lebih merata */
+            }
+            #addUserForm .form-row button {
+                margin-top: 0;
+                align-self: flex-end; /* Sejajar dengan input di desktop besar */
+            }
         }
     </style>
 </head>
 <body>
     <div id="readStatusIndicator">Reads Sesi Ini: 0</div>
-
     <div class="admin-container">
-        <button type="button" class="logout-btn" onclick="logout()">Logout</button>
-        <h1>Panel Admin</h1>
+        <div class="main-header">
+            <h1>Panel Admin</h1>
+            <button type="button" class="logout-btn" onclick="logout()">Logout</button>
+        </div>
         <p>Kelola pengguna dan siswa aplikasi sempoa.</p>
         <div class="user-list">
             <h3>Daftar Pengguna</h3>
-            <div class="filter-controls"><div><input type="checkbox" id="showDisabledUsers"><label for="showDisabledUsers">Tampilkan Pengguna Nonaktif</label></div><div><input type="checkbox" id="showCoachesOnly"><label for="showCoachesOnly">Hanya Tampilkan Coach</label></div><button type="button" id="syncCountBtn" style="background-color: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Sinkronkan Jumlah Siswa</button></div>
-            <table class="user-table" id="usersTable"><thead><tr><th>Email</th><th>Nama</th><th>Jml. Siswa</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="usersTableBody"></tbody></table>
-            <div class="pagination-controls" id="userPagination"><select id="userRowsPerPage"><option value="5" selected>5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option></select><div><button type="button" id="userPrevBtn" disabled>&laquo; Sebelumnya</button><span style="margin: 0 10px;">Halaman <b id="userCurrentPage">1</b> dari <b id="userTotalPages">1</b></span><button type="button" id="userNextBtn" disabled>Berikutnya &raquo;</button></div></div>
+            <div class="filter-controls">
+                <div><input type="checkbox" id="showDisabledUsers"><label for="showDisabledUsers">Tampilkan Pengguna Nonaktif</label></div>
+                <div><input type="checkbox" id="showCoachesOnly"><label for="showCoachesOnly">Hanya Tampilkan Coach</label></div>
+                <button type="button" id="syncCountBtn" style="background-color: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Sinkronkan Jumlah Siswa</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="user-table" id="usersTable"><thead><tr><th>Email</th><th>Nama</th><th>Jml. Siswa</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="usersTableBody"></tbody></table>
+            </div>
+            <div class="pagination-controls" id="userPagination">
+                <select id="userRowsPerPage"><option value="5" selected>5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option></select>
+                <div>
+                    <button type="button" id="userPrevBtn" disabled>&laquo; Sebelumnya</button>
+                    <span style="margin: 0 10px;">Halaman <b id="userCurrentPage">1</b> dari <b id="userTotalPages">1</b></span>
+                    <button type="button" id="userNextBtn" disabled>Berikutnya &raquo;</button>
+                </div>
+            </div>
         </div>
         <div class="add-user-section">
             <h4>Tambah Pengguna Baru</h4>
-            <form id="addUserForm"><input type="email" id="newUserEmail" placeholder="Email" required><input type="text" id="newUserName" placeholder="Nama" required><input type="password" id="newUserPassword" placeholder="Kata Sandi" required><select id="newUserRole" required><option value="user">Coach</option><option value="bendahara">Bendahara</option></select><button type="submit">Tambah Pengguna</button><div id="statusMessage"></div></form>
+            <form id="addUserForm">
+                <div class="form-row">
+                    <div><input type="email" id="newUserEmail" placeholder="Email" required></div>
+                    <div><input type="text" id="newUserName" placeholder="Nama" required></div>
+                    <div><input type="password" id="newUserPassword" placeholder="Kata Sandi" required></div>
+                    <div><select id="newUserRole" required><option value="user">Coach</option><option value="bendahara">Bendahara</option></select></div>
+                    <div><button type="submit" class="btn">Tambah Pengguna</button></div>
+                </div>
+                <div id="statusMessage"></div>
+            </form>
         </div>
         <div class="reset-password-section">
             <h4>Reset Password</h4>
-            <form id="resetPasswordForm"><select id="resetEmailSelector" required style="width: 300px;"></select><button type="submit">Kirim Email Reset</button><div id="resetPasswordStatusMessage"></div></form>
+            <form id="resetPasswordForm">
+                <div class="form-row">
+                    <div><select id="resetEmailSelector" required></select></div>
+                    <div><button type="submit" class="btn">Kirim Email Reset</button></div>
+                </div>
+                <div id="resetPasswordStatusMessage"></div>
+            </form>
         </div>
         <hr style="margin: 40px 0;">
         <div class="add-user-section">
             <h4>Tambah Siswa Baru</h4>
-            <form id="addStudentForm"><input type="text" id="newStudentName" placeholder="Nama Lengkap Siswa" required style="width: 300px;"><input type="tel" id="newStudentPhone" placeholder="No. Telepon (cth: 0812...)" style="width: 300px;"><select id="coachForStudentSelector" required style="width: 300px;"></select><button type="submit">Tambah Siswa</button><div id="studentStatusMessage"></div></form>
+            <form id="addStudentForm">
+                <div class="form-row">
+                    <div><input type="text" id="newStudentName" placeholder="Nama Lengkap Siswa" required></div>
+                    <div><input type="tel" id="newStudentPhone" placeholder="No. Telepon (cth: 0812...)"></div>
+                    <div><select id="coachForStudentSelector" required></select></div>
+                    <div><button type="submit" class="btn">Tambah Siswa</button></div>
+                </div>
+                <div id="studentStatusMessage"></div>
+            </form>
         </div>
         <div class="user-list" style="margin-top: 30px;">
             <h3>Daftar Siswa (Pembagian Coach)</h3>
-            <div class="filter-controls"><div><input type="checkbox" id="showDisabledStudents"><label for="showDisabledStudents">Tampilkan Siswa Nonaktif</label></div><div><label for="coachFilterSelector">Filter berdasarkan Coach:</label><select id="coachFilterSelector"></select></div></div>
-            <table class="user-table" id="studentsTable"><thead><tr><th style="width: 5%;"><input type="checkbox" id="selectAllCheckbox"></th><th>Nama Siswa</th><th>Coach Saat Ini</th><th>Level Siswa</th><th style="width: 15%;">Aksi</th></tr></thead><tbody id="studentsTableBody"></tbody></table>
-            <div class="pagination-controls" id="studentPagination"><select id="studentRowsPerPage"><option value="5" selected>5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option></select><div><button type="button" id="studentPrevBtn" disabled>&laquo; Sebelumnya</button><span style="margin: 0 10px;">Halaman <b id="studentCurrentPage">1</b> dari <b id="studentTotalPages">1</b></span><button type="button" id="studentNextBtn" disabled>Berikutnya &raquo;</button></div></div>
+            <div class="filter-controls">
+                <div><input type="checkbox" id="showDisabledStudents"><label for="showDisabledStudents">Tampilkan Siswa Nonaktif</label></div>
+                <div><label for="coachFilterSelector">Filter berdasarkan Coach:</label><select id="coachFilterSelector"></select></div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="student-table" id="studentsTable"><thead><tr><th style="width: 5%;"><input type="checkbox" id="selectAllCheckbox"></th><th>Nama Siswa</th><th>Coach Saat Ini</th><th>Level Siswa</th><th style="width: 15%;">Aksi</th></tr></thead><tbody id="studentsTableBody"></tbody></table>
+            </div>
+            <div class="pagination-controls" id="studentPagination">
+                <select id="studentRowsPerPage"><option value="5" selected>5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option></select>
+                <div>
+                    <button type="button" id="studentPrevBtn" disabled>&laquo; Sebelumnya</button>
+                    <span style="margin: 0 10px;">Halaman <b id="studentCurrentPage">1</b> dari <b id="studentTotalPages">1</b></span>
+                    <button type="button" id="studentNextBtn" disabled>Berikutnya &raquo;</button>
+                </div>
+            </div>
         </div>
-        <div class="bulk-action-container"><h3>Aksi Massal untuk Siswa Terpilih</h3><label for="bulkCoachSelector">Ganti coach ke:</label><select id="bulkCoachSelector"></select><button type="button" id="bulkChangeCoachBtn">Terapkan Perubahan</button></div>
-        <div class="transfer-section"><h3>Pindahkan Massal Siswa Antar Coach</h3><div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;"><div><label for="sourceCoachSelector">Dari Coach:</label><br><select id="sourceCoachSelector" style="min-width: 250px;"></select></div><div><label for="destinationCoachSelector">Ke Coach:</label><br><select id="destinationCoachSelector" style="min-width: 250px;"></select></div><div style="align-self: flex-end;"><button type="button" id="transferStudentsBtn" style="background-color: #17a2b8;">Pindahkan Siswa</button></div></div><div id="transferStatusMessage"></div></div>
+        <div class="bulk-action-container">
+            <h3>Aksi Massal untuk Siswa Terpilih</h3>
+            <div class="bulk-action-content">
+                <div class="form-group">
+                    <label for="bulkCoachSelector">Ganti coach ke:</label>
+                    <select id="bulkCoachSelector"></select>
+                </div>
+                <button type="button" id="bulkChangeCoachBtn">Terapkan Perubahan</button>
+            </div>
+        </div>
+        <div class="transfer-section">
+            <h3>Pindahkan Massal Siswa Antar Coach</h3>
+            <div class="form-row">
+                <div><label for="sourceCoachSelector">Dari Coach:</label><br><select id="sourceCoachSelector"></select></div>
+                <div><label for="destinationCoachSelector">Ke Coach:</label><br><select id="destinationCoachSelector"></select></div>
+                <div><button type="button" id="transferStudentsBtn" style="background-color: #17a2b8;">Pindahkan Siswa</button></div>
+            </div>
+            <div id="transferStatusMessage"></div>
+        </div>
         <hr style="margin: 40px 0;">
         <div class="curriculum-section">
             <h3>Manajemen Kurikulum</h3>
-            <div class="add-user-section"><h4>Tambah Level Kurikulum Baru</h4><form id="addLevelForm"><input type="text" id="newLevelName" placeholder="Nama Level Baru (cth: Foundation 3)" required><button type="submit">Tambah Level</button></form></div>
+            <div class="add-user-section"><h4>Tambah Level Kurikulum Baru</h4><form id="addLevelForm"><div class="form-row"><div><input type="text" id="newLevelName" placeholder="Nama Level Baru (cth: Foundation 3)" required></div><div><button type="submit" class="btn">Tambah Level</button></div></div></form></div>
             <div class="add-user-section" style="margin-top: 20px;"><h4>Edit Level Kurikulum yang Ada</h4><label for="levelEditorSelector">Pilih Level untuk Diedit:</label><select id="levelEditorSelector"></select><div id="curriculumEditor" class="curriculum-editor" style="display: none;"><p>Masukkan daftar aktivitas untuk setiap lesson, pisahkan dengan koma (,). Contoh: A,B,C,D</p><form id="editCurriculumForm"></form><button type="button" id="addLessonBtn" class="add-lesson-btn">(+) Tambah Lesson Baru</button><hr style="margin: 20px 0;"><button type="button" id="saveCurriculumBtn" style="background-color: #007bff; margin-top: 15px;">Simpan Perubahan Kurikulum</button></div></div>
         </div>
         <hr style="margin: 40px 0;">
         <div class="bank-management-section">
             <h3>Manajemen Bank</h3>
-            <form id="addBankForm"><input type="text" id="newBankName" placeholder="Nama Bank (cth: BCA)" required><input type="color" id="newBankColor" value="#007bff"><button type="submit">Tambah Bank</button></form><div id="bankStatusMessage"></div>
-            <h4 style="margin-top: 20px;">Daftar Bank</h4><table class="bank-table"><thead><tr><th>Nama Bank</th><th>Warna</th><th>Aksi</th></tr></thead><tbody id="bankTableBody"></tbody></table>
+            <div class="form-row">
+                <div><input type="text" id="newBankName" placeholder="Nama Bank (cth: BCA)" required form="addBankForm"></div>
+                <div><input type="color" id="newBankColor" value="#007bff" form="addBankForm"></div>
+                <div><button type="submit" class="btn" form="addBankForm">Tambah Bank</button></div>
+            </div>
+            <form id="addBankForm"></form>
+            <div id="bankStatusMessage"></div>
+            <h4 style="margin-top: 20px;">Daftar Bank</h4><div style="overflow-x:auto;"><table class="bank-table"><thead><tr><th>Nama Bank</th><th>Warna</th><th>Aksi</th></tr></thead><tbody id="bankTableBody"></tbody></table></div>
         </div>
         <hr style="margin: 40px 0;">
         <div class="spp-management-section">
@@ -179,7 +379,6 @@
         const secondaryAuth = getAuth(secondaryApp);
         const db = getFirestore(mainApp);
 
-        // --- ADDON: LOGIKA BARU UNTUK STATUS READ ---
         let sessionReadCount = 0;
         const readStatusElement = document.getElementById('readStatusIndicator');
         function updateReadStatus() {
@@ -189,7 +388,6 @@
             sessionReadCount = 0;
             updateReadStatus();
         }
-        // --- ADDON: AKHIR LOGIKA BARU ---
 
         let allUsers = [], allStudents = [], allBanks = {}, allLevels = [];
         let userCurrentPage = 1, studentCurrentPage = 1;
@@ -210,32 +408,31 @@
         const sppGlobalTotalSizeSpan = document.getElementById('sppGlobalTotalSize');
         const sppGlobalSizePercentageSpan = document.getElementById('sppGlobalSizePercentage');
         
-        window.logout = function() { signOut(auth).then(() => { window.location.href = 'index.html'; }); };
+        window.logout = function() { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
         
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                updateReadStatus(); // ADDON: Inisialisasi tampilan
+                updateReadStatus();
                 try {
                     const docRef = doc(db, "users", user.email);
                     const docSnap = await getDoc(docRef);
-                    sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
-
+                    sessionReadCount++; updateReadStatus();
                     if (docSnap.exists() && docSnap.data().role === 'admin') {
                         document.body.style.display = 'block';
                         await loadAllData();
                     } else {
                         alert("Akses ditolak. Anda bukan admin atau data Anda tidak ditemukan.");
                         await signOut(auth);
-                        window.location.href = 'index.html';
+                        window.location.href = 'login.html';
                     }
                 } catch (error) {
                     console.error("Terjadi error saat verifikasi admin:", error);
                     alert("Terjadi kesalahan saat otentikasi. Periksa console untuk detail.");
                     await signOut(auth);
-                    window.location.href = 'index.html';
+                    window.location.href = 'login.html';
                 }
             } else {
-                window.location.href = 'index.html';
+                window.location.href = 'login.html';
             }
         });
 
@@ -313,17 +510,22 @@
             const form = document.getElementById('editCurriculumForm');
             form.innerHTML = '';
             if (!level) { editor.style.display = 'none'; return; }
-            const docSnap = await getDoc(doc(db, "kurikulum", level));
-            sessionReadCount++; updateReadStatus();
-            if (docSnap.exists()) {
-                const lessons = docSnap.data().lessons || {};
-                const sortedKeys = Object.keys(lessons).sort((a,b) => parseInt(a.split(' ')[1]) - parseInt(b.split(' ')[1]));
-                sortedKeys.forEach(key => {
-                    const activities = lessons[key].join(',');
-                    form.innerHTML += `<div class="lesson-input-group"><label>${key}:</label><input type="text" value="${activities}" data-lesson-name="${key}">`;
-                });
+            try { // Perbaikan: Menambahkan blok try-catch untuk fetch data
+                const docSnap = await getDoc(doc(db, "kurikulum", level));
+                sessionReadCount++; updateReadStatus();
+                if (docSnap.exists()) {
+                    const lessons = docSnap.data().lessons || {};
+                    const sortedKeys = Object.keys(lessons).sort((a,b) => parseInt(a.split(' ')[1]) - parseInt(b.split(' ')[1]));
+                    sortedKeys.forEach(key => {
+                        const activities = lessons[key].join(',');
+                        form.innerHTML += `<div class="lesson-input-group"><label>${key}:</label><input type="text" value="${activities}" data-lesson-name="${key}">`;
+                    });
+                }
+                editor.style.display = 'block';
+            } catch(error) {
+                console.error("Error fetching curriculum:", error);
+                // Tambahkan penanganan error jika perlu
             }
-            editor.style.display = 'block';
         }
 
         window.deleteSppAttachmentsByYearAndMonth = async function() {
@@ -384,10 +586,6 @@
             }
         }
         
-        // --- SISA FUNGSI-FUNGSI DARI FILE ASLI ANDA ---
-        // Semua fungsi di bawah ini adalah salinan utuh dari file V6 Anda
-        // dan tidak diubah, karena tidak melakukan operasi 'read' baru.
-
         function loadSppYearsForDeletion() {
             const years = new Set();
             allStudents.forEach(student => {
@@ -441,15 +639,22 @@
                     studentCountCell = `<td style="text-align: center;">${studentCount}</td>`;
                 }
                 const formatRoleName = (role) => (role === 'user' ? 'Coach' : (role ? role.charAt(0).toUpperCase() + role.slice(1) : ''));
-                if (userData.role === 'admin') {
-                    row.innerHTML = `<td>${userData.id}</td><td><strong>${userData.name || 'ADMIN'}</strong></td><td>-</td><td>Admin</td><td>Aktif</td><td>-</td>`;
-                } else {
-                    const status = userData.status || 'active';
-                    row.className = status === 'disabled' ? 'disabled-row' : '';
-                    const buttonText = status === 'active' ? 'Disable' : 'Enable';
-                    const buttonClass = status === 'active' ? 'action-btn-disable' : 'action-btn-enable';
-                    row.innerHTML = `<td>${userData.id}</td><td>${userData.name || ''}</td>${studentCountCell}<td>${formatRoleName(userData.role)}</td><td>${status}</td><td style="white-space: nowrap;"><button type="button" class="${buttonClass}" onclick="toggleUserStatus('${userData.id}','${status}')">${buttonText}</button><button type="button" class="action-btn-edit" onclick="openEditModal('${userData.id}')">Detail</button></td>`;
-                }
+                const status = (userData.status === 'active' || userData.status === undefined) ? 'active' : 'disabled';
+                row.className = status === 'disabled' ? 'disabled-row' : '';
+                const buttonText = status === 'active' ? 'Disable' : 'Enable';
+                const buttonClass = status === 'active' ? 'action-btn-disable' : 'action-btn-enable';
+                
+                row.innerHTML = `
+                    <td>${userData.id}</td>
+                    <td>${userData.name || ''}</td>
+                    ${studentCountCell}
+                    <td>${formatRoleName(userData.role)}</td>
+                    <td>${status}</td>
+                    <td style="white-space: nowrap;">
+                        <button type="button" class="${buttonClass}" onclick="toggleUserStatus('${userData.id}','${userData.status || 'active'}')">${buttonText}</button>
+                        <button type="button" class="action-btn-edit" onclick="openEditModal('${userData.id}')">Detail</button>
+                    </td>
+                `;
             });
             updateUserPagination(totalItems);
         }

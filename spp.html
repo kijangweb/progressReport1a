@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pembayaran SPP</title>
     <style>
-        /* ... CSS asli Anda dari file V6 ... */
         :root {
             --primary-color: #007bff;
             --secondary-color: #6c757d;
@@ -44,20 +43,26 @@
         }
         .header-section {
             display: flex;
+            flex-direction: column;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
+            gap: 10px;
         }
         .header-buttons {
             display: flex;
+            flex-direction: column;
             gap: 10px;
+            width: 100%;
         }
-        .logout-btn, .refresh-btn {
+        .logout-btn, .refresh-btn, .btn-export, .btn-whatsapp, .btn-reset {
             padding: 8px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.2s ease;
+            width: 100%;
+            text-align: center;
         }
         .logout-btn {
             background-color: var(--danger-color);
@@ -75,9 +80,12 @@
         }
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 1fr;
             gap: 20px;
             align-items: end;
+        }
+        .form-grid .full-width {
+            grid-column: 1;
         }
         .form-group {
             display: flex;
@@ -88,7 +96,7 @@
             font-weight: 600;
             color: var(--dark-text);
         }
-        input[type="number"], select, textarea, input[type="date"] {
+        input[type="number"], select, textarea, input[type="date"], input[type="file"] {
             width: 100%;
             padding: 10px;
             border: 1px solid #ced4da;
@@ -161,7 +169,7 @@
             font-size: 16px;
             font-weight: 600;
             margin-top: 20px;
-            transition: background-color 0.2s ease;
+            width: 100%;
         }
         #addPaymentBtn:hover {
             background-color: #218838;
@@ -177,9 +185,10 @@
         .legend {
             margin-top: 10px;
             display: flex;
-            gap: 15px;
             flex-wrap: wrap;
             font-size: 0.9em;
+            flex-direction: column;
+            gap: 10px;
         }
         .legend-item {
             display: flex;
@@ -191,16 +200,16 @@
         }
         .spp-table-controls {
             display: flex;
+            flex-direction: column;
             justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
+            align-items: stretch;
             gap: 15px;
             margin-bottom: 20px;
         }
         .spp-table-controls .filter-group {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            gap: 5px;
         }
         .spp-table-container {
             border: 1px solid var(--border-color);
@@ -240,7 +249,7 @@
             left: 0;
             background-color: var(--light-bg);
             z-index: 20;
-            min-width: 170px;
+            min-width: 10%;
             text-align: left;
             border-right: 2px solid #ccc;
         }
@@ -324,6 +333,7 @@
             align-items: center;
             gap: 10px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
         .pagination-controls button {
             padding: 8px 15px;
@@ -381,11 +391,10 @@
             background-color: #138496;
         }
         .spp-table .checkbox-cell {
-            width: 40px;
-            min-width: 40px;
+            width: 30px; 
+            min-width: 10%;
             padding: 5px;
         }
-
         /* --- CSS BARU UNTUK ADDON STATUS READ --- */
         #readStatusIndicator {
             position: fixed;
@@ -411,13 +420,49 @@
             font-size: 12px;
             cursor: pointer;
         }
+        @media (min-width: 768px) {
+            .header-section {
+                flex-direction: row;
+                align-items: center;
+            }
+            .header-buttons {
+                flex-direction: row;
+                width: auto;
+            }
+            .logout-btn, .refresh-btn, .btn-export, .btn-whatsapp, .btn-reset {
+                width: auto;
+            }
+            .form-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+            .form-grid .full-width {
+                grid-column: 1 / -1;
+            }
+            #addPaymentBtn {
+                width: auto;
+            }
+            .legend {
+                flex-direction: row;
+                gap: 15px;
+            }
+            .spp-table-controls {
+                flex-direction: row;
+                align-items: center;
+            }
+            .spp-table-controls .filter-group {
+                flex-direction: row;
+            }
+            .spp-table .checkbox-cell {
+                width: 30px; 
+                min-width: 10%;
+            }
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
     <div id="readStatusIndicator">Reads Sesi Ini: 0</div>
-
     <div class="container">
         <div class="header-section">
             <h1>Pembayaran SPP Siswa</h1>
@@ -447,12 +492,12 @@
                         <label for="paymentYear">Tahun Pembayaran</label>
                         <input type="number" id="paymentYear" required min="2000" value="2025">
                     </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
+                    <div class="form-group full-width">
                         <label>Bulan yang Dibayar</label>
                         <div class="month-selector" id="monthSelector"></div>
                     </div>
-                    <div class="form-group" style="grid-column: 1 / -1;"><label for="keterangan">Keterangan</label><textarea id="keterangan" rows="2"></textarea></div>
-                    <div class="form-group" style="grid-column: 1 / -1;"><label for="attachment">Upload Bukti Bayar</label><input type="file" id="attachment" accept="image/*,.pdf"></div>
+                    <div class="form-group full-width"><label for="keterangan">Keterangan</label><textarea id="keterangan" rows="2"></textarea></div>
+                    <div class="form-group full-width"><label for="attachment">Upload Bukti Bayar</label><input type="file" id="attachment" accept="image/*,.pdf"></div>
                 </div>
                 <button type="submit" id="addPaymentBtn">Simpan Pembayaran</button>
                 <div id="statusMessage"></div>
@@ -488,7 +533,6 @@
                 <button id="nextBtn" disabled>Berikutnya &raquo;</button>
             </div>
         </div>
-
         <div class="content-block">
             <h3>Input Laporan Non-SPP</h3>
             <form id="otherPaymentForm">
@@ -497,13 +541,12 @@
                     <div class="form-group"><label for="otherNominal">Nominal (Rp)</label><input type="number" id="otherNominal" required min="0"></div>
                     <div class="form-group"><label for="otherBankSelector">Bank</label><select id="otherBankSelector" required></select></div>
                     <div class="form-group"><label for="otherPaymentDate">Tanggal Bayar</label><input type="date" id="otherPaymentDate" required></div>
-                    <div class="form-group" style="grid-column: 1 / -1;"><label for="otherKeterangan">Keterangan</label><textarea id="otherKeterangan" rows="2" required></textarea></div>
+                    <div class="form-group full-width"><label for="otherKeterangan">Keterangan</label><textarea id="otherKeterangan" rows="2" required></textarea></div>
                 </div>
                 <button type="submit" id="addOtherPaymentBtn">Simpan Laporan</button>
                 <div id="otherStatusMessage"></div>
             </form>
         </div>
-
         <div class="content-block">
             <h3>Riwayat Laporan Non-SPP</h3>
             <div class="spp-table-controls">
@@ -523,7 +566,7 @@
             </div>
             <button class="btn-whatsapp" onclick="generateAndSendSelectedOtherPaymentProof()" style="margin-top: 20px;">Kirim Laporan Terpilih via WhatsApp</button>
         </div>
-        </div>
+    </div>
     <div id="singleModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -542,7 +585,7 @@
             <div class="modal-body">
                 <p>Edit teks template di bawah ini. Gunakan placeholder <code>{nama_siswa}</code>, <code>{tahun_bayar}</code>, <code>{rincian_pembayaran}</code>, <code>{total_nominal_formatted}</code>, dan <code>{nama_file}</code> untuk data dinamis.</p>
                 <textarea id="whatsappTemplateTextarea" rows="10" style="width:100%;"></textarea>
-                <div style="display: flex; justify-content: space-between; margin-top: 10px; align-items: center;">
+                <div style="display: flex; justify-content: space-between; margin-top: 10px; align-items: center; flex-direction: column; gap: 10px;">
                     <button class="btn-export" onclick="saveWhatsappTemplate()">Simpan Template</button>
                     <button class="btn-reset" onclick="resetWhatsappTemplate()">Reset ke Awal</button>
                 </div>
@@ -554,7 +597,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
         import { getFirestore, collection, getDocs, doc, getDoc, addDoc, updateDoc, query, where, Timestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-        
         const firebaseConfig = {
             apiKey: "AIzaSyBm3SkLLtl9LvczDDht-OQ6-R4OYLPYAJQ",
             authDomain: "progres-report-5d199.firebaseapp.com",
@@ -567,8 +609,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
-        // --- ADDON: LOGIKA BARU UNTUK STATUS READ ---
         let sessionReadCount = 0;
         const readStatusElement = document.getElementById('readStatusIndicator');
         function updateReadStatus() {
@@ -578,8 +618,6 @@
             sessionReadCount = 0;
             updateReadStatus();
         }
-        // --- ADDON: AKHIR LOGIKA BARU ---
-
         let allStudents = [];
         let allYearsWithPayments = [];
         let currentPage = 1;
@@ -589,12 +627,10 @@
         let brandSettings = {};
         let whatsappTemplateText = '';
         const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        
         let allOtherPayments = [];
         let otherCurrentPage = 1;
         const otherRowsPerPage = 10;
-
-        window.logout = function() { signOut(auth).then(() => { window.location.href = 'index.html'; }); };
+        window.logout = function() { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
         const singleModal = document.getElementById('singleModal');
         const modalBodyContent = document.getElementById('modalBodyContent');
         const modalTitle = document.getElementById('modalTitle');
@@ -607,7 +643,6 @@ Pembayaran yang tercatat:
 Total nominal yang tercatat adalah: *{total_nominal_formatted}*
 Laporan PDF sudah kami kirimkan ke folder unduhan Anda dengan nama "{nama_file}". Mohon dilampirkan dan dicek.
 Terima kasih.`;
-
         window.onclick = function(event) {
             if (event.target == singleModal) {
                 singleModal.style.display = 'none';
@@ -616,43 +651,33 @@ Terima kasih.`;
                 settingsModal.style.display = 'none';
             }
         }
-        
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                updateReadStatus(); // Inisialisasi tampilan addon
+                updateReadStatus();
                 const docRef = doc(db, "users", user.email);
                 const docSnap = await getDoc(docRef);
-                sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
-
+                sessionReadCount++; updateReadStatus();
                 if (docSnap.exists() && docSnap.data().role === 'bendahara') {
                     document.body.style.display = 'block';
                     document.getElementById('paymentDate').valueAsDate = new Date();
                     document.getElementById('paymentYear').value = new Date().getFullYear();
                     currentBendaharaName = docSnap.data().name || 'Bendahara';
-                    
                     await loadBrandSettings();
                     await loadBanks();
                     await loadAllStudents();
                     await loadWhatsappTemplate();
                     setupEventListeners();
                     populateMonths();
-
                     initializeNonSppModule();
-
                 } else {
                     alert("Akses ditolak. Halaman ini hanya untuk Bendahara.");
                     await signOut(auth);
-                    window.location.href = 'index.html';
+                    window.location.href = 'login.html';
                 }
             } else {
-                window.location.href = 'index.html';
+                window.location.href = 'login.html';
             }
         });
-
-        // ======================================================================
-        // --- SEMUA FUNGSI INTI SPP (UTUH DARI FILE STABIL V6) ---
-        // ======================================================================
-
         window.showPaymentDetails = function(detailsJsonEncoded) {
             const detailsJson = decodeURIComponent(detailsJsonEncoded);
             const details = JSON.parse(detailsJson);
@@ -696,11 +721,10 @@ Terima kasih.`;
             modalBodyContent.innerHTML = contentHTML;
             singleModal.style.display = 'flex';
         };
-
         async function loadWhatsappTemplate() {
             try {
                 const docSnap = await getDoc(doc(db, "settings", "whatsapp_templates"));
-                sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
+                sessionReadCount++; updateReadStatus();
                 if (docSnap.exists()) {
                     whatsappTemplateText = docSnap.data().paymentProof || '';
                 } else {
@@ -711,11 +735,10 @@ Terima kasih.`;
                 whatsappTemplateText = defaultWhatsappTemplate;
             }
         }
-
         async function loadBrandSettings() {
             try {
                 const docSnap = await getDoc(doc(db, "settings", "brand"));
-                sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
+                sessionReadCount++; updateReadStatus();
                 if (docSnap.exists()) {
                     brandSettings = docSnap.data();
                 } else {
@@ -726,13 +749,11 @@ Terima kasih.`;
                 brandSettings = {};
             }
         }
-
         async function loadAllStudents() {
             try {
                 const q = query(collection(db, "students"), where("status", "==", "active"));
                 const querySnapshot = await getDocs(q);
-                sessionReadCount += querySnapshot.size; updateReadStatus(); // ADDON: Menghitung read
-
+                sessionReadCount += querySnapshot.size; updateReadStatus();
                 allStudents = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 populateStudentSelector();
                 populateYearFilter();
@@ -742,13 +763,11 @@ Terima kasih.`;
                 console.error("Error loading students:", error);
             }
         }
-
         async function loadBanks() {
             try {
                 const banksCollection = collection(db, "banks");
                 const banksSnapshot = await getDocs(banksCollection);
-                sessionReadCount += banksSnapshot.size; updateReadStatus(); // ADDON: Menghitung read
-
+                sessionReadCount += banksSnapshot.size; updateReadStatus();
                 bankColors = {};
                 banksSnapshot.docs.forEach(doc => {
                     if (doc.data().status === 'active' || !doc.data().status) {
@@ -761,7 +780,6 @@ Terima kasih.`;
                 console.error("Gagal memuat data bank:", error);
             }
         }
-
         function populateStudentSelector() {
             const selector = document.getElementById('studentSelector');
             selector.innerHTML = '<option value="">-- Pilih Siswa --</option>';
@@ -771,7 +789,6 @@ Terima kasih.`;
                 selector.innerHTML += `<option value="${student.id}">${student.name} (${studentLevel} - ${studentStatus})</option>`;
             });
         }
-
         function populateStudentFilter() {
             const filter = document.getElementById('studentFilter');
             filter.innerHTML = '<option value="all">Semua Siswa</option>';
@@ -779,15 +796,13 @@ Terima kasih.`;
                 filter.innerHTML += `<option value="${student.id}">${student.name}</option>`;
             });
         }
-
         function populateBankSelector() {
             const selector = document.getElementById('bankSelector');
             selector.innerHTML = '<option value="">Pilih Bank</option>';
             for (const bankName in bankColors) {
-                selector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
+                bankSelector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
             }
         }
-
         function populateMonths() {
             const monthSelector = document.getElementById('monthSelector');
             monthSelector.innerHTML = '';
@@ -797,7 +812,6 @@ Terima kasih.`;
                 `;
             });
         }
-
         function populateBankLegend() {
             const legendDiv = document.getElementById('bankLegend');
             legendDiv.innerHTML = '';
@@ -807,7 +821,6 @@ Terima kasih.`;
                 `;
             }
         }
-
         function populateYearFilter() {
             const yearFilter = document.getElementById('yearFilter');
             const years = new Set();
@@ -832,7 +845,6 @@ Terima kasih.`;
                 yearFilter.value = 'all';
             }
         }
-        
         async function getBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -841,7 +853,6 @@ Terima kasih.`;
                 reader.onerror = error => reject(error);
             });
         }
-        
         async function compressImage(file, quality = 0.1) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -878,7 +889,6 @@ Terima kasih.`;
                 reader.onerror = error => reject(error);
             });
         }
-
         async function handleAddPayment(e) {
             e.preventDefault();
             const studentId = document.getElementById('studentSelector').value;
@@ -890,7 +900,6 @@ Terima kasih.`;
             const attachmentFile = document.getElementById('attachment').files[0];
             const monthsPaid = Array.from(document.querySelectorAll('input[name="month"]:checked')).map(cb => parseInt(cb.value));
             const statusMessageDiv = document.getElementById('statusMessage');
-
             if (!studentId || isNaN(nominal) || nominal <= 0 || !bank || !paymentDate || isNaN(paymentYear) || monthsPaid.length === 0 || !attachmentFile) {
                 statusMessageDiv.textContent = 'Semua field wajib diisi, termasuk bukti bayar.';
                 statusMessageDiv.style.color = 'red';
@@ -898,7 +907,6 @@ Terima kasih.`;
             }
             statusMessageDiv.textContent = 'Menyimpan pembayaran...';
             statusMessageDiv.style.color = 'blue';
-
             try {
                 let attachmentBase64 = '';
                 if (attachmentFile) {
@@ -917,33 +925,27 @@ Terima kasih.`;
                         return;
                     }
                 }
-
                 const studentRef = doc(db, "students", studentId);
                 const studentSnap = await getDoc(studentRef);
-                sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
-
+                sessionReadCount++; updateReadStatus();
                 if (!studentSnap.exists()) {
                     statusMessageDiv.textContent = 'Error: Data siswa tidak ditemukan.';
                     statusMessageDiv.style.color = 'red';
                     return;
                 }
-
                 const studentData = studentSnap.data();
                 const updatedSppData = { ...studentData.spp };
                 const paymentUniqueId = crypto.randomUUID();
-                
                 const existingMonths = monthsPaid.filter(monthIndex => {
                     const key = `${paymentYear}-${monthIndex}`;
                     return updatedSppData[key] !== undefined;
                 });
-
                 if (existingMonths.length > 0) {
                     const existingMonthsNames = existingMonths.map(i => monthNames[i]).join(', ');
                     statusMessageDiv.textContent = `Error: Pembayaran untuk bulan ${existingMonthsNames} pada tahun ${paymentYear} sudah ada.`;
                     statusMessageDiv.style.color = 'red';
                     return;
                 }
-
                 monthsPaid.forEach(monthIndex => {
                     const key = `${paymentYear}-${monthIndex}`;
                     updatedSppData[key] = {
@@ -956,11 +958,9 @@ Terima kasih.`;
                         studentLevel: studentData.studentLevel || 'Level belum diatur'
                     };
                 });
-
                 await updateDoc(studentRef, {
                     spp: updatedSppData
                 });
-
                 statusMessageDiv.textContent = 'Pembayaran berhasil disimpan!';
                 document.getElementById('sppPaymentForm').reset();
                 document.getElementById('paymentDate').valueAsDate = new Date();
@@ -972,14 +972,12 @@ Terima kasih.`;
                 console.error("Error storing payment:", error);
             }
         }
-        
         function renderSppTable() {
             const tableHeader = document.getElementById('tableHeader');
             const tableSubHeader = document.getElementById('tableSubHeader');
             const tableBody = document.getElementById('sppTableBody');
             const selectedStudentId = document.getElementById('studentFilter').value;
             const selectedYear = document.getElementById('yearFilter').value;
-            
             let studentsToDisplay = allStudents.filter(student => {
                 let matchesStudent = selectedStudentId === 'all' || student.id === selectedStudentId;
                 if (selectedYear === 'all') {
@@ -993,28 +991,23 @@ Terima kasih.`;
             const start = (currentPage - 1) * rowsPerPage;
             const end = start + rowsPerPage;
             const paginatedStudents = studentsToDisplay.slice(start, end);
-
             tableHeader.innerHTML = '';
             tableSubHeader.innerHTML = '';
-
             if (allYearsWithPayments.length === 0 && selectedYear === 'all') {
                 tableBody.innerHTML = `<tr><td colspan="${monthNames.length + 1}" class="no-data">Belum ada data pembayaran SPP sama sekali.</td></tr>`;
                 updatePaginationControls(0, 1);
                 return;
             }
-            
             const yearsToDisplay = selectedYear === 'all' ? allYearsWithPayments : [selectedYear];
             tableHeader.innerHTML = `<th rowspan="2">Nama Siswa</th>`;
             yearsToDisplay.forEach(year => {
                 tableHeader.innerHTML += `<th colspan="12">${year}</th>`;
             });
-
             yearsToDisplay.forEach(year => {
                  monthNames.forEach(month => {
                     tableSubHeader.innerHTML += `<th>${month.substring(0,3).toUpperCase()}</th>`;
                 });
             });
-
             tableBody.innerHTML = '';
             if (paginatedStudents.length === 0) {
                 const colspan = 1 + (yearsToDisplay.length * 12);
@@ -1026,7 +1019,6 @@ Terima kasih.`;
                     const studentNameCell = row.insertCell();
                     const studentStatus = student.status || 'inactive';
                     studentNameCell.innerHTML = `${student.name}<span class="student-status">${studentStatus.toUpperCase()}</span>`;
-            
                     const studentSpp = student.spp || {};
                     yearsToDisplay.forEach(year => {
                         monthNames.forEach((month, monthIndex) => {
@@ -1069,14 +1061,12 @@ Terima kasih.`;
             }
             updatePaginationControls(currentPage, totalPages);
         }
-
         function updatePaginationControls(current, total) {
             document.getElementById('currentPageDisplay').textContent = current;
             document.getElementById('totalPagesDisplay').textContent = total;
             document.getElementById('prevBtn').disabled = current <= 1;
             document.getElementById('nextBtn').disabled = current >= total || total === 0;
         }
-
         function setupEventListeners() {
             document.getElementById('sppPaymentForm').addEventListener('submit', handleAddPayment);
             document.getElementById('yearFilter').addEventListener('change', () => {
@@ -1101,7 +1091,6 @@ Terima kasih.`;
                 }
             });
         }
-        
         function formatPhoneNumber(number) {
             number = String(number).replace(/\s/g, '');
             if (number.startsWith('0')) {
@@ -1114,7 +1103,6 @@ Terima kasih.`;
             }
             return number;
         }
-
         window.generateAndSendPaymentProof = function() {
             const studentFilter = document.getElementById('studentFilter');
             const yearFilter = document.getElementById('yearFilter');
@@ -1125,7 +1113,6 @@ Terima kasih.`;
             const studentId = studentFilter.value;
             const student = allStudents.find(s => s.id === studentId);
             const selectedYear = yearFilter.value;
-
             if (!student || !student.phone) {
                 alert("Nomor telepon siswa tidak ditemukan. Harap perbarui data siswa di Panel Admin.");
                 return;
@@ -1133,78 +1120,62 @@ Terima kasih.`;
             const studentName = student.name;
             const phoneNumber = formatPhoneNumber(student.phone);
             const paymentsForYear = allStudents.find(s => s.id === studentId)?.spp;
-            
             if (!paymentsForYear || Object.keys(paymentsForYear).filter(k=>k.startsWith(selectedYear)).length === 0) {
                 alert("Tidak ada data pembayaran untuk siswa ini pada tahun yang dipilih.");
                 return;
             }
-
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             let yPos = 15;
-
-            const addContent = () => {
+            const addContentAndSave = () => {
                 if (brandSettings && brandSettings.companyName) {
                     doc.setFontSize(12);
                     doc.setFont("helvetica", "normal");
                     doc.text(brandSettings.companyName, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
                     yPos += 8;
                 }
-                
                 doc.setFontSize(16);
                 doc.setFont("helvetica", "bold");
                 doc.text(`Bukti Pembayaran SPP`, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
                 yPos += 10;
-                
                 doc.setFontSize(10);
                 doc.setFont("helvetica", "normal");
                 doc.text(`Tahun: ${selectedYear}`, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
                 yPos += 15;
-                
                 doc.text(`Nama Siswa: ${studentName}`, 15, yPos);
                 yPos += 10;
-                
                 const paidMonths = Object.keys(paymentsForYear)
                     .filter(key => key.startsWith(selectedYear))
                     .sort((a,b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]))
                     .map(key => ({monthIndex: parseInt(key.split('-')[1]), data: paymentsForYear[key]}));
-
                 const tableData = paidMonths.map(p => {
                     const nominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(p.data.nominal);
                     return [monthNames[p.monthIndex], nominalFormatted, p.data.bank];
                 });
-
                 const totalNominal = paidMonths.reduce((sum, p) => sum + p.data.nominal, 0);
-
                 doc.autoTable({
                     startY: yPos,
                     head: [['Bulan', 'Nominal', 'Bank']],
                     body: tableData,
                 });
-                
                 yPos = doc.autoTable.previous.finalY + 10;
                 doc.text(`Total Terbayar: ${new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal)}`, 14, yPos);
-
                 const fileName = `Bukti_Bayar_SPP_${studentName.replace(/ /g, '_')}_${selectedYear}.pdf`;
-                
                 const totalNominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal);
                 const rincianPembayaran = paidMonths.map(p => `• ${monthNames[p.monthIndex]}: ${new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(p.data.nominal)}`).join('\n');
-                
                 let message = whatsappTemplateText
                     .replace(/{nama_siswa}/g, studentName)
                     .replace(/{tahun_bayar}/g, selectedYear)
                     .replace(/{total_nominal_formatted}/g, totalNominalFormatted)
                     .replace(/{rincian_pembayaran}/g, rincianPembayaran)
                     .replace(/{nama_file}/g, fileName);
-
                 const encodedMessage = encodeURIComponent(message);
                 const whatsappUrl = `https://web.whatsapp.com/send/?phone=${phoneNumber}&text=${encodedMessage}`;
-                
-                doc.save(fileName);
-                window.open(whatsappUrl, '_blank');
-                alert(`Bukti pembayaran PDF untuk ${studentName} (${selectedYear}) telah diunduh. Silakan lampirkan secara manual di chat WhatsApp yang terbuka.`);
+                doc.save(fileName, { returnPromise: true }).then(() => {
+                    alert(`Bukti pembayaran PDF untuk ${studentName} (${selectedYear}) telah diunduh. Silakan lampirkan secara manual di chat WhatsApp yang terbuka.`);
+                    window.open(whatsappUrl, '_blank');
+                });
             };
-
             if (brandSettings && brandSettings.logoBase64) {
                 const img = new Image();
                 img.src = brandSettings.logoBase64;
@@ -1214,19 +1185,17 @@ Terima kasih.`;
                     const calculatedLogoWidth = desiredLogoHeight * aspectRatio;
                     doc.addImage(img, 'PNG', (doc.internal.pageSize.getWidth() - calculatedLogoWidth) / 2, yPos, calculatedLogoWidth, desiredLogoHeight);
                     yPos += desiredLogoHeight + 10;
-                    addContent();
+                    addContentAndSave();
                 };
-                img.onerror = () => addContent();
+                img.onerror = () => addContentAndSave();
             } else {
-                addContent();
+                addContentAndSave();
             }
         }
-        
         window.exportToExcel = function() {
             const selectedStudentId = document.getElementById('studentFilter').value;
             const selectedYear = document.getElementById('yearFilter').value;
             let fileName = `Laporan_SPP_${selectedYear === 'all' ? 'Semua_Tahun' : selectedYear}`;
-
             const filteredStudents = allStudents.filter(student => {
                 let matchesStudent = selectedStudentId === 'all' || student.id === selectedStudentId;
                 if (selectedYear === 'all') {
@@ -1235,12 +1204,10 @@ Terima kasih.`;
                     return matchesStudent && Object.keys(student.spp || {}).some(key => key.startsWith(selectedYear));
                 }
             });
-
             if (selectedStudentId !== 'all') {
                 const studentName = allStudents.find(s => s.id === selectedStudentId)?.name || 'Siswa_Tidak_Ditemukan';
                 fileName = `Laporan_SPP_${studentName}_${selectedYear === 'all' ? 'Semua_Tahun' : selectedYear}`;
             }
-
             const yearsToExport = selectedYear === 'all' ? allYearsWithPayments : [selectedYear];
             const headerNames = ['Nama Siswa'];
             yearsToExport.forEach(year => {
@@ -1248,12 +1215,10 @@ Terima kasih.`;
                     headerNames.push(`${month} ${year}`);
                 });
             });
-
             const bodyData = filteredStudents.map(student => {
                 const rowData = [];
                 rowData.push(student.name);
                 const studentSpp = student.spp || {};
-
                 yearsToExport.forEach(year => {
                     monthNames.forEach((month, monthIndex) => {
                         const key = `${year}-${monthIndex}`;
@@ -1270,7 +1235,6 @@ Terima kasih.`;
                 });
                 return rowData;
             });
-            
             const table = document.createElement('table');
             const thead = table.createTHead();
             const headerRow = thead.insertRow();
@@ -1279,7 +1243,6 @@ Terima kasih.`;
                 th.textContent = headerText;
                 headerRow.appendChild(th);
             });
-
             const tbody = table.createTBody();
             bodyData.forEach(rowData => {
                 const row = tbody.insertRow();
@@ -1288,11 +1251,9 @@ Terima kasih.`;
                     cell.textContent = cellData;
                 });
             });
-            
             const uri = 'data:application/vnd.ms-excel;base64,';
             const template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table>' + table.innerHTML + '</table></body></html>';
             const base64 = btoa(unescape(encodeURIComponent(template)));
-
             const link = document.createElement('a');
             link.href = uri + base64;
             link.download = `${fileName}.xls`;
@@ -1300,7 +1261,6 @@ Terima kasih.`;
             link.click();
             document.body.removeChild(link);
         }
-
         window.openWhatsappSettings = async function() {
             settingsModal.style.display = 'flex';
             settingsStatusMessage.textContent = 'Memuat template...';
@@ -1308,7 +1268,6 @@ Terima kasih.`;
             whatsappTemplateTextarea.value = whatsappTemplateText;
             settingsStatusMessage.textContent = '';
         }
-
         window.saveWhatsappTemplate = async function() {
             settingsStatusMessage.textContent = 'Menyimpan template...';
             settingsStatusMessage.style.color = 'blue';
@@ -1327,43 +1286,32 @@ Terima kasih.`;
                 settingsStatusMessage.style.color = 'red';
             }
         }
-
         window.resetWhatsappTemplate = async function() {
             if (confirm("Apakah Anda yakin ingin mengembalikan template ke pengaturan awal? Ini tidak bisa dibatalkan.")) {
                 whatsappTemplateTextarea.value = defaultWhatsappTemplate;
                 await saveWhatsappTemplate();
             }
         }
-
-        // ======================================================================
-        // --- MODUL NON-SPP (IMPLEMENTASI BARU YANG TERISOLASI) ---
-        // ======================================================================
-        
         function initializeNonSppModule() {
             loadNonSppData();
             setupNonSppEventListeners();
         }
-
         async function loadNonSppData() {
             try {
                 const querySnapshot = await getDocs(collection(db, "other_payments"));
-                sessionReadCount += querySnapshot.size; updateReadStatus(); // ADDON: Menghitung read
-                
+                sessionReadCount += querySnapshot.size; updateReadStatus();
                 allOtherPayments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
                 populateNonSppSelectors();
                 renderOtherPaymentsTable(filterNonSppData());
             } catch (error) {
                 console.error("Error loading Non-SPP data:", error);
             }
         }
-        
         function populateNonSppSelectors() {
             const studentSelector = document.getElementById('otherStudentSelector');
             const studentFilter = document.getElementById('otherStudentFilter');
             const bankSelector = document.getElementById('otherBankSelector');
             const yearFilter = document.getElementById('otherYearFilter');
-
             studentSelector.innerHTML = '<option value="">-- Pilih Siswa --</option>';
             studentFilter.innerHTML = '<option value="all">Semua Siswa</option>';
             allStudents.forEach(student => {
@@ -1371,12 +1319,10 @@ Terima kasih.`;
                 studentSelector.innerHTML += optionHTML;
                 studentFilter.innerHTML += `<option value="${student.id}">${student.name}</option>`;
             });
-
             bankSelector.innerHTML = '<option value="">Pilih Bank</option>';
             for (const bankName in bankColors) {
                 bankSelector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
             }
-
             const years = new Set(allOtherPayments
                 .filter(p => p.timestamp && typeof p.timestamp.toDate === 'function')
                 .map(p => p.timestamp.toDate().getFullYear())
@@ -1387,7 +1333,6 @@ Terima kasih.`;
                 yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
             });
         }
-
         function setupNonSppEventListeners() {
             document.getElementById('otherPaymentForm').addEventListener('submit', handleAddOtherPayment);
             document.getElementById('otherStudentFilter').addEventListener('change', () => { otherCurrentPage = 1; renderOtherPaymentsTable(filterNonSppData()); });
@@ -1403,7 +1348,6 @@ Terima kasih.`;
                 });
             });
         }
-        
         async function handleAddOtherPayment(e) {
             e.preventDefault();
             const studentId = document.getElementById('otherStudentSelector').value;
@@ -1413,7 +1357,6 @@ Terima kasih.`;
             const paymentDate = document.getElementById('otherPaymentDate').value;
             const keterangan = document.getElementById('otherKeterangan').value;
             const statusMessageDiv = document.getElementById('otherStatusMessage');
-
             if (!studentId || isNaN(nominal) || !bank || !paymentDate || !keterangan) {
                 statusMessageDiv.textContent = 'Semua field harus diisi.';
                 statusMessageDiv.style.color = 'red';
@@ -1421,7 +1364,6 @@ Terima kasih.`;
             }
             statusMessageDiv.textContent = 'Menyimpan laporan...';
             statusMessageDiv.style.color = 'blue';
-
             try {
                 const docData = {
                     timestamp: Timestamp.fromDate(new Date(paymentDate)),
@@ -1433,14 +1375,12 @@ Terima kasih.`;
                 statusMessageDiv.style.color = 'green';
                 document.getElementById('otherPaymentForm').reset();
                 document.getElementById('otherPaymentDate').valueAsDate = new Date();
-                
                 await loadNonSppData();
             } catch (error) {
                 statusMessageDiv.textContent = `Error: ${error.message}`;
                 statusMessageDiv.style.color = 'red';
             }
         }
-
         function filterNonSppData() {
             const studentId = document.getElementById('otherStudentFilter').value;
             const year = document.getElementById('otherYearFilter').value;
@@ -1457,13 +1397,11 @@ Terima kasih.`;
                 return matchesStudent && matchesYear;
             });
         }
-        
         function renderOtherPaymentsTable(data) {
             const tableBody = document.getElementById('otherPaymentsTableBody');
             const totalPages = Math.ceil(data.length / otherRowsPerPage);
             otherCurrentPage = Math.min(otherCurrentPage, totalPages || 1);
             const paginatedData = data.slice((otherCurrentPage - 1) * otherRowsPerPage, otherCurrentPage * otherRowsPerPage);
-
             tableBody.innerHTML = '';
             if (paginatedData.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="6" class="no-data">Tidak ada laporan yang cocok dengan filter.</td></tr>';
@@ -1495,47 +1433,64 @@ Terima kasih.`;
             document.getElementById('otherNextBtn').disabled = otherCurrentPage >= totalPages;
             document.getElementById('selectAllCheckbox').checked = false;
         }
-
         window.generateAndSendSelectedOtherPaymentProof = async function() {
             const selectedCheckboxes = document.querySelectorAll('.report-checkbox:checked');
             if (selectedCheckboxes.length === 0) return alert('Harap centang setidaknya satu laporan.');
-            
             const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
             const selectedReports = allOtherPayments.filter(p => selectedIds.includes(p.id));
             const studentIds = new Set(selectedReports.map(p => p.studentId));
-
             if (studentIds.size > 1) return alert('Hanya bisa mengirim laporan untuk satu siswa dalam satu waktu.');
-
             const studentId = [...studentIds][0];
             const student = allStudents.find(s => s.id === studentId);
             if (!student || !student.phone) return alert("Nomor telepon siswa tidak ditemukan.");
-
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.setFontSize(16).text('Laporan Non-SPP', 105, 15, { align: 'center' });
-            doc.setFontSize(12).text(`Nama Siswa: ${student.name}`, 14, 25);
-
-            doc.autoTable({
-                startY: 30,
-                head: [['Tanggal', 'Keterangan', 'Bank', 'Nominal']],
-                body: selectedReports.map(p => {
-                    const dateString = (p.timestamp && typeof p.timestamp.toDate === 'function')
-                        ? p.timestamp.toDate().toLocaleDateString('id-ID')
-                        : 'Tgl Invalid';
-                    return [dateString, p.keterangan, p.bank, `Rp ${new Intl.NumberFormat('id-ID').format(p.nominal)}`];
-                })
-            });
-            
-            const fileName = `Laporan_Non-SPP_${student.name.replace(/ /g, '_')}.pdf`;
-            doc.save(fileName);
-            
-            const message = `Halo, ini rincian laporan non-SPP untuk *${student.name}*.\n\n*Mohon lampirkan file PDF "${fileName}" yang baru saja Anda unduh.*`;
-            const whatsappUrl = `https://web.whatsapp.com/send/?phone=${formatPhoneNumber(student.phone)}&text=${encodeURIComponent(message)}`;
-            
-            window.open(whatsappUrl, '_blank');
-            alert(`PDF telah diunduh: "${fileName}"\n\nSilakan lampirkan file tersebut di chat WhatsApp yang terbuka.`);
+            let yPos = 15;
+            const addContentAndSave = () => {
+                if (brandSettings && brandSettings.companyName) {
+                    doc.setFontSize(12);
+                    doc.setFont("helvetica", "normal");
+                    doc.text(brandSettings.companyName, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
+                    yPos += 8;
+                }
+                doc.setFontSize(16).text('Laporan Non-SPP', doc.internal.pageSize.getWidth() / 2, yPos, { align: 'center' });
+                yPos += 15;
+                doc.setFontSize(12).text(`Nama Siswa: ${student.name}`, 14, yPos);
+                yPos += 10;
+                doc.autoTable({
+                    startY: yPos,
+                    head: [['Tanggal', 'Keterangan', 'Bank', 'Nominal']],
+                    body: selectedReports.map(p => {
+                        const dateString = (p.timestamp && typeof p.timestamp.toDate === 'function')
+                            ? p.timestamp.toDate().toLocaleDateString('id-ID')
+                            : 'Tgl Invalid';
+                        return [dateString, p.keterangan, p.bank, `Rp ${new Intl.NumberFormat('id-ID').format(p.nominal)}`];
+                    })
+                });
+                const fileName = `Laporan_Non-SPP_${student.name.replace(/ /g, '_')}.pdf`;
+                const message = `Halo, ini rincian laporan non-SPP untuk *${student.name}*.\n\n*Mohon lampirkan file PDF "${fileName}" yang baru saja Anda unduh.*`;
+                const whatsappUrl = `https://web.whatsapp.com/send/?phone=${formatPhoneNumber(student.phone)}&text=${encodeURIComponent(message)}`;
+                doc.save(fileName, { returnPromise: true }).then(() => {
+                    alert(`PDF telah diunduh: "${fileName}"\n\nSilakan lampirkan file tersebut di chat WhatsApp yang terbuka.`);
+                    window.open(whatsappUrl, '_blank');
+                });
+            };
+            if (brandSettings && brandSettings.logoBase64) {
+                const img = new Image();
+                img.src = brandSettings.logoBase64;
+                img.onload = () => {
+                    const desiredLogoHeight = 20;
+                    const aspectRatio = img.width / img.height;
+                    const calculatedLogoWidth = desiredLogoHeight * aspectRatio;
+                    doc.addImage(img, 'PNG', (doc.internal.pageSize.getWidth() - calculatedLogoWidth) / 2, yPos, calculatedLogoWidth, desiredLogoHeight);
+                    yPos += desiredLogoHeight + 10;
+                    addContentAndSave();
+                };
+                img.onerror = () => addContentAndSave();
+            } else {
+                addContentAndSave();
+            }
         }
-
     </script>
 </body>
 </html>

@@ -5,40 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Coach</title>
     <style>
-        /* ... CSS asli Anda dari file dashboard.html ... */
         body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; display: none; }
         .container { max-width: 1000px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
         h1, h3 { color: #007bff; }
-        .header-info { display: flex; justify-content: space-between; align-items: center; }
-        .logout-btn { padding: 8px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .refresh-btn { padding: 8px 15px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
-        .report-table, .student-list-table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
-        .report-table th, .report-table td, .student-list-table th, .student-list-table td { border: 1px solid #ddd; padding: 12px; text-align: left; word-wrap: break-word; }
-        .report-table th, .student-list-table th { background-color: #f2f2f2; }
-        .report-table .col-sesi { width: 7%; text-align: center; }
-        .report-table .col-siswa { width: 18%; }
-        .report-table .col-level { width: 15%; }
-        .report-table .col-tanggal { width: 13%; }
-        .report-table .col-lesson { width: 12%; }
-        .report-table .col-aktivitas { width: 22%; }
-        .report-table .col-hasil { width: 18%; }    
+        .header-info { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .header-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .logout-btn, .refresh-btn, .btn-export, .btn-reset { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; text-align: center; width: 100%; }
+        .logout-btn { background-color: #dc3545; color: white; }
+        .refresh-btn { background-color: #17a2b8; color: white; }
+        .student-list-table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
+        .student-list-table th, .student-list-table td { border: 1px solid #ddd; padding: 12px; text-align: left; word-wrap: break-word; }
+        .student-list-table th { background-color: #f2f2f2; }
         .report-form-section { margin-top: 30px; padding: 20px; border: 1px solid #ccc; border-radius: 8px; background-color: #fafafa; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .form-grid > div { flex: 1 1 200px; }
-        .form-grid .full-width { grid-column: 1 / -1; }
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .form-grid .full-width { grid-column: 1; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         input[readonly] { background-color: #e9ecef; cursor: not-allowed; }
-        .report-form-section button, .report-controls button { padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .report-form-section button { padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
         #addReportForm button { background-color: #28a745; margin-top: 15px; }
         #reportStatusMessage { margin-top: 15px; font-weight: bold; }
         .report-controls { margin-top: 40px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9; }
-        .report-filters { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
-        #clearReportFilterBtn { background-color: #6c757d; }
-        #activityCheckboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 10px; padding: 10px; background-color: #fff; border: 1px solid #ddd; border-radius: 4px; }
+        .report-filters { display: flex; flex-direction: column; flex-wrap: wrap; gap: 15px; align-items: stretch; }
+        .report-filters > div { width: 100%; }
+        #clearReportFilterBtn, #sendPdfBtn { width: 100%; }
+        #activityCheckboxes { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; padding: 10px; background-color: #fff; border: 1px solid #ddd; border-radius: 4px; }
         #activityCheckboxes label { font-weight: normal; display: flex; align-items: center; }
         #activityCheckboxes input { width: auto; margin-right: 8px; }
-        .header-buttons { display: flex; gap: 10px; }
         .btn-export { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 600; transition: background-color 0.2s ease; }
         .btn-export:hover { background-color: #0056b3; }
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
@@ -47,34 +40,79 @@
         .modal-header h3 { margin: 0; color: #333; }
         .close-btn { color: #aaa; font-size: 30px; font-weight: bold; cursor: pointer; }
         .close-btn:hover { color: black; }
-        .modal-body { display: flex; flex-direction: column; gap: 5px; }
+        .modal-body { display: flex; flex-direction: column; gap: 10px; }
         .btn-reset { background-color: #6c757d; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; transition: background-color 0.2s ease; }
         .btn-reset:hover { background-color: #5a6268; }
+        #readStatusIndicator { position: fixed; bottom: 10px; right: 10px; background-color: #212529; color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-family: monospace; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.3); opacity: 0.8; transition: opacity 0.3s; }
+        #readStatusIndicator:hover { opacity: 1; }
+        #readStatusIndicator button { margin-left: 10px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
+        
+        /* Perbaikan untuk tabel riwayat agar dapat digulir */
+        .report-table-container {
+            overflow-x: auto;
+        }
+        .report-table { 
+            width: 100%; 
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+        .report-table th, .report-table td { 
+            border: 1px solid #ddd; 
+            padding: 12px; 
+            text-align: left; 
+            word-wrap: break-word;
+        }
+        .report-table th { background-color: #f2f2f2; }
 
-        /* --- CSS BARU UNTUK ADDON STATUS READ --- */
-        #readStatusIndicator {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background-color: #212529;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-family: monospace;
-            z-index: 2000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            opacity: 0.8;
-            transition: opacity 0.3s;
-        }
-        #readStatusIndicator:hover {
-            opacity: 1;
-        }
-        #readStatusIndicator button {
-            margin-left: 10px;
-            padding: 2px 8px;
-            font-size: 12px;
-            cursor: pointer;
+        @media (min-width: 768px) {
+            .header-info { flex-direction: row; align-items: center; }
+            .header-buttons { flex-direction: row; width: auto; }
+            .logout-btn, .refresh-btn, .btn-export, .btn-reset { width: auto; }
+            .form-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+            .form-grid > div { flex: 1 1 200px; }
+            .form-grid .full-width { grid-column: 1 / -1; }
+            .report-filters { flex-direction: row; align-items: flex-end; gap: 20px; }
+            .report-filters > div { width: auto; }
+            #clearReportFilterBtn, #sendPdfBtn { width: auto; }
+            #activityCheckboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+            
+            /* Pada desktop, tabel tidak perlu digulir */
+            .report-table-container {
+                overflow-x: unset;
+            }
+            .report-table { 
+                display: table; 
+                table-layout: fixed; 
+                white-space: normal;
+                width: 100%;
+            }
+            .report-table th, .report-table td {
+                min-width: unset;
+            }
+            
+            /* Perbaikan khusus untuk lebar kolom di desktop */
+            .report-table .col-sesi {
+                width: 5%;
+                text-align: center;
+            }
+            .report-table .col-siswa {
+                width: 15%;
+            }
+            .report-table .col-level {
+                width: 10%;
+            }
+            .report-table .col-tanggal {
+                width: 10%;
+            }
+            .report-table .col-lesson {
+                width: 15%;
+            }
+            .report-table .col-aktivitas {
+                width: 25%;
+            }
+            .report-table .col-hasil {
+                width: 20%;
+            }
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -82,7 +120,6 @@
 </head>
 <body>
     <div id="readStatusIndicator">Reads Sesi Ini: 0</div>
-
     <div class="container">
         <div class="header-info">
             <h1>Dashboard Coach</h1>
@@ -95,10 +132,12 @@
         <p>Selamat datang, <strong id="coachEmailDisplay">...</strong>.</p>
         <div style="margin-top: 30px;">
             <h3>Daftar Siswa Anda</h3>
-            <table class="student-list-table">
-                <thead><tr><th>Nama Siswa</th><th>Level</th><th>Lesson Terakhir</th></tr></thead>
-                <tbody id="myStudentsTableBody"></tbody>
-            </table>
+            <div style="overflow-x:auto;">
+                <table class="student-list-table">
+                    <thead><tr><th>Nama Siswa</th><th>Level</th><th>Lesson Terakhir</th></tr></thead>
+                    <tbody id="myStudentsTableBody"></tbody>
+                </table>
+            </div>
         </div>
         <div class="report-form-section">
             <h3>Lapor Aktivitas Harian</h3>
@@ -113,7 +152,9 @@
                 <div><button type="button" id="clearReportFilterBtn">Reset Filter</button></div>
                 <div><button type="button" id="sendPdfBtn" style="background-color: #007bff; color: white;">Kirim PDF</button></div>
             </div>
-            <table class="report-table" id="reportTableForPdf"><thead><tr><th class="col-sesi">Sesi</th><th class="col-siswa">Siswa</th><th class="col-level">Level</th><th class="col-tanggal">Tanggal</th><th class="col-lesson">Lesson</th><th class="col-aktivitas">Aktivitas</th><th class="col-hasil">Hasil</th></tr></thead><tbody id="reportsTableBody"></tbody></table>
+            <div class="report-table-container">
+                <table class="report-table" id="reportTableForPdf"><thead><tr><th class="col-sesi">Sesi</th><th class="col-siswa">Siswa</th><th class="col-level">Level</th><th class="col-tanggal">Tanggal</th><th class="col-lesson">Lesson</th><th class="col-aktivitas">Aktivitas</th><th class="col-hasil">Hasil</th></tr></thead><tbody id="reportsTableBody"></tbody></table>
+            </div>
         </div>
     </div>
     
@@ -126,7 +167,7 @@
             <div class="modal-body">
                 <p>Edit teks template di bawah ini. Gunakan placeholder <code>{nama_siswa}</code>, <code>{level_siswa}</code>, dan <code>{nomor_sesi}</code> untuk data dinamis.</p>
                 <textarea id="whatsappTemplateTextarea" rows="10" style="width:100%;"></textarea>
-                <div style="display: flex; justify-content: space-between; margin-top: 10px; align-items: center;">
+                <div style="display: flex; justify-content: space-between; margin-top: 10px; align-items: center; flex-direction: column; gap: 10px;">
                     <button class="btn-export" onclick="saveWhatsappTemplate()">Simpan Template</button>
                     <button class="btn-reset" onclick="resetWhatsappTemplate()">Reset ke Awal</button>
                 </div>
@@ -141,12 +182,9 @@
         import { getFirestore, collection, getDocs, doc, getDoc, addDoc, query, where, Timestamp, orderBy, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
         
         const firebaseConfig = { apiKey: "AIzaSyBm3SkLLtl9LvczDDht-OQ6-R4OYLPYAJQ", authDomain: "progres-report-5d199.firebaseapp.com", projectId: "progres-report-5d199", storageBucket: "progres-report-5d199.firebasestorage.app", messagingSenderId: "363573365137", appId: "1:363573365137:web:98f32d5ff8fae05617b230", measurementId: "G-CPX04R69F5" };
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
-        // --- ADDON: LOGIKA BARU UNTUK STATUS READ ---
         let sessionReadCount = 0;
         const readStatusElement = document.getElementById('readStatusIndicator');
         function updateReadStatus() {
@@ -156,8 +194,6 @@
             sessionReadCount = 0;
             updateReadStatus();
         }
-        // --- ADDON: AKHIR LOGIKA BARU ---
-        
         let currentCoachName = '';
         let kurikulum = {};
         let myStudents = [];
@@ -174,13 +210,11 @@ Terima kasih.`;
         window.logout = function() {
             sessionStorage.clear();
             localStorage.clear();
-            signOut(auth).then(() => { window.location.href = 'index.html'; });
+            signOut(auth).then(() => { window.location.href = 'login.html'; });
         };
-
         const saveToCache = (key, data) => {
             sessionStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), data: data }));
         };
-        
         const loadFromCache = (key, maxAgeMinutes = 5) => {
             const item = sessionStorage.getItem(key);
             if (!item) return null;
@@ -194,11 +228,10 @@ Terima kasih.`;
         
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                updateReadStatus(); // Inisialisasi tampilan addon
+                updateReadStatus();
                 const docRef = doc(db, "users", user.email);
                 const docSnap = await getDoc(docRef);
-                sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
-
+                sessionReadCount++; updateReadStatus();
                 if (docSnap.exists() && docSnap.data().role === 'user' && docSnap.data().status !== 'disabled') {
                     document.body.style.display = 'block';
                     document.getElementById('coachEmailDisplay').textContent = user.email;
@@ -207,7 +240,6 @@ Terima kasih.`;
                     
                     kurikulum = JSON.parse(localStorage.getItem('kurikulum'))?.data || await fetchCurriculum();
                     brandSettings = JSON.parse(localStorage.getItem('brandSettings'))?.data || await fetchBrandSettings();
-
                     const cachedData = loadFromCache('coachData');
                     if (cachedData) {
                         myStudents = cachedData.students;
@@ -217,45 +249,41 @@ Terima kasih.`;
                         myStudents = data.students;
                         allMyReports = data.reports;
                     }
-
                     await loadWhatsappTemplate();
                     populateUI();
                     setupEventListeners();
                 } else {
                     alert("Akses ditolak.");
                     await signOut(auth);
-                    window.location.href = 'index.html';
+                    window.location.href = 'login.html';
                 }
             } else { 
-                window.location.href = 'index.html'; 
+                window.location.href = 'login.html'; 
             }
         });
-
         async function fetchCurriculum() {
             try {
                 const querySnapshot = await getDocs(collection(db, "kurikulum"));
-                sessionReadCount += querySnapshot.size; updateReadStatus(); // ADDON: Menghitung read
+                sessionReadCount += querySnapshot.size; updateReadStatus();
                 const data = {};
                 querySnapshot.forEach(doc => { data[doc.id] = doc.data().lessons; });
                 saveToCache('kurikulum', data);
                 return data;
             } catch (error) { console.error("Gagal ambil kurikulum:", error); return {}; }
         }
-
         async function fetchBrandSettings() {
             try {
                 const docSnap = await getDoc(doc(db, "settings", "brand"));
-                sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
+                sessionReadCount++; updateReadStatus();
                 const settings = docSnap.exists() ? docSnap.data() : {};
                 saveToCache('brandSettings', settings);
                 return settings;
             } catch (error) { console.error("Gagal ambil brand settings:", error); return {}; }
         }
-
         async function loadWhatsappTemplate() {
             try {
                 const docSnap = await getDoc(doc(db, "settings", "whatsapp_templates"));
-                sessionReadCount++; updateReadStatus(); // ADDON: Menghitung read
+                sessionReadCount++; updateReadStatus();
                 if (docSnap.exists() && docSnap.data().reportProof) {
                     whatsappTemplateText = docSnap.data().reportProof;
                 } else {
@@ -266,21 +294,17 @@ Terima kasih.`;
                 whatsappTemplateText = defaultReportWhatsappTemplate;
             }
         }
-        
         async function loadAllData(coachEmail) {
             try {
                 const studentQuery = query(collection(db, "students"), where("coachEmail", "==", coachEmail), where("status", "==", "active"));
                 const studentSnapshot = await getDocs(studentQuery);
-                sessionReadCount += studentSnapshot.size; // ADDON: Menghitung read
-
+                sessionReadCount += studentSnapshot.size;
                 const reportQuery = query(collection(db, "reports"), where("coachEmail", "==", coachEmail));
                 const reportSnapshot = await getDocs(reportQuery);
-                sessionReadCount += reportSnapshot.size; // ADDON: Menghitung read
-                updateReadStatus(); // ADDON: Update tampilan setelah semua pembacaan selesai
-
+                sessionReadCount += reportSnapshot.size;
+                updateReadStatus();
                 const students = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const reports = reportSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
                 const dataToCache = { students, reports };
                 saveToCache('coachData', dataToCache);
                 return dataToCache;
@@ -289,21 +313,17 @@ Terima kasih.`;
                 return { students: [], reports: [] };
             }
         }
-        
         function populateUI() {
             populateStudentLists();
             applyReportFiltersAndRender();
         }
-
         function populateStudentLists() {
             const studentsTableBody = document.getElementById('myStudentsTableBody');
             const studentSelector = document.getElementById('studentSelectorForReport');
             const reportFilterStudent = document.getElementById('reportFilterStudent');
-            
             studentsTableBody.innerHTML = '';
             studentSelector.innerHTML = '<option value="">-- Pilih Siswa --</option>';
             reportFilterStudent.innerHTML = '<option value="">-- Semua Siswa --</option>';
-
             myStudents.sort((a, b) => a.name.localeCompare(b.name)).forEach(student => {
                 const lastLessonDisplay = student.lastLesson || 'Belum ada laporan';
                 studentsTableBody.innerHTML += `<tr><td>${student.name}</td><td>${student.studentLevel || ''}</td><td>${lastLessonDisplay}</td></tr>`;
@@ -311,13 +331,11 @@ Terima kasih.`;
                 reportFilterStudent.innerHTML += `<option value="${student.id}">${student.name}</option>`;
             });
         }
-
         function applyReportFiltersAndRender() {
             const studentId = document.getElementById('reportFilterStudent').value;
             let level = document.getElementById('reportFilterLevel').value;
             let sortOption = document.getElementById('reportSortBy').value;
             let filteredReports = allMyReports;
-
             if (studentId) {
                 filteredReports = filteredReports.filter(r => r.studentId === studentId);
                 const levels = [...new Set(filteredReports.map(r => r.level))].filter(Boolean);
@@ -335,14 +353,11 @@ Terima kasih.`;
                 document.getElementById('reportFilterLevel').innerHTML = '<option value="">-- Semua Level --</option>';
                 level = ''; 
             }
-
             if (level) {
                 filteredReports = filteredReports.filter(r => r.level === level);
             }
-            
             renderReports(filteredReports, sortOption);
         }
-
         function renderReports(reports, sortOption) {
             currentlyDisplayedReports = reports;
             const tableBody = document.getElementById('reportsTableBody');
@@ -351,7 +366,6 @@ Terima kasih.`;
                 tableBody.innerHTML = '<tr><td colspan="7">Tidak ada laporan yang cocok.</td></tr>';
                 return;
             }
-
             const sortedReports = reports.sort((a, b) => {
                 let sortValueA = 0;
                 let sortValueB = 0;
@@ -365,7 +379,6 @@ Terima kasih.`;
                 }
                 return sortValueB - sortValueA;
             });
-            
             const activityCounters = {};
             [...sortedReports].reverse().forEach(report => {
                 const key = `${report.studentId}_${report.level}`;
@@ -373,7 +386,6 @@ Terima kasih.`;
                 activityCounters[key]++;
                 report.activityNumber = activityCounters[key];
             });
-
             sortedReports.forEach(report => {
                 const date = report.timestamp && report.timestamp.toDate ? report.timestamp.toDate().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : new Date(report.timestamp).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 tableBody.innerHTML += `<tr><td style="text-align: center;">${report.activityNumber || ''}</td><td>${report.siswa}</td><td>${report.level}</td><td>${date}</td><td>${report.lessonName || ''}</td><td>${report.lesson || ''}</td><td>${report.hasil}</td></tr>`;
@@ -391,13 +403,10 @@ Terima kasih.`;
             const studentName = studentSelector.options[studentSelector.selectedIndex].text.split('(')[0].trim();
             const lessonName = document.getElementById('reportLessonSelector').value;
             const reportDate = document.getElementById('reportDate').value;
-            
             statusMessageDiv.textContent = 'Mengirim...';
-
             const checkedActivities = Array.from(document.querySelectorAll('#activityCheckboxes input:checked'))
                 .map(cb => cb.value)
                 .sort(); 
-
             const reportData = {
                 siswa: studentName, studentId: studentId,
                 level: document.getElementById('reportLevel').value,
@@ -416,12 +425,10 @@ Terima kasih.`;
                     lastLesson: lessonName,
                     lastReportTimestamp: reportData.timestamp
                 });
-
                 statusMessageDiv.textContent = 'Laporan berhasil dikirim!';
                 document.getElementById('addReportForm').reset();
                 document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
                 document.getElementById('activityCheckboxesContainer').style.display = 'none';
-                
                 sessionStorage.removeItem('coachData');
                 const data = await loadAllData(auth.currentUser.email);
                 myStudents = data.students;
@@ -441,7 +448,6 @@ Terima kasih.`;
             lessonSelector.innerHTML = '';
             activityContainer.style.display = 'none';
             if (!studentId) return;
-
             const student = myStudents.find(s => s.id === studentId);
             if (student && student.studentLevel) {
                 const studentLevelValue = student.studentLevel;
@@ -477,7 +483,6 @@ Terima kasih.`;
                 container.style.display = 'none';
             }
         }
-
         let isSetupDone = false;
         function setupEventListeners() {
             if (isSetupDone) return;
@@ -508,7 +513,6 @@ Terima kasih.`;
             document.querySelector('#settingsModal .close-btn').onclick = () => document.getElementById('settingsModal').style.display = 'none';
             isSetupDone = true;
         }
-
         function formatPhoneNumber(number) {
             number = number.replace(/\s/g, '');
             if (number.startsWith('0')) {
@@ -523,30 +527,25 @@ Terima kasih.`;
             const studentFilter = document.getElementById('reportFilterStudent');
             const levelFilter = document.getElementById('reportFilterLevel');
             const studentId = studentFilter.value;
-        
             if (!studentId || !levelFilter.value) {
                 alert("Harap pilih filter Siswa dan Level spesifik terlebih dahulu sebelum membuat laporan.");
                 return;
             }
-        
             const student = myStudents.find(s => s.id === studentId);
             if (!student || !student.phone) {
                 alert("Nomor telepon siswa tidak ditemukan. Harap perbarui data siswa di Panel Admin.");
                 return;
             }
-            
             const phoneNumber = formatPhoneNumber(student.phone);
             const isValidPhoneNumber = /^[0-9]{9,15}$/.test(phoneNumber);
             if (!isValidPhoneNumber) {
                 alert("Nomor telepon siswa tidak valid. Harap perbarui data siswa di Panel Admin.");
                 return;
             }
-        
             if (currentlyDisplayedReports.length === 0) {
                 alert("Tidak ada laporan untuk dibuat PDF.");
                 return;
             }
-
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             const studentName = student.name;
@@ -555,114 +554,87 @@ Terima kasih.`;
             const pageCenter = pageWidth / 2;
             let yPos = 15;
             
+            const addContentAndSave = () => {
+                if (brandSettings && brandSettings.companyName) {
+                    doc.setFontSize(12);
+                    doc.setFont("helvetica", "normal");
+                    doc.text(brandSettings.companyName, pageCenter, yPos, { align: "center" });
+                    yPos += 8;
+                }
+                doc.setFontSize(16);
+                doc.setFont("helvetica", "bold");
+                doc.text("Laporan Aktivitas Siswa", pageCenter, yPos, { align: "center" });
+                yPos += 15;
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+                doc.text(`Coach : ${currentCoachName}`, 15, yPos);
+                doc.text(`Siswa / Level : ${studentName} / ${levelName}`, 15, yPos + 7);
+                yPos += 15;
+                const sortedReports = [...currentlyDisplayedReports].sort((a, b) => {
+                    const dateA = a.timestamp && typeof a.timestamp.toDate === 'function' ? a.timestamp.toDate() : new Date(a.timestamp);
+                    const dateB = b.timestamp && typeof b.timestamp.toDate === 'function' ? b.timestamp.toDate() : new Date(b.timestamp);
+                    return dateA - dateB;
+                });
+                const reportsWithSessionNumbers = sortedReports.map((report, index) => ({
+                    ...report,
+                    activityNumber: index + 1
+                }));
+                const head = [['Sesi', 'Tanggal', 'Lesson', 'Aktivitas', 'Hasil']];
+                const body = reportsWithSessionNumbers.map(report => {
+                    const date = (report.timestamp && typeof report.timestamp.toDate === 'function' ? report.timestamp.toDate() : new Date(report.timestamp)).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    return [ report.activityNumber, date, report.lessonName, report.lesson, report.hasil ];
+                });
+                doc.autoTable({
+                    startY: yPos,
+                    head: head,
+                    body: body,
+                    styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+                    headStyles: { fillColor: [220, 220, 220], textColor: [0,0,0], fontStyle: 'bold' },
+                    columnStyles: {
+                        0: { cellWidth: 10 }, 1: { cellWidth: 20 }, 2: { cellWidth: 20 },
+                        3: { cellWidth: 'auto' }, 4: { cellWidth: 'auto' }
+                    },
+                    margin: { left: 14, right: 14 }
+                });
+                const fileName = `Laporan_Aktivitas_${studentName.replace(/ /g, "_")}_${levelName.replace(/ /g, "_")}.pdf`;
+                const lastReport = currentlyDisplayedReports[0]; 
+                const lastSessionNumber = lastReport ? lastReport.activityNumber : 'N/A';
+                let message = whatsappTemplateText
+                    .replace(/{nama_siswa}/g, studentName)
+                    .replace(/{level_siswa}/g, levelName)
+                    .replace(/{nomor_sesi}/g, lastSessionNumber);
+                const encodedMessage = encodeURIComponent(message);
+                const whatsappUrl = `https://web.whatsapp.com/send/?phone=${phoneNumber}&text=${encodedMessage}`;
+                doc.save(fileName, { returnPromise: true }).then(() => {
+                    alert("Laporan PDF berhasil dibuat dan diunduh. Chat WhatsApp siap dikirim.");
+                    window.open(whatsappUrl, '_blank');
+                });
+            };
             if (brandSettings && brandSettings.logoBase64) {
                 try {
                     const fullLogoBase64 = brandSettings.logoBase64.startsWith('data:') ? brandSettings.logoBase64 : `data:image/png;base64,${brandSettings.logoBase64}`;
                     const img = new Image();
                     img.src = fullLogoBase64;
-                    
                     img.onload = function() {
-                        const desiredLogoHeight = 20; 
-                        const aspectRatio = img.width / img.height; 
-                        const calculatedLogoWidth = desiredLogoHeight * aspectRatio; 
+                        const desiredLogoHeight = 20;
+                        const aspectRatio = img.width / img.height;
+                        const calculatedLogoWidth = desiredLogoHeight * aspectRatio;
                         doc.addImage(fullLogoBase64, 'PNG', pageCenter - (calculatedLogoWidth / 2), yPos, calculatedLogoWidth, desiredLogoHeight, undefined, 'HIGH');
                         yPos += desiredLogoHeight + 10;
-                        addContentToPdf(doc, studentName, levelName, pageCenter, yPos);
-                        sendWhatsAppMessage(studentName, levelName, currentlyDisplayedReports);
+                        addContentAndSave();
                     };
                     img.onerror = function() {
                         console.error("Gagal memuat logo, lanjutkan tanpa logo.");
-                        addContentToPdf(doc, studentName, levelName, pageCenter, yPos);
-                        sendWhatsAppMessage(studentName, levelName, currentlyDisplayedReports);
+                        addContentAndSave();
                     };
                 } catch (e) {
                     console.error("Gagal menambahkan logo ke PDF. Pastikan format Base64 benar.", e);
-                    addContentToPdf(doc, studentName, levelName, pageCenter, yPos);
-                    sendWhatsAppMessage(studentName, levelName, currentlyDisplayedReports);
+                    addContentAndSave();
                 }
             } else {
-                addContentToPdf(doc, studentName, levelName, pageCenter, yPos);
-                sendWhatsAppMessage(studentName, levelName, currentlyDisplayedReports);
+                addContentAndSave();
             }
         }
-        
-        function addContentToPdf(doc, studentName, levelName, pageCenter, yPos) {
-            if (brandSettings && brandSettings.companyName) {
-                doc.setFontSize(12);
-                doc.setFont("helvetica", "normal");
-                doc.text(brandSettings.companyName, pageCenter, yPos, { align: "center" });
-                yPos += 8; 
-            }
-
-            doc.setFontSize(16);
-            doc.setFont("helvetica", "bold");
-            doc.text("Laporan Aktivitas Siswa", pageCenter, yPos, { align: "center" });
-            yPos += 15;
-
-            doc.setFontSize(10);
-            doc.setFont("helvetica", "normal");
-            doc.text(`Coach : ${currentCoachName}`, 15, yPos);
-            doc.text(`Siswa / Level : ${studentName} / ${levelName}`, 15, yPos + 7);
-            yPos += 15;
-            
-            const sortedReports = [...currentlyDisplayedReports].sort((a, b) => {
-                const dateA = a.timestamp && typeof a.timestamp.toDate === 'function' ? a.timestamp.toDate() : new Date(a.timestamp);
-                const dateB = b.timestamp && typeof b.timestamp.toDate === 'function' ? b.timestamp.toDate() : new Date(b.timestamp);
-                return dateA - dateB;
-            });
-
-            const reportsWithSessionNumbers = sortedReports.map((report, index) => ({
-                ...report,
-                activityNumber: index + 1
-            }));
-
-            const head = [['Sesi', 'Tanggal', 'Lesson', 'Aktivitas', 'Hasil']];
-            const body = reportsWithSessionNumbers.map(report => {
-                const date = (report.timestamp && typeof report.timestamp.toDate === 'function' ? report.timestamp.toDate() : new Date(report.timestamp)).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                return [ report.activityNumber, date, report.lessonName, report.lesson, report.hasil ];
-            });
-
-            doc.autoTable({
-                startY: yPos,
-                head: head,
-                body: body,
-                styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
-                headStyles: { fillColor: [220, 220, 220], textColor: [0,0,0], fontStyle: 'bold' },
-                columnStyles: {
-                    0: { cellWidth: 10 }, 1: { cellWidth: 20 }, 2: { cellWidth: 20 },
-                    3: { cellWidth: 'auto' }, 4: { cellWidth: 'auto' }
-                },
-                margin: { left: 14, right: 14 }
-            });
-
-            const fileName = `Laporan_Aktivitas_${studentName.replace(/ /g, "_")}_${levelName.replace(/ /g, "_")}.pdf`;
-            doc.save(fileName);
-        }
-
-        function sendWhatsAppMessage(studentName, levelName, reports) {
-            const studentFilter = document.getElementById('reportFilterStudent');
-            const studentId = studentFilter.value;
-            const student = myStudents.find(s => s.id === studentId);
-            const phoneNumber = formatPhoneNumber(student.phone);
-            
-            const lastReport = reports[0]; 
-            const lastSessionNumber = lastReport ? lastReport.activityNumber : 'N/A';
-            
-            let message = whatsappTemplateText
-                .replace(/{nama_siswa}/g, studentName)
-                .replace(/{level_siswa}/g, levelName)
-                .replace(/{nomor_sesi}/g, lastSessionNumber);
-
-            const encodedMessage = encodeURIComponent(message);
-            const whatsappUrl = `https://web.whatsapp.com/send/?phone=${phoneNumber}&text=${encodedMessage}`;
-            window.open(whatsappUrl, '_blank');
-            alert("Laporan PDF berhasil dibuat dan diunduh. Chat WhatsApp siap dikirim.");
-        }
-
-        const settingsModal = document.getElementById('settingsModal');
-        const whatsappTemplateTextarea = document.getElementById('whatsappTemplateTextarea');
-        const settingsStatusMessage = document.getElementById('settingsStatusMessage');
-
         window.openWhatsappSettings = async function() {
             settingsModal.style.display = 'flex';
             settingsStatusMessage.textContent = 'Memuat template...';
@@ -681,7 +653,6 @@ Terima kasih.`;
                 settingsStatusMessage.style.color = 'red';
             }
         }
-
         window.saveWhatsappTemplate = async function() {
             settingsStatusMessage.textContent = 'Menyimpan template...';
             settingsStatusMessage.style.color = 'blue';
@@ -701,7 +672,6 @@ Terima kasih.`;
                 settingsStatusMessage.style.color = 'red';
             }
         }
-
         window.resetWhatsappTemplate = function() {
             if (confirm("Apakah Anda yakin ingin mengembalikan template ke pengaturan awal?")) {
                 whatsappTemplateTextarea.value = defaultReportWhatsappTemplate;
@@ -711,4 +681,3 @@ Terima kasih.`;
     </script>
 </body>
 </html>
-}
