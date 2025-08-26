@@ -420,6 +420,33 @@
             font-size: 12px;
             cursor: pointer;
         }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            background-color: transparent;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--secondary-color);
+            transition: color 0.2s, border-bottom 0.2s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px; /* Menutupi garis bawah kontainer */
+        }
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
         @media (min-width: 768px) {
             .header-section {
                 flex-direction: row;
@@ -465,124 +492,134 @@
     <div id="readStatusIndicator">Reads Sesi Ini: 0</div>
     <div class="container">
         <div class="header-section">
-            <h1>Pembayaran SPP Siswa</h1>
+            <h1>Pembayaran Siswa</h1>
             <div class="header-buttons">
                 <button class="btn-export" onclick="openWhatsappSettings()">Pengaturan WhatsApp Templates</button>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </div>
-        <div class="content-block">
-            <h3>Input Pembayaran Baru</h3>
-            <form id="sppPaymentForm">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="studentSelector">Nama & Status Siswa</label>
-                        <select id="studentSelector" required></select>
-                    </div>
-                    <div class="form-group"><label for="nominal">Nominal (Rp)</label><input type="number" id="nominal" required min="0"></div>
-                    <div class="form-group">
-                        <label for="bankSelector">Bank</label>
-                        <select id="bankSelector" required></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="paymentDate">Tanggal Bayar</label>
-                        <input type="date" id="paymentDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="paymentYear">Tahun Pembayaran</label>
-                        <input type="number" id="paymentYear" required min="2000" value="2025">
-                    </div>
-                    <div class="form-group full-width">
-                        <label>Bulan yang Dibayar</label>
-                        <div class="month-selector" id="monthSelector"></div>
-                    </div>
-                    <div class="form-group full-width"><label for="keterangan">Keterangan</label><textarea id="keterangan" rows="2"></textarea></div>
-                    <div class="form-group full-width"><label for="attachment">Upload Bukti Bayar</label><input type="file" id="attachment" accept="image/*,.pdf"></div>
-                </div>
-                <button type="submit" id="addPaymentBtn">Simpan Pembayaran</button>
-                <div id="statusMessage"></div>
-            </form>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab('spp-tab')">Pembayaran SPP</button>
+            <button class="tab-btn" onclick="openTab('nonspp-tab')">Laporan Non-SPP</button>
         </div>
-        <div class="content-block">
-            <h3>Riwayat Pembayaran</h3>
-            <div class="spp-table-controls">
-                <div class="filter-group">
-                    <label for="studentFilter">Nama Siswa:</label>
-                    <select id="studentFilter"></select>
-                </div>
-                <div class="filter-group">
-                    <label for="yearFilter">Tahun:</label>
-                    <select id="yearFilter"></select>
-                </div>
-                <div class="filter-group">
-                    <label for="monthFilter">Bulan:</label>
-                    <select id="monthFilter">
-                        <option value="all">Semua Bulan</option>
-                        <option value="0">Januari</option>
-                        <option value="1">Februari</option>
-                        <option value="2">Maret</option>
-                        <option value="3">April</option>
-                        <option value="4">Mei</option>
-                        <option value="5">Juni</option>
-                        <option value="6">Juli</option>
-                        <option value="7">Agustus</option>
-                        <option value="8">September</option>
-                        <option value="9">Oktober</option>
-                        <option value="10">November</option>
-                        <option value="11">Desember</option>
-                    </select>
-                </div>
-                <div class="legend" id="bankLegend"></div>
-                <button class="btn-whatsapp" onclick="generateAndSendPaymentProof()">Kirim Bukti Bayar via WhatsApp</button>
-                <button class="btn-export" onclick="exportToExcel()">Export ke Excel</button>
+
+        <div id="spp-tab" class="tab-content active">
+            <div class="content-block">
+                <h3>Input Pembayaran Baru</h3>
+                <form id="sppPaymentForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="studentSelector">Nama & Status Siswa</label>
+                            <select id="studentSelector" required></select>
+                        </div>
+                        <div class="form-group"><label for="nominal">Nominal (Rp)</label><input type="number" id="nominal" required min="0"></div>
+                        <div class="form-group">
+                            <label for="bankSelector">Bank</label>
+                            <select id="bankSelector" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentDate">Tanggal Bayar</label>
+                            <input type="date" id="paymentDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentYear">Tahun Pembayaran</label>
+                            <input type="number" id="paymentYear" required min="2000" value="2025">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Bulan yang Dibayar</label>
+                            <div class="month-selector" id="monthSelector"></div>
+                        </div>
+                        <div class="form-group full-width"><label for="keterangan">Keterangan</label><textarea id="keterangan" rows="2"></textarea></div>
+                        <div class="form-group full-width"><label for="attachment">Upload Bukti Bayar</label><input type="file" id="attachment" accept="image/*,.pdf"></div>
+                    </div>
+                    <button type="submit" id="addPaymentBtn">Simpan Pembayaran</button>
+                    <div id="statusMessage"></div>
+                </form>
             </div>
-            <div class="spp-table-container">
-                <table class="spp-table" id="sppTable">
-                    <thead>
-                        <tr id="tableHeader"></tr>
-                        <tr id="tableSubHeader"></tr>
-                    </thead>
-                    <tbody id="sppTableBody"></tbody>
-                </table>
-            </div>
-            <div class="pagination-controls">
-                <button id="prevBtn" disabled>&laquo; Sebelumnya</button>
-                <span>Halaman <b id="currentPageDisplay">1</b> dari <b id="totalPagesDisplay">1</b></span>
-                <button id="nextBtn" disabled>Berikutnya &raquo;</button>
+            <div class="content-block">
+                <h3>Riwayat Pembayaran</h3>
+                <div class="spp-table-controls">
+                    <div class="filter-group">
+                        <label for="studentFilter">Nama Siswa:</label>
+                        <select id="studentFilter"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="yearFilter">Tahun:</label>
+                        <select id="yearFilter"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="monthFilter">Bulan:</label>
+                        <select id="monthFilter">
+                            <option value="all">Semua Bulan</option>
+                            <option value="0">Januari</option>
+                            <option value="1">Februari</option>
+                            <option value="2">Maret</option>
+                            <option value="3">April</option>
+                            <option value="4">Mei</option>
+                            <option value="5">Juni</option>
+                            <option value="6">Juli</option>
+                            <option value="7">Agustus</option>
+                            <option value="8">September</option>
+                            <option value="9">Oktober</option>
+                            <option value="10">November</option>
+                            <option value="11">Desember</option>
+                        </select>
+                    </div>
+                    <div class="legend" id="bankLegend"></div>
+                    <button class="btn-whatsapp" onclick="generateAndSendPaymentProof()">Kirim Bukti Bayar via WhatsApp</button>
+                    <button class="btn-export" onclick="exportToExcel()">Export ke Excel</button>
+                </div>
+                <div class="spp-table-container">
+                    <table class="spp-table" id="sppTable">
+                        <thead>
+                            <tr id="tableHeader"></tr>
+                            <tr id="tableSubHeader"></tr>
+                        </thead>
+                        <tbody id="sppTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination-controls">
+                    <button id="prevBtn" disabled>&laquo; Sebelumnya</button>
+                    <span>Halaman <b id="currentPageDisplay">1</b> dari <b id="totalPagesDisplay">1</b></span>
+                    <button id="nextBtn" disabled>Berikutnya &raquo;</button>
+                </div>
             </div>
         </div>
-        <div class="content-block">
-            <h3>Input Laporan Non-SPP</h3>
-            <form id="otherPaymentForm">
-                <div class="form-grid">
-                    <div class="form-group"><label for="otherStudentSelector">Nama Siswa</label><select id="otherStudentSelector" required></select></div>
-                    <div class="form-group"><label for="otherNominal">Nominal (Rp)</label><input type="number" id="otherNominal" required min="0"></div>
-                    <div class="form-group"><label for="otherBankSelector">Bank</label><select id="otherBankSelector" required></select></div>
-                    <div class="form-group"><label for="otherPaymentDate">Tanggal Bayar</label><input type="date" id="otherPaymentDate" required></div>
-                    <div class="form-group full-width"><label for="otherKeterangan">Keterangan</label><textarea id="otherKeterangan" rows="2" required></textarea></div>
+
+        <div id="nonspp-tab" class="tab-content">
+            <div class="content-block">
+                <h3>Input Laporan Non-SPP</h3>
+                <form id="otherPaymentForm">
+                    <div class="form-grid">
+                        <div class="form-group"><label for="otherStudentSelector">Nama Siswa</label><select id="otherStudentSelector" required></select></div>
+                        <div class="form-group"><label for="otherNominal">Nominal (Rp)</label><input type="number" id="otherNominal" required min="0"></div>
+                        <div class="form-group"><label for="otherBankSelector">Bank</label><select id="otherBankSelector" required></select></div>
+                        <div class="form-group"><label for="otherPaymentDate">Tanggal Bayar</label><input type="date" id="otherPaymentDate" required></div>
+                        <div class="form-group full-width"><label for="otherKeterangan">Keterangan</label><textarea id="otherKeterangan" rows="2" required></textarea></div>
+                    </div>
+                    <button type="submit" id="addOtherPaymentBtn">Simpan Laporan</button>
+                    <div id="otherStatusMessage"></div>
+                </form>
+            </div>
+            <div class="content-block">
+                <h3>Riwayat Laporan Non-SPP</h3>
+                <div class="spp-table-controls">
+                    <div class="filter-group"><label for="otherStudentFilter">Siswa:</label><select id="otherStudentFilter"></select></div>
+                    <div class="filter-group"><label for="otherYearFilter">Tahun:</label><select id="otherYearFilter"></select></div>
                 </div>
-                <button type="submit" id="addOtherPaymentBtn">Simpan Laporan</button>
-                <div id="otherStatusMessage"></div>
-            </form>
-        </div>
-        <div class="content-block">
-            <h3>Riwayat Laporan Non-SPP</h3>
-            <div class="spp-table-controls">
-                <div class="filter-group"><label for="otherStudentFilter">Siswa:</label><select id="otherStudentFilter"></select></div>
-                <div class="filter-group"><label for="otherYearFilter">Tahun:</label><select id="otherYearFilter"></select></div>
+                <div class="spp-table-container">
+                    <table class="spp-table" id="otherPaymentsTable">
+                        <thead><tr><th class="checkbox-cell"><input type="checkbox" id="selectAllCheckbox" title="Pilih Semua"></th><th>Tanggal</th><th>Nama Siswa</th><th>Keterangan</th><th>Bank</th><th>Nominal</th></tr></thead>
+                        <tbody id="otherPaymentsTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination-controls">
+                    <button id="otherPrevBtn" disabled>&laquo; Sebelumnya</button>
+                    <span>Halaman <b id="otherCurrentPageDisplay">1</b> dari <b id="otherTotalPagesDisplay">1</b></span>
+                    <button id="otherNextBtn" disabled>Berikutnya &raquo;</button>
+                </div>
+                <button class="btn-whatsapp" onclick="generateAndSendSelectedOtherPaymentProof()" style="margin-top: 20px;">Kirim Laporan Terpilih via WhatsApp</button>
             </div>
-            <div class="spp-table-container">
-                <table class="spp-table" id="otherPaymentsTable">
-                    <thead><tr><th class="checkbox-cell"><input type="checkbox" id="selectAllCheckbox" title="Pilih Semua"></th><th>Tanggal</th><th>Nama Siswa</th><th>Keterangan</th><th>Bank</th><th>Nominal</th></tr></thead>
-                    <tbody id="otherPaymentsTableBody"></tbody>
-                </table>
-            </div>
-            <div class="pagination-controls">
-                <button id="otherPrevBtn" disabled>&laquo; Sebelumnya</button>
-                <span>Halaman <b id="otherCurrentPageDisplay">1</b> dari <b id="otherTotalPagesDisplay">1</b></span>
-                <button id="otherNextBtn" disabled>Berikutnya &raquo;</button>
-            </div>
-            <button class="btn-whatsapp" onclick="generateAndSendSelectedOtherPaymentProof()" style="margin-top: 20px;">Kirim Laporan Terpilih via WhatsApp</button>
         </div>
     </div>
     <div id="singleModal" class="modal">
@@ -614,7 +651,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, addDoc, updateDoc, query, where, Timestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, addDoc, updateDoc, query, where, Timestamp } from "https://www.gstatic.com/firebase/12.1.0/firebase-firestore.js";
         const firebaseConfig = {
             apiKey: "AIzaSyBm3SkLLtl9LvczDDht-OQ6-R4OYLPYAJQ",
             authDomain: "progres-report-5d199.firebaseapp.com",
@@ -687,6 +724,8 @@ Terima kasih.`;
                     setupEventListeners();
                     populateMonths();
                     initializeNonSppModule();
+                    // PERBAIKAN: Panggil fungsi ini setelah semua data dimuat
+                    openTab('spp-tab');
                 } else {
                     alert("Akses ditolak. Halaman ini hanya untuk Bendahara.");
                     await signOut(auth);
@@ -1566,6 +1605,23 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 img.onerror = () => addContentAndSave();
             } else {
                 addContentAndSave();
+            }
+        }
+        window.openTab = function(tabName) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`.tab-btn[onclick="openTab('${tabName}')"]`).classList.add('active');
+            if(tabName === 'spp-tab') {
+                renderSppTable();
+            } else if (tabName === 'nonspp-tab') {
+                renderOtherPaymentsTable(filterNonSppData());
             }
         }
     </script>
