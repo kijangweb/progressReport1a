@@ -1228,7 +1228,13 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 message = message.replace(/{nama_file}/g, fileName);
                 
                 const encodedMessage = encodeURIComponent(message);
-                const whatsappUrl = `https://web.whatsapp.com/send/?phone=${phoneNumber}&text=${encodedMessage}`;
+                
+                let whatsappUrl;
+                if (isMobile) {
+                    whatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`;
+                } else {
+                    whatsappUrl = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+                }
                 
                 doc.save(fileName, { returnPromise: true }).then(() => {
                     if (isMobile) {
@@ -1324,10 +1330,9 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             link.click();
             document.body.removeChild(link);
         }
-        window.openWhatsappSettings = async function() {
+        window.openWhatsappSettings = function() {
             settingsModal.style.display = 'flex';
             settingsStatusMessage.textContent = 'Memuat template...';
-            await loadWhatsappTemplate();
             whatsappTemplateTextarea.value = whatsappTemplateText;
             settingsStatusMessage.textContent = '';
         }
