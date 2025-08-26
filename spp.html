@@ -1537,7 +1537,16 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 });
                 const fileName = `Laporan_Non-SPP_${student.name.replace(/ /g, '_')}.pdf`;
                 const message = `Halo, ini rincian laporan non-SPP untuk *${student.name}*.\n\n*Mohon lampirkan file PDF "${fileName}" yang baru saja Anda unduh.*`;
-                const whatsappUrl = `https://web.whatsapp.com/send/?phone=${formatPhoneNumber(student.phone)}&text=${encodeURIComponent(message)}`;
+                
+                const encodedMessage = encodeURIComponent(message);
+                
+                let whatsappUrl;
+                if (isMobile) {
+                    whatsappUrl = `whatsapp://send?phone=${formatPhoneNumber(student.phone)}&text=${encodedMessage}`;
+                } else {
+                    whatsappUrl = `https://web.whatsapp.com/send?phone=${formatPhoneNumber(student.phone)}&text=${encodedMessage}`;
+                }
+                
                 doc.save(fileName, { returnPromise: true }).then(() => {
                     alert(`PDF telah diunduh: "${fileName}"\n\nSilakan lampirkan file tersebut di chat WhatsApp yang terbuka.`);
                     window.open(whatsappUrl, '_blank');
