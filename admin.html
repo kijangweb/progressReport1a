@@ -112,7 +112,7 @@
             display: flex;
             border-bottom: 2px solid #ccc;
             margin-bottom: 20px;
-            overflow-x: auto; /* Memungkinkan gulir horizontal pada tab */
+            overflow-x: auto;
             white-space: nowrap;
         }
         .tab-btn {
@@ -133,7 +133,7 @@
         }
         .tab-content {
             display: none;
-            overflow-y: auto; /* Memungkinkan gulir vertikal di dalam tab */
+            overflow-y: auto;
         }
         .tab-content.active {
             display: block;
@@ -144,26 +144,8 @@
             border-radius: 8px;
             margin-top: 20px;
         }
-
-        /* Perbaikan Tampilan Seluler */
         .table-container {
             overflow-x: auto;
-        }
-
-        /* Tata letak untuk layar kecil */
-        .main-header .logout-btn {
-            width: 100%;
-        }
-        .bulk-action-content {
-            flex-direction: column;
-        }
-        .form-row {
-            flex-direction: column;
-        }
-        .form-row button {
-            align-self: flex-start;
-            margin-top: 0;
-            width: 100%;
         }
         
         @media (min-width: 768px) {
@@ -254,8 +236,7 @@
                 align-self: auto;
                 margin-top: 20px;
             }
-
-            /* Tata letak untuk layar medium ke atas */
+            
             .table-container {
                 overflow-x: unset;
             }
