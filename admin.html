@@ -10,14 +10,13 @@
         
         .main-header { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 10px; }
         h1 { margin: 0; color: #007bff; }
+        /* Tombol Logout dibuat proporsional */
         .logout-btn { padding: 8px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; text-align: center; }
 
         h3, h4 { color: #333; }
         .user-table, .bank-table, .student-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: auto; }
         .user-table th, .user-table td, .bank-table th, .bank-table td, .student-table th, .student-table td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: middle; }
-        /* Mengatur agar judul kolom tidak terpotong */
         .user-table th, .bank-table th, .student-table th { background-color: #f2f2f2; white-space: normal; }
-        /* Mengatur agar isi sel bisa wrap jika terlalu panjang */
         .user-table td, .bank-table td, .student-table td { word-wrap: break-word; }
         
         .action-btn-disable, .action-btn-enable, .action-btn-edit {
@@ -29,7 +28,6 @@
             white-space: nowrap;
             width: auto;
         }
-
         .action-btn-disable { background-color: #ffc107; color: black; }
         .action-btn-enable { background-color: #28a745; color: white; }
         .action-btn-edit { background-color: #007bff; color: white; }
@@ -45,6 +43,7 @@
             padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; 
         }
 
+        /* Tombol-tombol formulir dibuat proporsional di mobile */
         .add-user-section button, .reset-password-section button, 
         .transfer-section button, .bank-management-section button, 
         .spp-management-section button, .add-user-section .btn,
@@ -52,7 +51,7 @@
         .filter-controls button, .branding-management-section button { 
             padding: 8px 15px; background-color: #28a745; color: white; 
             border: none; border-radius: 4px; cursor: pointer; 
-            width: 40%; text-align: center;
+            width: 100%; text-align: center;
         }
         
         h3, h4 { text-align: left; }
@@ -64,7 +63,8 @@
         .bulk-action-container select, .bulk-action-container button { width: 100%; }
         
         .pagination-controls select { width: auto; }
-        .pagination-controls button { width: auto; }
+        /* Tombol navigasi pagination tetap fleksibel */
+        .pagination-controls button { width: 100%; }
 
         .filter-controls { margin: 15px 0 5px 0; display: flex; flex-direction: column; gap: 10px; align-items: stretch; flex-wrap: wrap; }
         .disabled-row td { text-decoration: line-through; color: #999; background-color: #f8f9fa !important; }
@@ -105,6 +105,7 @@
         .transfer-section select { width: 100%; }
         .transfer-section button { align-self: stretch; margin-top: 10px; }
 
+        /* Aksi bulk dibuat proporsional */
         .bulk-action-content {
             display: flex;
             flex-direction: column;
@@ -190,11 +191,13 @@
             .filter-spp-options button { margin-left: auto; width: auto; }
             
             .bulk-action-container { flex-direction: column; align-items: flex-start; gap: 15px; }
+            /* Penyesuaian agar tombol bulk action sejajar di desktop */
             .bulk-action-content {
                 display: flex;
                 flex-direction: row;
                 align-items: flex-end;
                 gap: 10px;
+                flex-wrap: wrap;
             }
             .bulk-action-content .form-group {
                 display: flex;
