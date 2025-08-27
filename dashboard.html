@@ -305,7 +305,10 @@ Terima kasih.`;
                 updateReadStatus();
                 const students = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const reports = reportSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const dataToCache = { students, reports };
+                
+                const processedReports = processAndSortReports(reports);
+
+                const dataToCache = { students, reports: processedReports };
                 saveToCache('coachData', dataToCache);
                 return dataToCache;
             } catch (error) {
@@ -313,6 +316,33 @@ Terima kasih.`;
                 return { students: [], reports: [] };
             }
         }
+        function processAndSortReports(reports) {
+            if (!reports || reports.length === 0) return [];
+            
+            const groupedReports = reports.reduce((acc, report) => {
+                const key = `${report.studentId}_${report.level}`;
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(report);
+                return acc;
+            }, {});
+
+            let processedReports = [];
+            for (const key in groupedReports) {
+                const group = groupedReports[key];
+                group.sort((a, b) => {
+                    const dateA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+                    const dateB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+                    return dateA - dateB;
+                });
+                group.forEach((report, index) => {
+                    report.activityNumber = index + 1;
+                    processedReports.push(report);
+                });
+            }
+
+            return processedReports;
+        }
+
         function populateUI() {
             populateStudentLists();
             applyReportFiltersAndRender();
@@ -379,13 +409,7 @@ Terima kasih.`;
                 }
                 return sortValueB - sortValueA;
             });
-            const activityCounters = {};
-            [...sortedReports].reverse().forEach(report => {
-                const key = `${report.studentId}_${report.level}`;
-                if (!activityCounters[key]) activityCounters[key] = 0;
-                activityCounters[key]++;
-                report.activityNumber = activityCounters[key];
-            });
+            
             sortedReports.forEach(report => {
                 const date = report.timestamp && report.timestamp.toDate ? report.timestamp.toDate().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : new Date(report.timestamp).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 tableBody.innerHTML += `<tr><td style="text-align: center;">${report.activityNumber || ''}</td><td>${report.siswa}</td><td>${report.level}</td><td>${date}</td><td>${report.lessonName || ''}</td><td>${report.lesson || ''}</td><td>${report.hasil}</td></tr>`;
@@ -581,11 +605,12 @@ Terima kasih.`;
                 doc.text(`Coach : ${currentCoachName}`, 15, yPos);
                 doc.text(`Siswa / Level : ${studentName} / ${levelName}`, 15, yPos + 7);
                 yPos += 15;
-                const sortedReports = [...currentlyDisplayedReports].sort((a, b) => {
+                const sortedReports = currentlyDisplayedReports.sort((a, b) => {
                     const dateA = a.timestamp && typeof a.timestamp.toDate === 'function' ? a.timestamp.toDate() : new Date(a.timestamp);
                     const dateB = b.timestamp && typeof b.timestamp.toDate === 'function' ? b.timestamp.toDate() : new Date(b.timestamp);
                     return dateA - dateB;
                 });
+                
                 const reportsWithSessionNumbers = sortedReports.map((report, index) => ({
                     ...report,
                     activityNumber: index + 1
@@ -608,7 +633,7 @@ Terima kasih.`;
                     margin: { left: 14, right: 14 }
                 });
                 const fileName = `Laporan_Aktivitas_${studentName.replace(/ /g, "_")}_${levelName.replace(/ /g, "_")}.pdf`;
-                const lastReport = reportsWithSessionNumbers[reportsWithSessionNumbers.length - 1]; 
+                const lastReport = currentlyDisplayedReports[currentlyDisplayedReports.length - 1]; 
                 const lastSessionNumber = lastReport ? lastReport.activityNumber : 'N/A';
                 
                 let message = whatsappTemplateText

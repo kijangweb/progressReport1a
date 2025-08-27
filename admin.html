@@ -14,8 +14,11 @@
 
         h3, h4 { color: #333; }
         .user-table, .bank-table, .student-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
-        .user-table th, .user-table td, .bank-table th, .bank-table td, .student-table th, .student-table td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: middle; word-wrap: break-word; }
-        .user-table th, .bank-table th, .student-table th { background-color: #f2f2f2; }
+        .user-table th, .user-table td, .bank-table th, .bank-table td, .student-table th, .student-table td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: middle; }
+        /* Mengatur agar judul kolom tidak terpotong */
+        .user-table th, .bank-table th, .student-table th { background-color: #f2f2f2; white-space: nowrap; }
+        /* Mengatur agar isi sel bisa wrap jika terlalu panjang */
+        .user-table td, .bank-table td, .student-table td { word-wrap: break-word; }
         
         .action-btn-disable, .action-btn-enable, .action-btn-edit {
             padding: 5px 10px;
