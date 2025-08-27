@@ -141,6 +141,11 @@
             border-radius: 8px;
             margin-top: 20px;
         }
+
+        /* Perbaikan Tampilan Seluler */
+        .table-container {
+            overflow-x: auto;
+        }
         
         @media (min-width: 768px) {
             .main-header { flex-direction: row; align-items: center; }
@@ -266,7 +271,7 @@
                     <div><input type="checkbox" id="showCoachesOnly"><label for="showCoachesOnly">Hanya Tampilkan Coach</label></div>
                     <button type="button" id="syncCountBtn" style="background-color: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Sinkronkan Jumlah Siswa</button>
                 </div>
-                <div style="overflow-x:auto;">
+                <div class="table-container">
                     <table class="user-table" id="usersTable"><thead><tr><th>ID</th><th>Email</th><th>Nama</th><th>Jml. Siswa</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="usersTableBody"></tbody></table>
                 </div>
                 <div class="pagination-controls" id="userPagination">
@@ -341,7 +346,7 @@
             <div class="content-block">
                 <h3>Daftar Tunggu Penugasan</h3>
                 <p>Siswa di bawah ini menunggu penetapan coach dan level sebelum disimpan ke database utama.</p>
-                <div style="overflow-x:auto;">
+                <div class="table-container">
                     <table class="student-table" id="pendingAssignmentTable">
                         <thead>
                             <tr>
@@ -373,7 +378,7 @@
                     <div><input type="checkbox" id="showDisabledStudents"><label for="showDisabledStudents">Tampilkan Siswa Nonaktif</label></div>
                     <div><label for="coachFilterSelector">Filter berdasarkan Coach:</label><select id="coachFilterSelector"></select></div>
                 </div>
-                <div style="overflow-x:auto;">
+                <div class="table-container">
                     <table class="student-table" id="studentsTable"><thead><tr><th style="width: 5%;"><input type="checkbox" id="selectAllCheckbox"></th><th>Nama Siswa</th><th>Coach Saat Ini</th><th>Level Siswa</th><th style="width: 15%;">Aksi</th></tr></thead><tbody id="studentsTableBody"></tbody></table>
                 </div>
                 <div class="pagination-controls" id="studentPagination">
@@ -447,7 +452,7 @@
                 <form id="addBankForm"></form>
                 <div id="bankStatusMessage"></div>
                 <h4 style="margin-top: 20px;">Daftar Bank</h4>
-                <div style="overflow-x:auto;">
+                <div class="table-container">
                     <table class="bank-table"><thead><tr><th>Nama Bank</th><th>Warna</th><th>Aksi</th></tr></thead><tbody id="bankTableBody"></tbody></table>
                 </div>
             </div>
@@ -972,7 +977,7 @@
             document.getElementById('userCurrentPage').textContent = userCurrentPage;
             document.getElementById('userTotalPages').textContent = totalPages;
             document.getElementById('userPrevBtn').disabled = userCurrentPage === 1;
-            document.getElementById('userNextBtn').disabled = userCurrentPage === totalPages;
+            document.getElementById('userNextBtn').disabled = userCurrentPage >= totalPages;
         }
         function renderStudentTable() {
             const tableBody = document.getElementById('studentsTableBody');
