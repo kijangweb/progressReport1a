@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admin</title>
+    <title>Administrasi</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; display: none; }
         .admin-container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
@@ -260,7 +260,7 @@
     <div id="readStatusIndicator">Reads Sesi Ini: 0</div>
     <div class="admin-container">
         <div class="main-header">
-            <h1>Panel Admin</h1>
+            <h1>Administrasi</h1>
             <button type="button" class="logout-btn" onclick="logout()">Logout</button>
         </div>
         <div class="tabs">
@@ -399,7 +399,7 @@
                 </div>
             </div>
             <div class="bulk-action-container">
-                <h3>Aksi Massal untuk Siswa Terpilih</h3>
+                <h3>Pilihan Ganti Coach</h3>
                 <div class="bulk-action-content">
                     <div class="form-group">
                         <label for="bulkCoachSelector">Ganti coach ke:</label>
@@ -414,7 +414,7 @@
                 </div>
             </div>
             <div class="transfer-section">
-                <h3>Pindahkan Massal Siswa Antar Coach</h3>
+                <h3>Pindah Grup Coach</h3>
                 <div class="form-row">
                     <div><label for="sourceCoachSelector">Dari Coach:</label><br><select id="sourceCoachSelector"></select></div>
                     <div><label for="destinationCoachSelector">Ke Coach:</label><br><select id="destinationCoachSelector"></select></div>
@@ -904,7 +904,7 @@
                 let displayedRole;
                 switch (userData.role) {
                     case 'admin':
-                        displayedRole = 'SUPERUSER';
+                        displayedRole = 'Direktur';
                         break;
                     case 'bendahara':
                         displayedRole = 'ADMIN';
