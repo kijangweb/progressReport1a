@@ -86,11 +86,16 @@
         }
         .report-table th { background-color: #f2f2f2; }
 
+        .pagination-controls { margin-top: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; }
+        .pagination-controls button:disabled { background-color: #ccc; cursor: not-allowed; }
+        .pagination-controls select { width: auto; }
+        .pagination-controls .page-info { text-align: center; }
+
         @media (min-width: 768px) {
             .header-info { flex-direction: row; align-items: center; }
             .header-buttons { flex-direction: row; width: auto; }
             .logout-btn, .refresh-btn, .btn-export, .btn-reset { width: auto; }
-            .form-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+            .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
             .form-grid > div { flex: 1 1 200px; }
             .form-grid .full-width { grid-column: 1 / -1; }
             .report-filters { flex-direction: row; align-items: flex-end; gap: 20px; }
@@ -185,6 +190,22 @@
             <div class="report-table-container">
                 <table class="report-table" id="reportTableForPdf"><thead><tr><th class="col-sesi">Sesi</th><th class="col-siswa">Siswa</th><th class="col-level">Level</th><th class="col-tanggal">Tanggal</th><th class="col-lesson">Lesson</th><th class="col-aktivitas">Aktivitas</th><th class="col-hasil">Hasil</th></tr></thead><tbody id="reportsTableBody"></tbody></table>
             </div>
+            <div class="pagination-controls" id="reportPagination">
+                <div>
+                    <label for="reportRowsPerPage">Baris per Halaman:</label>
+                    <select id="reportRowsPerPage">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                    </select>
+                </div>
+                <div>
+                    <button type="button" id="reportPrevBtn" disabled>&laquo; Sebelumnya</button>
+                    <span class="page-info">Halaman <b id="reportCurrentPage">1</b> dari <b id="reportTotalPages">1</b></span>
+                    <button type="button" id="reportNextBtn" disabled>Berikutnya &raquo;</button>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -231,6 +252,10 @@
         let allMyReports = [];
         let currentlyDisplayedReports = [];
         let brandSettings = {};
+
+        // Variabel untuk paginasi laporan
+        let reportCurrentPage = 1;
+        let reportRowsPerPage = 10;
         
         const defaultReportWhatsappTemplate = `Halo Bapak/Ibu, ini adalah laporan aktivitas harian sempoa untuk *{nama_siswa}*.
 Laporan sesi ke *{nomor_sesi}* untuk level *{level_siswa}* sudah tersedia.
@@ -380,7 +405,6 @@ Terima kasih.`;
         }
         function populateStudentLists() {
             const studentsTableBody = document.getElementById('myStudentsTableBody');
-            // Menggunakan jQuery untuk Select2
             const studentSelector = $('#studentSelectorForReport');
             const reportFilterStudent = $('#reportFilterStudent');
             
@@ -434,6 +458,8 @@ Terima kasih.`;
             if (level) {
                 filteredReports = filteredReports.filter(r => r.level === level);
             }
+            // Reset halaman ke 1 saat filter berubah
+            reportCurrentPage = 1;
             window.renderReports(filteredReports, sortOption);
         }
 
@@ -443,6 +469,7 @@ Terima kasih.`;
             tableBody.innerHTML = '';
             if (!reports || reports.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="7">Tidak ada laporan yang cocok.</td></tr>';
+                window.updateReportPagination(0);
                 return;
             }
             const sortedReports = reports.sort((a, b) => {
@@ -450,7 +477,7 @@ Terima kasih.`;
                 let sortValueB = 0;
                 try {
                     sortValueA = a[sortOption] && a[sortOption].toDate ? a[sortOption].toDate().getTime() : (a[sortOption] ? new Date(a[sortOption]).getTime() : 0);
-                    sortValueB = b[sortOption] && b[sortOption].toDate ? b[sortOption].toDate().getTime() : (b[sortOption] ? new Date(b[sortOption]).getTime() : 0);
+                    sortValueB = b[sortOption] && b[b's timestamp'].toDate ? b[sortOption].toDate().getTime() : (b[sortOption] ? new Date(b[sortOption]).getTime() : 0);
                 } catch (e) {
                     console.warn('Gagal mengurai tanggal. Menggunakan tanggal 0.');
                     sortValueA = a[sortOption] ? new Date(a[sortOption]).getTime() : 0;
@@ -459,11 +486,25 @@ Terima kasih.`;
                 return sortValueB - sortValueA;
             });
             
-            sortedReports.forEach(report => {
+            // Logika paginasi
+            const startIndex = (reportCurrentPage - 1) * reportRowsPerPage;
+            const endIndex = startIndex + reportRowsPerPage;
+            const paginatedReports = sortedReports.slice(startIndex, endIndex);
+
+            paginatedReports.forEach(report => {
                 const date = report.timestamp && report.timestamp.toDate ? report.timestamp.toDate().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : new Date(report.timestamp).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 tableBody.innerHTML += `<tr><td style="text-align: center;">${report.activityNumber || ''}</td><td>${report.siswa}</td><td>${report.level}</td><td>${date}</td><td>${report.lessonName || ''}</td><td>${report.lesson || ''}</td><td>${report.hasil}</td></tr>`;
             });
+            window.updateReportPagination(reports.length);
         }
+
+        window.updateReportPagination = function(totalItems) {
+            const totalPages = Math.ceil(totalItems / reportRowsPerPage) || 1;
+            document.getElementById('reportCurrentPage').textContent = reportCurrentPage;
+            document.getElementById('reportTotalPages').textContent = totalPages;
+            document.getElementById('reportPrevBtn').disabled = reportCurrentPage === 1;
+            document.getElementById('reportNextBtn').disabled = reportCurrentPage >= totalPages;
+        };
         
         async function handleAddReport(e) {
             e.preventDefault();
@@ -592,6 +633,27 @@ Terima kasih.`;
                 settingsBtn.addEventListener('click', window.openWhatsappSettings);
             }
             document.querySelector('#settingsModal .close-btn').onclick = () => document.getElementById('settingsModal').style.display = 'none';
+
+            // Event listener untuk pagination
+            document.getElementById('reportRowsPerPage').addEventListener('change', (e) => {
+                reportRowsPerPage = parseInt(e.target.value);
+                reportCurrentPage = 1;
+                window.renderReports(currentlyDisplayedReports, document.getElementById('reportSortBy').value);
+            });
+            document.getElementById('reportPrevBtn').addEventListener('click', () => {
+                if (reportCurrentPage > 1) {
+                    reportCurrentPage--;
+                    window.renderReports(currentlyDisplayedReports, document.getElementById('reportSortBy').value);
+                }
+            });
+            document.getElementById('reportNextBtn').addEventListener('click', () => {
+                const totalPages = Math.ceil(currentlyDisplayedReports.length / reportRowsPerPage) || 1;
+                if (reportCurrentPage < totalPages) {
+                    reportCurrentPage++;
+                    window.renderReports(currentlyDisplayedReports, document.getElementById('reportSortBy').value);
+                }
+            });
+
             isSetupDone = true;
         }
 
