@@ -96,7 +96,7 @@
             font-weight: 600;
             color: var(--dark-text);
         }
-        input[type="number"], select, textarea, input[type="date"], input[type="file"] {
+        input[type="text"], input[type="number"], select, textarea, input[type="date"], input[type="file"] {
             width: 100%;
             padding: 10px;
             border: 1px solid #ced4da;
@@ -512,7 +512,7 @@
                             <label for="studentSelector">Nama & Status Siswa</label>
                             <select id="studentSelector" required></select>
                         </div>
-                        <div class="form-group"><label for="nominal">Nominal (Rp)</label><input type="number" id="nominal" required min="0"></div>
+                        <div class="form-group"><label for="nominal">Nominal (Rp)</label><input type="text" id="nominal" required></div>
                         <div class="form-group">
                             <label for="bankSelector">Bank</label>
                             <select id="bankSelector" required></select>
@@ -531,6 +531,14 @@
                         </div>
                         <div class="form-group full-width"><label for="keterangan">Keterangan</label><textarea id="keterangan" rows="2"></textarea></div>
                         <div class="form-group full-width"><label for="attachment">Upload Bukti Bayar</label><input type="file" id="attachment" accept="image/*,.pdf"></div>
+                        <div class="form-group full-width">
+                            <label for="imageQualitySelector">Kualitas Bukti Bayar (Kompresi)</label>
+                            <select id="imageQualitySelector">
+                                <option value="0.3">Kualitas Tinggi (30%)</option>
+                                <option value="0.2" selected>Kualitas Sedang (20%)</option>
+                                <option value="0.1">Kualitas Rendah (10%)</option>
+                            </select>
+                        </div>
                     </div>
                     <button type="submit" id="addPaymentBtn">Simpan Pembayaran</button>
                     <div id="statusMessage"></div>
@@ -592,7 +600,7 @@
                 <form id="otherPaymentForm">
                     <div class="form-grid">
                         <div class="form-group"><label for="otherStudentSelector">Nama Siswa</label><select id="otherStudentSelector" required></select></div>
-                        <div class="form-group"><label for="otherNominal">Nominal (Rp)</label><input type="number" id="otherNominal" required min="0"></div>
+                        <div class="form-group"><label for="otherNominal">Nominal (Rp)</label><input type="text" id="otherNominal" required></div>
                         <div class="form-group"><label for="otherBankSelector">Bank</label><select id="otherBankSelector" required></select></div>
                         <div class="form-group"><label for="otherPaymentDate">Tanggal Bayar</label><input type="date" id="otherPaymentDate" required></div>
                         <div class="form-group full-width"><label for="otherKeterangan">Keterangan</label><textarea id="otherKeterangan" rows="2" required></textarea></div>
@@ -720,11 +728,11 @@ Terima kasih.`;
                     await loadBrandSettings();
                     await loadBanks();
                     await loadAllStudents();
+                    await loadNonSppData();
                     await loadWhatsappTemplate();
                     setupEventListeners();
                     populateMonths();
                     initializeNonSppModule();
-                    // PERBAIKAN: Panggil fungsi ini setelah semua data dimuat
                     openTab('spp-tab');
                 } else {
                     alert("Akses ditolak. Halaman ini hanya untuk Bendahara.");
@@ -910,7 +918,7 @@ Terima kasih.`;
                 reader.onerror = error => reject(error);
             });
         }
-        async function compressImage(file, quality = 0.1) {
+        async function compressImage(file, quality = 0.7) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
@@ -949,7 +957,8 @@ Terima kasih.`;
         async function handleAddPayment(e) {
             e.preventDefault();
             const studentId = document.getElementById('studentSelector').value;
-            const nominal = parseFloat(document.getElementById('nominal').value);
+            const nominalInput = document.getElementById('nominal').value;
+            const nominal = parseFloat(nominalInput.replace(/\./g, ''));
             const bank = document.getElementById('bankSelector').value;
             const paymentDate = document.getElementById('paymentDate').value;
             const paymentYear = document.getElementById('paymentYear').value;
@@ -957,6 +966,8 @@ Terima kasih.`;
             const attachmentFile = document.getElementById('attachment').files[0];
             const monthsPaid = Array.from(document.querySelectorAll('input[name="month"]:checked')).map(cb => parseInt(cb.value));
             const statusMessageDiv = document.getElementById('statusMessage');
+            const compressionQuality = parseFloat(document.getElementById('imageQualitySelector').value);
+
             if (!studentId || isNaN(nominal) || nominal <= 0 || !bank || !paymentDate || isNaN(paymentYear) || monthsPaid.length === 0 || !attachmentFile) {
                 statusMessageDiv.textContent = 'Semua field wajib diisi, termasuk bukti bayar.';
                 statusMessageDiv.style.color = 'red';
@@ -973,7 +984,7 @@ Terima kasih.`;
                         return;
                     }
                     if (attachmentFile.type.startsWith('image/')) {
-                        attachmentBase64 = await compressImage(attachmentFile);
+                        attachmentBase64 = await compressImage(attachmentFile, compressionQuality);
                     } else if (attachmentFile.type === 'application/pdf') {
                         attachmentBase64 = await getBase64(attachmentFile);
                     } else {
@@ -1145,6 +1156,25 @@ Terima kasih.`;
                 if (currentPage < totalPages) {
                     currentPage++;
                     renderSppTable();
+                }
+            });
+            setupNominalInput('nominal');
+            setupNominalInput('otherNominal');
+        }
+        function setupNominalInput(id) {
+            const inputElement = document.getElementById(id);
+            inputElement.addEventListener('keyup', function(e) {
+                let value = e.target.value;
+                value = value.replace(/\./g, '');
+                if (!isNaN(value) && value.length > 0) {
+                    e.target.value = new Intl.NumberFormat('id-ID').format(value);
+                }
+            });
+            inputElement.addEventListener('change', function(e) {
+                let value = e.target.value;
+                value = value.replace(/\./g, '');
+                if (!isNaN(value) && value.length > 0) {
+                    e.target.value = new Intl.NumberFormat('id-ID').format(value);
                 }
             });
         }
@@ -1454,12 +1484,14 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                     checkbox.checked = e.target.checked;
                 });
             });
+            setupNominalInput('otherNominal');
         }
         async function handleAddOtherPayment(e) {
             e.preventDefault();
             const studentId = document.getElementById('otherStudentSelector').value;
             const studentName = document.getElementById('otherStudentSelector').selectedOptions[0].text;
-            const nominal = parseFloat(document.getElementById('otherNominal').value);
+            const nominalInput = document.getElementById('otherNominal').value;
+            const nominal = parseFloat(nominalInput.replace(/\./g, ''));
             const bank = document.getElementById('otherBankSelector').value;
             const paymentDate = document.getElementById('otherPaymentDate').value;
             const keterangan = document.getElementById('otherKeterangan').value;
@@ -1607,7 +1639,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 addContentAndSave();
             }
         }
-        window.openTab = function(tabName) {
+        window.openTab = async function(tabName) {
             const tabContents = document.querySelectorAll('.tab-content');
             tabContents.forEach(tab => {
                 tab.classList.remove('active');
@@ -1621,6 +1653,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             if(tabName === 'spp-tab') {
                 renderSppTable();
             } else if (tabName === 'nonspp-tab') {
+                await loadNonSppData();
                 renderOtherPaymentsTable(filterNonSppData());
             }
         }

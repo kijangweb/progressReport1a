@@ -520,7 +520,17 @@ Terima kasih.`;
             } else if (number.startsWith('+')) {
                 number = number.slice(1);
             }
-            return number;
+            const phoneNumber = number;
+            // Jika nomor telepon tidak dimulai dengan '62'
+            if (!phoneNumber.startsWith('62')) {
+                // Periksa jika nomor dimulai dengan '0' dan ganti menjadi '62'
+                if (phoneNumber.startsWith('0')) {
+                    return '62' + phoneNumber.slice(1);
+                }
+                // Jika tidak dimulai dengan '0' atau '62', tambahkan '62' di awal
+                return '62' + phoneNumber;
+            }
+            return phoneNumber;
         }
         
         async function generatePdfAndWhatsApp() {
@@ -546,6 +556,7 @@ Terima kasih.`;
                 alert("Tidak ada laporan untuk dibuat PDF.");
                 return;
             }
+            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             const studentName = student.name;
@@ -597,16 +608,26 @@ Terima kasih.`;
                     margin: { left: 14, right: 14 }
                 });
                 const fileName = `Laporan_Aktivitas_${studentName.replace(/ /g, "_")}_${levelName.replace(/ /g, "_")}.pdf`;
-                const lastReport = currentlyDisplayedReports[0]; 
+                const lastReport = reportsWithSessionNumbers[reportsWithSessionNumbers.length - 1]; 
                 const lastSessionNumber = lastReport ? lastReport.activityNumber : 'N/A';
+                
                 let message = whatsappTemplateText
                     .replace(/{nama_siswa}/g, studentName)
                     .replace(/{level_siswa}/g, levelName)
                     .replace(/{nomor_sesi}/g, lastSessionNumber);
+
                 const encodedMessage = encodeURIComponent(message);
-                const whatsappUrl = `https://web.whatsapp.com/send/?phone=${phoneNumber}&text=${encodedMessage}`;
+                
+                let whatsappUrl;
+                // Menggunakan skema URL langsung untuk WhatsApp
+                if (isMobile) {
+                    whatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`;
+                } else {
+                    whatsappUrl = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+                }
+
                 doc.save(fileName, { returnPromise: true }).then(() => {
-                    alert("Laporan PDF berhasil dibuat dan diunduh. Chat WhatsApp siap dikirim.");
+                    alert(`Laporan PDF berhasil dibuat dan diunduh. Chat WhatsApp siap dikirim.`);
                     window.open(whatsappUrl, '_blank');
                 });
             };
