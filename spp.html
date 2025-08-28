@@ -614,6 +614,9 @@
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 </head>
 <body>
     <div id="readStatusIndicator">Reads Sesi Ini: 0</div>
@@ -637,8 +640,9 @@
                 <form id="sppPaymentForm">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="studentSelector">Nama & Status Siswa</label>
-                            <select id="studentSelector" required></select>
+                            <label for="studentSearchBox">Nama & Status Siswa</label>
+                            <input type="text" id="studentSearchBox" placeholder="Cari siswa..." required>
+                            <input type="hidden" id="studentSelector" name="studentId">
                         </div>
                         <div class="form-group"><label for="nominal">Nominal (Rp)</label><input type="text" id="nominal" required></div>
                         <div class="form-group">
@@ -733,10 +737,19 @@
                 <h3>Input Laporan Non-SPP</h3>
                 <form id="otherPaymentForm">
                     <div class="form-grid">
-                        <div class="form-group"><label for="otherStudentSelector">Nama Siswa</label><select id="otherStudentSelector" required></select></div>
+                        <div class="form-group">
+                            <label for="otherStudentSelector">Nama Siswa</label>
+                            <select id="otherStudentSelector" required></select>
+                        </div>
                         <div class="form-group"><label for="otherNominal">Nominal (Rp)</label><input type="text" id="otherNominal" required></div>
-                        <div class="form-group"><label for="otherBankSelector">Bank</label><select id="otherBankSelector" required></select></div>
-                        <div class="form-group"><label for="otherPaymentDate">Tanggal Bayar</label><input type="date" id="otherPaymentDate" required></div>
+                        <div class="form-group">
+                            <label for="otherBankSelector">Bank</label>
+                            <select id="otherBankSelector" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="otherPaymentDate">Tanggal Bayar</label>
+                            <input type="date" id="otherPaymentDate" required>
+                        </div>
                         <div class="form-group full-width"><label for="otherKeterangan">Keterangan</label><textarea id="otherKeterangan" rows="2" required></textarea></div>
                     </div>
                     <button type="submit" id="addOtherPaymentBtn">Simpan Laporan</button>
@@ -746,8 +759,14 @@
             <div class="content-block">
                 <h3>Riwayat Laporan Non-SPP</h3>
                 <div class="spp-table-controls">
-                    <div class="filter-group"><label for="otherStudentFilter">Siswa:</label><select id="otherStudentFilter"></select></div>
-                    <div class="filter-group"><label for="otherYearFilter">Tahun:</label><select id="otherYearFilter"></select></div>
+                    <div class="filter-group">
+                        <label for="otherStudentFilter">Siswa:</label>
+                        <select id="otherStudentFilter"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="otherYearFilter">Tahun:</label>
+                        <select id="otherYearFilter"></select>
+                    </div>
                 </div>
                 <div class="spp-table-container">
                     <table class="spp-table" id="otherPaymentsTable">
@@ -773,23 +792,25 @@
         <div id="manajemen-siswa-tab" class="tab-content">
             <div class="content-block">
                 <h3>Tambah & Impor Siswa</h3>
-                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
-                    <div class="form-group">
-                        <label for="newStudentName">Nama Lengkap Siswa</label>
-                        <input type="text" id="newStudentName" placeholder="Nama Lengkap" required>
+                <form id="addStudentForm">
+                    <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                        <div class="form-group">
+                            <label for="newStudentName">Nama Lengkap Siswa</label>
+                            <input type="text" id="newStudentName" placeholder="Nama Lengkap" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newStudentPhone">No. Telepon</label>
+                            <input type="tel" id="newStudentPhone" placeholder="cth: 0812...">
+                        </div>
+                        <div class="form-group">
+                            <label for="coachForStudentSelector">Tetapkan Coach</label>
+                            <select id="coachForStudentSelector" required></select>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" id="addStudentBtn" class="action-btn" style="background-color: var(--success-color);">Tambah Siswa</button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="newStudentPhone">No. Telepon</label>
-                        <input type="tel" id="newStudentPhone" placeholder="cth: 0812...">
-                    </div>
-                    <div class="form-group">
-                        <label for="coachForStudentSelector">Tetapkan Coach</label>
-                        <select id="coachForStudentSelector" required></select>
-                    </div>
-                    <div class="form-group">
-                        <button type="button" id="addStudentBtn" class="action-btn" style="background-color: var(--success-color);">Tambah Siswa</button>
-                    </div>
-                </div>
+                </form>
                 <div id="studentStatusMessage" class="status-message"></div>
 
                 <div style="margin-top: 30px;">
@@ -881,7 +902,7 @@
                         <button type="button" id="bulkChangeLevelBtn" class="action-btn" style="background-color: #007bff; margin-top: 10px; padding: 8px 12px; font-size: 14px;">Terapkan</button>
                     </div>
                 </div>
-                <div id="bulkActionStatusMessage" class="status-message" style="margin-top: 15px;"></div>
+                <div id="bulkActionStatusMessage" class="status-message"></div>
             </div>
             
             <div class="content-block">
@@ -1079,7 +1100,7 @@ Terima kasih.`;
                 pendingImportStudents = JSON.parse(localStorage.getItem('pendingImportStudents')) || [];
 
                 updateReadStatus();
-                populateStudentSelector();
+                setupStudentSearchBox();
                 populateYearFilter();
                 populateStudentFilter();
                 renderSppTable();
@@ -1184,77 +1205,118 @@ Terima kasih.`;
                 console.error("Gagal memuat data bank:", error);
             }
         }
-        function populateStudentSelector() {
-            const selector = document.getElementById('studentSelector');
-            const otherSelector = document.getElementById('otherStudentSelector');
-            selector.innerHTML = '<option value="">-- Pilih Siswa --</option>';
-            otherSelector.innerHTML = '<option value="">-- Pilih Siswa --</option>';
-            allStudents.forEach(student => {
-                const studentStatus = student.status || 'inactive';
-                const studentLevel = student.studentLevel || 'Level belum diatur';
-                const optionHTML = `<option value="${student.id}">${student.name} (${studentLevel} - ${studentStatus})</option>`;
-                selector.innerHTML += optionHTML;
-                otherSelector.innerHTML += optionHTML;
+        
+        function setupStudentSearchBox() {
+            const searchBox = $('#studentSearchBox');
+            const studentSelector = $('#studentSelector');
+            const studentData = allStudents.map(student => ({
+                label: `${student.name} (${student.studentLevel || 'Level belum diatur'} - ${student.status})`,
+                value: student.id
+            }));
+
+            searchBox.autocomplete({
+                source: studentData,
+                minLength: 2,
+                select: function(event, ui) {
+                    searchBox.val(ui.item.label);
+                    studentSelector.val(ui.item.value);
+                    return false;
+                }
             });
+            // Clear the hidden input if the search box is cleared
+            searchBox.on('input', function() {
+                if ($(this).val() === '') {
+                    studentSelector.val('');
+                }
+            });
+        }
+        
+        function populateStudentSelector() {
+            // This function is now used for the other student selectors and filters.
+            // The main one is replaced by the search box.
+            const otherSelector = document.getElementById('otherStudentSelector');
+            if (otherSelector) {
+                otherSelector.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+                allStudents.forEach(student => {
+                    const studentStatus = student.status || 'inactive';
+                    const studentLevel = student.studentLevel || 'Level belum diatur';
+                    const optionHTML = `<option value="${student.id}">${student.name} (${studentLevel} - ${studentStatus})</option>`;
+                    otherSelector.innerHTML += optionHTML;
+                });
+            }
         }
         function populateStudentFilter() {
             const filter = document.getElementById('studentFilter');
-            filter.innerHTML = '<option value="all">Semua Siswa</option>';
-            allStudents.forEach(student => {
-                filter.innerHTML += `<option value="${student.id}">${student.name}</option>`;
-            });
+            if(filter) {
+                filter.innerHTML = '<option value="all">Semua Siswa</option>';
+                allStudents.forEach(student => {
+                    filter.innerHTML += `<option value="${student.id}">${student.name}</option>`;
+                });
+            }
         }
         function populateBankSelector() {
             const selector = document.getElementById('bankSelector');
             const otherSelector = document.getElementById('otherBankSelector');
-            selector.innerHTML = '<option value="">Pilih Bank</option>';
-            otherSelector.innerHTML = '<option value="">Pilih Bank</option>';
-            for (const bankName in bankColors) {
-                const optionHTML = `<option value="${bankName}">${bankName}</option>`;
-                selector.innerHTML += optionHTML;
-                otherSelector.innerHTML += optionHTML;
+            if (selector) {
+                selector.innerHTML = '<option value="">Pilih Bank</option>';
+                for (const bankName in bankColors) {
+                    const optionHTML = `<option value="${bankName}">${bankName}</option>`;
+                    selector.innerHTML += optionHTML;
+                }
+            }
+            if (otherSelector) {
+                otherSelector.innerHTML = '<option value="">Pilih Bank</option>';
+                for (const bankName in bankColors) {
+                    otherSelector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
+                }
             }
         }
         function populateMonths() {
             const monthSelector = document.getElementById('monthSelector');
-            monthSelector.innerHTML = '';
-            monthNames.forEach((month, index) => {
-                monthSelector.innerHTML += `
-                    <label><input type="checkbox" name="month" value="${index}"> ${month}</label>
-                `;
-            });
+            if (monthSelector) {
+                monthSelector.innerHTML = '';
+                monthNames.forEach((month, index) => {
+                    monthSelector.innerHTML += `
+                        <label><input type="checkbox" name="month" value="${index}"> ${month}</label>
+                    `;
+                });
+            }
         }
         function populateBankLegend() {
             const legendDiv = document.getElementById('bankLegend');
-            legendDiv.innerHTML = '';
-            for (const bank in bankColors) {
-                legendDiv.innerHTML += `
-                    <div class="legend-item"><span class="bank-color" style="background-color: ${bankColors[bank]};"></span>${bank}</div>
-                `;
+            if (legendDiv) {
+                legendDiv.innerHTML = '';
+                for (const bank in bankColors) {
+                    legendDiv.innerHTML += `
+                        <div class="legend-item"><span class="bank-color" style="background-color: ${bankColors[bank]};"></span>${bank}</div>
+                    `;
+                }
             }
         }
         function populateYearFilter() {
             const yearFilter = document.getElementById('yearFilter');
-            const years = new Set();
-            allStudents.forEach(student => {
-                if (student.spp) {
-                    Object.keys(student.spp).forEach(key => {
-                        const year = key.split('-')[0];
-                        if (year) {
-                            years.add(parseInt(year));
-                        }
-                    });
+            if (yearFilter) {
+                const years = new Set();
+                allStudents.forEach(student => {
+                    if (student.spp) {
+                        Object.keys(student.spp).forEach(key => {
+                            const year = key.split('-')[0];
+                            if (year) {
+                                years.add(parseInt(year));
+                            }
+                        });
+                    }
+                });
+                allYearsWithPayments = Array.from(years).sort((a, b) => a - b);
+                yearFilter.innerHTML = '<option value="all">Semua Tahun</option>';
+                allYearsWithPayments.forEach(year => {
+                    yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
+                });
+                if (allYearsWithPayments.length > 0) {
+                    yearFilter.value = Math.max(...allYearsWithPayments);
+                } else {
+                    yearFilter.value = 'all';
                 }
-            });
-            allYearsWithPayments = Array.from(years).sort((a, b) => a - b);
-            yearFilter.innerHTML = '<option value="all">Semua Tahun</option>';
-            allYearsWithPayments.forEach(year => {
-                yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
-            });
-            if (allYearsWithPayments.length > 0) {
-                yearFilter.value = Math.max(...allYearsWithPayments);
-            } else {
-                yearFilter.value = 'all';
             }
         }
         async function getBase64(file) {
@@ -1315,7 +1377,14 @@ Terima kasih.`;
             const statusMessageDiv = document.getElementById('statusMessage');
             const compressionQuality = parseFloat(document.getElementById('imageQualitySelector').value);
 
-            if (!studentId || isNaN(nominal) || nominal <= 0 || !bank || !paymentDate || isNaN(paymentYear) || monthsPaid.length === 0 || !attachmentFile) {
+            // Validasi tambahan untuk studentSelector
+            if (!studentId || studentId === '') {
+                statusMessageDiv.textContent = 'Harap pilih siswa yang valid dari daftar.';
+                statusMessageDiv.style.color = 'red';
+                return;
+            }
+
+            if (isNaN(nominal) || nominal <= 0 || !bank || !paymentDate || isNaN(paymentYear) || monthsPaid.length === 0 || !attachmentFile) {
                 statusMessageDiv.textContent = 'Semua field wajib diisi, termasuk bukti bayar.';
                 statusMessageDiv.style.color = 'red';
                 return;
@@ -1503,11 +1572,14 @@ Terima kasih.`;
 
         function setupEventListeners() {
             document.getElementById('sppPaymentForm').addEventListener('submit', handleAddPayment);
+            const studentFilter = document.getElementById('studentFilter');
+            if(studentFilter) {
+                studentFilter.addEventListener('change', () => {
+                    currentPage = 1;
+                    renderSppTable();
+                });
+            }
             document.getElementById('yearFilter').addEventListener('change', () => {
-                currentPage = 1;
-                renderSppTable();
-            });
-            document.getElementById('studentFilter').addEventListener('change', () => {
                 currentPage = 1;
                 renderSppTable();
             });
@@ -1532,7 +1604,11 @@ Terima kasih.`;
             setupNominalInput('nominal');
             setupNominalInput('otherNominal');
 
-            document.getElementById('addStudentForm').addEventListener('submit', handleAddStudent);
+            const addStudentBtn = document.getElementById('addStudentBtn');
+            if (addStudentBtn) {
+                addStudentBtn.addEventListener('click', handleAddStudent);
+            }
+            document.getElementById('importStudentForm').addEventListener('submit', handleImportStudent);
             document.getElementById('selectAllBulkCheckbox').addEventListener('click', (e) => {
                 document.querySelectorAll('.student-checkbox').forEach(checkbox => {
                     if (checkbox.closest('tr').style.display !== 'none') checkbox.checked = e.target.checked;
@@ -1559,32 +1635,31 @@ Terima kasih.`;
             document.getElementById('showDisabledStudents').addEventListener('change', () => { studentCurrentPage = 1; renderStudentTable(); });
             document.getElementById('coachFilterSelector').addEventListener('change', () => { studentCurrentPage = 1; renderStudentTable(); });
             document.getElementById('downloadExcelTemplateBtn').addEventListener('click', downloadExcelTemplate);
-            document.getElementById('importStudentForm').addEventListener('submit', handleImportStudent);
             
             document.getElementById('otherRowsPerPage').addEventListener('change', (e) => {
                 otherRowsPerPage = parseInt(e.target.value, 10);
                 otherCurrentPage = 1; renderOtherPaymentsTable(filterNonSppData()); 
             });
-            // New event listener for the "Tambah Siswa" button
-            document.getElementById('addStudentBtn').addEventListener('click', handleAddStudent);
         }
 
         function setupNominalInput(id) {
             const inputElement = document.getElementById(id);
-            inputElement.addEventListener('keyup', function(e) {
-                let value = e.target.value;
-                value = value.replace(/\./g, '');
-                if (!isNaN(value) && value.length > 0) {
-                    e.target.value = new Intl.NumberFormat('id-ID').format(value);
-                }
-            });
-            inputElement.addEventListener('change', function(e) {
-                let value = e.target.value;
-                value = value.replace(/\./g, '');
-                if (!isNaN(value) && value.length > 0) {
-                    e.target.value = new Intl.NumberFormat('id-ID').format(value);
-                }
-            });
+            if (inputElement) {
+                inputElement.addEventListener('keyup', function(e) {
+                    let value = e.target.value;
+                    value = value.replace(/\./g, '');
+                    if (!isNaN(value) && value.length > 0) {
+                        e.target.value = new Intl.NumberFormat('id-ID').format(value);
+                    }
+                });
+                inputElement.addEventListener('change', function(e) {
+                    let value = e.target.value;
+                    value = value.replace(/\./g, '');
+                    if (!isNaN(value) && value.length > 0) {
+                        e.target.value = new Intl.NumberFormat('id-ID').format(value);
+                    }
+                });
+            }
         }
         function formatPhoneNumber(number) {
             number = String(number).replace(/\s/g, '');
