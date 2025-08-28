@@ -794,6 +794,24 @@
 
         <div id="manajemen-siswa-tab" class="tab-content">
             <div class="content-block">
+                <h3>Ringkasan Data</h3>
+                <div class="summary-dashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div style="padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background-color: #fff;">
+                        <h4>Total Siswa</h4>
+                        <h2 id="summaryTotalStudents">0</h2>
+                    </div>
+                    <div style="padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background-color: #fff;">
+                        <h4>Total Coach</h4>
+                        <h2 id="summaryTotalCoaches">0</h2>
+                    </div>
+                    <div style="padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background-color: #fff;">
+                        <h4>Siswa Aktif per Level</h4>
+                        <ul id="summaryActiveStudentsByLevel" style="list-style-type: none; padding: 0; margin: 0;"></ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-block">
                 <h3>Tambah & Impor Siswa</h3>
                 <form id="addStudentForm">
                     <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
@@ -1116,14 +1134,15 @@ Terima kasih.`;
                 populateYearFilter();
                 setupStudentFilterSearchBox();
                 setupOtherStudentSearchBox();
-                setupStudentListSearchBox(); // Panggil fungsi untuk searchbox di daftar siswa
-                populateLevelFilterDropdown(); // Panggil fungsi untuk filter level
+                setupStudentListSearchBox();
+                populateLevelFilterDropdown();
                 renderSppTable();
                 
                 populateCoachDropdowns();
                 populateLevelDropdowns();
                 renderStudentTable();
                 renderPendingAssignmentTable();
+                renderSummaryDashboard();
 
             } catch (error) {
                 console.error("ERROR di dalam loadAllData:", error);
@@ -1131,6 +1150,40 @@ Terima kasih.`;
             }
         }
 
+        function renderSummaryDashboard() {
+            const totalStudentsElement = document.getElementById('summaryTotalStudents');
+            const totalCoachesElement = document.getElementById('summaryTotalCoaches');
+            const studentsByLevelList = document.getElementById('summaryActiveStudentsByLevel');
+
+            // 1. Total Siswa
+            const totalStudents = allStudents.length;
+            totalStudentsElement.textContent = totalStudents;
+
+            // 2. Total Coach
+            const totalCoaches = allUsers.filter(u => u.role === 'user' && (u.status || 'active') === 'active').length;
+            totalCoachesElement.textContent = totalCoaches;
+
+            // 3. Siswa Aktif per Level
+            const activeStudents = allStudents.filter(s => (s.status || 'active') === 'active');
+            const studentsPerLevel = activeStudents.reduce((acc, student) => {
+                const level = student.studentLevel || 'Level Tidak Diketahui';
+                acc[level] = (acc[level] || 0) + 1;
+                return acc;
+            }, {});
+
+            studentsByLevelList.innerHTML = '';
+            for (const level in studentsPerLevel) {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${level}: ${studentsPerLevel[level]} siswa`;
+                studentsByLevelList.appendChild(listItem);
+            }
+            if (Object.keys(studentsPerLevel).length === 0) {
+                 const listItem = document.createElement('li');
+                 listItem.textContent = 'Tidak ada siswa aktif.';
+                 studentsByLevelList.appendChild(listItem);
+            }
+        }
+        
         window.showPaymentDetails = function(detailsJsonEncoded) {
             const detailsJson = decodeURIComponent(detailsJsonEncoded);
             const details = JSON.parse(detailsJson);
@@ -2004,8 +2057,8 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 const querySnapshot = await getDocs(collection(db, "other_payments"));
                 sessionReadCount += querySnapshot.size; updateReadStatus();
                 allOtherPayments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setupOtherStudentSearchBox(); // Panggil fungsi ini untuk menginisialisasi pencarian
-                populateNonSppSelectors(); // Tetap panggil ini untuk mengisi bank dan tahun
+                setupOtherStudentSearchBox(); 
+                populateNonSppSelectors(); 
                 renderOtherPaymentsTable(filterNonSppData());
             } catch (error) {
                 console.error("Error loading Non-SPP data:", error);
@@ -2029,10 +2082,8 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             });
         }
         function setupNonSppEventListeners() {
-            // Event listener untuk form input non-spp
             document.getElementById('otherPaymentForm').addEventListener('submit', handleAddOtherPayment);
             
-            // Event listener untuk filter laporan non-spp
             const otherStudentFilter = document.getElementById('otherStudentFilter');
             const otherStudentFilterSearchBox = document.getElementById('otherStudentFilterSearchBox');
             if(otherStudentFilterSearchBox) {
@@ -2063,7 +2114,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
         async function handleAddOtherPayment(e) {
             e.preventDefault();
             const studentId = document.getElementById('otherStudentSelector').value;
-            const studentName = document.getElementById('otherStudentSearchBox').value; // Mengambil nama dari search box
+            const studentName = document.getElementById('otherStudentSearchBox').value; 
             const nominalInput = document.getElementById('otherNominal').value;
             const nominal = parseFloat(nominalInput.replace(/\./g, ''));
             const bank = document.getElementById('otherBankSelector').value;
@@ -2229,6 +2280,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             } else if (tabName === 'manajemen-siswa-tab') {
                 renderStudentTable();
                 renderPendingAssignmentTable();
+                renderSummaryDashboard();
             }
         }
 
