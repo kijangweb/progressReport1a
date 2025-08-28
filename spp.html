@@ -680,8 +680,9 @@
                 <h3>Riwayat Pembayaran</h3>
                 <div class="spp-table-controls">
                     <div class="filter-group">
-                        <label for="studentFilter">Nama Siswa:</label>
-                        <select id="studentFilter"></select>
+                        <label for="studentFilterSearchBox">Nama Siswa:</label>
+                        <input type="text" id="studentFilterSearchBox" placeholder="Cari siswa...">
+                        <input type="hidden" id="studentFilter" value="all">
                     </div>
                     <div class="filter-group">
                         <label for="yearFilter">Tahun:</label>
@@ -738,8 +739,9 @@
                 <form id="otherPaymentForm">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="otherStudentSelector">Nama Siswa</label>
-                            <select id="otherStudentSelector" required></select>
+                            <label for="otherStudentSearchBox">Nama Siswa</label>
+                            <input type="text" id="otherStudentSearchBox" placeholder="Cari siswa..." required>
+                            <input type="hidden" id="otherStudentSelector" name="studentId">
                         </div>
                         <div class="form-group"><label for="otherNominal">Nominal (Rp)</label><input type="text" id="otherNominal" required></div>
                         <div class="form-group">
@@ -760,8 +762,9 @@
                 <h3>Riwayat Laporan Non-SPP</h3>
                 <div class="spp-table-controls">
                     <div class="filter-group">
-                        <label for="otherStudentFilter">Siswa:</label>
-                        <select id="otherStudentFilter"></select>
+                        <label for="otherStudentFilterSearchBox">Siswa:</label>
+                        <input type="text" id="otherStudentFilterSearchBox" placeholder="Cari siswa...">
+                        <input type="hidden" id="otherStudentFilter" value="all">
                     </div>
                     <div class="filter-group">
                         <label for="otherYearFilter">Tahun:</label>
@@ -863,13 +866,22 @@
             <div class="content-block">
                 <h3>Daftar Siswa (Manajemen Aktif)</h3>
                 <div class="filter-controls">
+                    <div class="form-group">
+                        <label for="studentListSearchBox">Cari Siswa:</label>
+                        <input type="text" id="studentListSearchBox" placeholder="Ketik nama siswa...">
+                        <input type="hidden" id="studentListFilter" value="all">
+                    </div>
+                    <div class="form-group">
+                        <label for="levelFilterSelector">Level:</label>
+                        <select id="levelFilterSelector"><option value="all">Semua Level</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="coachFilterSelector">Coach:</label>
+                        <select id="coachFilterSelector"></select>
+                    </div>
                     <div class="form-group" style="flex-direction: row; align-items: center;">
                         <input type="checkbox" id="showDisabledStudents" style="margin-right: 5px;">
                         <label for="showDisabledStudents">Tampilkan Siswa Nonaktif</label>
-                    </div>
-                    <div class="form-group">
-                        <label for="coachFilterSelector">Filter berdasarkan Coach:</label>
-                        <select id="coachFilterSelector"></select>
                     </div>
                 </div>
                 <div class="student-table-container">
@@ -1102,7 +1114,10 @@ Terima kasih.`;
                 updateReadStatus();
                 setupStudentSearchBox();
                 populateYearFilter();
-                populateStudentFilter();
+                setupStudentFilterSearchBox();
+                setupOtherStudentSearchBox();
+                setupStudentListSearchBox(); // Panggil fungsi untuk searchbox di daftar siswa
+                populateLevelFilterDropdown(); // Panggil fungsi untuk filter level
                 renderSppTable();
                 
                 populateCoachDropdowns();
@@ -1231,26 +1246,90 @@ Terima kasih.`;
             });
         }
         
-        function populateStudentSelector() {
-            // This function is now used for the other student selectors and filters.
-            // The main one is replaced by the search box.
-            const otherSelector = document.getElementById('otherStudentSelector');
-            if (otherSelector) {
-                otherSelector.innerHTML = '<option value="">-- Pilih Siswa --</option>';
-                allStudents.forEach(student => {
-                    const studentStatus = student.status || 'inactive';
-                    const studentLevel = student.studentLevel || 'Level belum diatur';
-                    const optionHTML = `<option value="${student.id}">${student.name} (${studentLevel} - ${studentStatus})</option>`;
-                    otherSelector.innerHTML += optionHTML;
-                });
-            }
+        function setupStudentFilterSearchBox() {
+            const searchBox = $('#studentFilterSearchBox');
+            const studentFilter = $('#studentFilter');
+            const studentData = [{ label: 'Semua Siswa', value: 'all' }].concat(allStudents.map(student => ({
+                label: student.name,
+                value: student.id
+            })));
+            
+            searchBox.autocomplete({
+                source: studentData,
+                minLength: 2,
+                select: function(event, ui) {
+                    searchBox.val(ui.item.label);
+                    studentFilter.val(ui.item.value);
+                    renderSppTable();
+                    return false;
+                }
+            });
+            // Handle clearing the search box
+            searchBox.on('input', function() {
+                if ($(this).val() === '') {
+                    studentFilter.val('all');
+                    renderSppTable();
+                }
+            });
         }
-        function populateStudentFilter() {
-            const filter = document.getElementById('studentFilter');
-            if(filter) {
-                filter.innerHTML = '<option value="all">Semua Siswa</option>';
-                allStudents.forEach(student => {
-                    filter.innerHTML += `<option value="${student.id}">${student.name}</option>`;
+
+        function setupOtherStudentSearchBox() {
+            const searchBox = $('#otherStudentSearchBox');
+            const studentSelector = $('#otherStudentSelector');
+            const studentData = allStudents.map(student => ({
+                label: `${student.name} (${student.studentLevel || 'N/A'} - ${student.status})`,
+                value: student.id
+            }));
+
+            searchBox.autocomplete({
+                source: studentData,
+                minLength: 2,
+                select: function(event, ui) {
+                    searchBox.val(ui.item.label);
+                    studentSelector.val(ui.item.value);
+                    return false;
+                }
+            });
+            // Clear the hidden input if the search box is cleared
+            searchBox.on('input', function() {
+                if ($(this).val() === '') {
+                    studentSelector.val('');
+                }
+            });
+        }
+
+        function setupStudentListSearchBox() {
+            const searchBox = $('#studentListSearchBox');
+            const studentFilter = $('#studentListFilter');
+            const studentData = [{ label: 'Semua Siswa', value: 'all' }].concat(allStudents.map(student => ({
+                label: student.name,
+                value: student.id
+            })));
+            
+            searchBox.autocomplete({
+                source: studentData,
+                minLength: 2,
+                select: function(event, ui) {
+                    searchBox.val(ui.item.label);
+                    studentFilter.val(ui.item.value);
+                    renderStudentTable();
+                    return false;
+                }
+            });
+            searchBox.on('input', function() {
+                if ($(this).val() === '') {
+                    studentFilter.val('all');
+                    renderStudentTable();
+                }
+            });
+        }
+
+        function populateLevelFilterDropdown() {
+            const levelSelector = document.getElementById('levelFilterSelector');
+            if (levelSelector) {
+                levelSelector.innerHTML = '<option value="all">Semua Level</option>';
+                allLevels.forEach(level => {
+                    levelSelector.innerHTML += `<option value="${level}">${level}</option>`;
                 });
             }
         }
@@ -1572,13 +1651,16 @@ Terima kasih.`;
 
         function setupEventListeners() {
             document.getElementById('sppPaymentForm').addEventListener('submit', handleAddPayment);
-            const studentFilter = document.getElementById('studentFilter');
-            if(studentFilter) {
-                studentFilter.addEventListener('change', () => {
-                    currentPage = 1;
-                    renderSppTable();
-                });
-            }
+            document.getElementById('studentFilterSearchBox').addEventListener('input', () => {
+                const searchBoxValue = document.getElementById('studentFilterSearchBox').value;
+                const studentFilterValue = document.getElementById('studentFilter').value;
+                if (!searchBoxValue) {
+                    if (studentFilterValue !== 'all') {
+                        document.getElementById('studentFilter').value = 'all';
+                        renderSppTable();
+                    }
+                }
+            });
             document.getElementById('yearFilter').addEventListener('change', () => {
                 currentPage = 1;
                 renderSppTable();
@@ -1604,11 +1686,7 @@ Terima kasih.`;
             setupNominalInput('nominal');
             setupNominalInput('otherNominal');
 
-            const addStudentBtn = document.getElementById('addStudentBtn');
-            if (addStudentBtn) {
-                addStudentBtn.addEventListener('click', handleAddStudent);
-            }
-            document.getElementById('importStudentForm').addEventListener('submit', handleImportStudent);
+            document.getElementById('addStudentForm').addEventListener('submit', handleAddStudent);
             document.getElementById('selectAllBulkCheckbox').addEventListener('click', (e) => {
                 document.querySelectorAll('.student-checkbox').forEach(checkbox => {
                     if (checkbox.closest('tr').style.display !== 'none') checkbox.checked = e.target.checked;
@@ -1635,10 +1713,15 @@ Terima kasih.`;
             document.getElementById('showDisabledStudents').addEventListener('change', () => { studentCurrentPage = 1; renderStudentTable(); });
             document.getElementById('coachFilterSelector').addEventListener('change', () => { studentCurrentPage = 1; renderStudentTable(); });
             document.getElementById('downloadExcelTemplateBtn').addEventListener('click', downloadExcelTemplate);
+            document.getElementById('importStudentForm').addEventListener('submit', handleImportStudent);
             
             document.getElementById('otherRowsPerPage').addEventListener('change', (e) => {
                 otherRowsPerPage = parseInt(e.target.value, 10);
                 otherCurrentPage = 1; renderOtherPaymentsTable(filterNonSppData()); 
+            });
+            document.getElementById('levelFilterSelector').addEventListener('change', () => {
+                studentCurrentPage = 1;
+                renderStudentTable();
             });
         }
 
@@ -1921,24 +2004,16 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 const querySnapshot = await getDocs(collection(db, "other_payments"));
                 sessionReadCount += querySnapshot.size; updateReadStatus();
                 allOtherPayments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                populateNonSppSelectors();
+                setupOtherStudentSearchBox(); // Panggil fungsi ini untuk menginisialisasi pencarian
+                populateNonSppSelectors(); // Tetap panggil ini untuk mengisi bank dan tahun
                 renderOtherPaymentsTable(filterNonSppData());
             } catch (error) {
                 console.error("Error loading Non-SPP data:", error);
             }
         }
         function populateNonSppSelectors() {
-            const studentSelector = document.getElementById('otherStudentSelector');
-            const studentFilter = document.getElementById('otherStudentFilter');
             const bankSelector = document.getElementById('otherBankSelector');
             const yearFilter = document.getElementById('otherYearFilter');
-            studentSelector.innerHTML = '<option value="">-- Pilih Siswa --</option>';
-            studentFilter.innerHTML = '<option value="all">Semua Siswa</option>';
-            allStudents.forEach(student => {
-                const optionHTML = `<option value="${student.id}">${student.name} (${student.studentLevel || 'N/A'} - ${student.status})</option>`;
-                studentSelector.innerHTML += optionHTML;
-                studentFilter.innerHTML += `<option value="${student.id}">${student.name}</option>`;
-            });
             bankSelector.innerHTML = '<option value="">Pilih Bank</option>';
             for (const bankName in bankColors) {
                 bankSelector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
@@ -1954,8 +2029,20 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             });
         }
         function setupNonSppEventListeners() {
+            // Event listener untuk form input non-spp
             document.getElementById('otherPaymentForm').addEventListener('submit', handleAddOtherPayment);
-            document.getElementById('otherStudentFilter').addEventListener('change', () => { otherCurrentPage = 1; renderOtherPaymentsTable(filterNonSppData()); });
+            
+            // Event listener untuk filter laporan non-spp
+            const otherStudentFilter = document.getElementById('otherStudentFilter');
+            const otherStudentFilterSearchBox = document.getElementById('otherStudentFilterSearchBox');
+            if(otherStudentFilterSearchBox) {
+                otherStudentFilterSearchBox.addEventListener('input', () => {
+                    if (otherStudentFilterSearchBox.value === '') {
+                        otherStudentFilter.value = 'all';
+                        renderOtherPaymentsTable(filterNonSppData());
+                    }
+                });
+            }
             document.getElementById('otherYearFilter').addEventListener('change', () => { otherCurrentPage = 1; renderOtherPaymentsTable(filterNonSppData()); });
             document.getElementById('otherRowsPerPage').addEventListener('change', (e) => {
                 otherRowsPerPage = parseInt(e.target.value, 10);
@@ -1976,7 +2063,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
         async function handleAddOtherPayment(e) {
             e.preventDefault();
             const studentId = document.getElementById('otherStudentSelector').value;
-            const studentName = document.getElementById('otherStudentSelector').selectedOptions[0].text;
+            const studentName = document.getElementById('otherStudentSearchBox').value; // Mengambil nama dari search box
             const nominalInput = document.getElementById('otherNominal').value;
             const nominal = parseFloat(nominalInput.replace(/\./g, ''));
             const bank = document.getElementById('otherBankSelector').value;
@@ -2179,9 +2266,15 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             const tableBody = document.getElementById('studentsTableBody');
             const showDisabled = document.getElementById('showDisabledStudents').checked;
             const coachFilter = document.getElementById('coachFilterSelector').value;
+            const studentFilter = document.getElementById('studentListFilter').value;
+            const levelFilter = document.getElementById('levelFilterSelector').value;
             let filteredStudents = allStudents;
+            
             if (coachFilter !== 'all') { filteredStudents = filteredStudents.filter(s => s.coachEmail === coachFilter); }
+            if (studentFilter !== 'all') { filteredStudents = filteredStudents.filter(s => s.id === studentFilter); }
+            if (levelFilter !== 'all') { filteredStudents = filteredStudents.filter(s => s.studentLevel === levelFilter); }
             if (!showDisabled) { filteredStudents = filteredStudents.filter(s => (s.status || 'active') === 'active'); }
+
             const rowsPerPage = parseInt(document.getElementById('studentRowsPerPage').value, 10);
             const totalItems = filteredStudents.length;
             const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
