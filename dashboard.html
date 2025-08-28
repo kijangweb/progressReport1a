@@ -574,6 +574,16 @@
         
         <div class="section-container">
             <h3>Daftar Siswa Anda</h3>
+            <div class="report-filters">
+                <div>
+                    <label for="studentLevelFilter">Filter Berdasarkan Level</label>
+                    <select id="studentLevelFilter"></select>
+                </div>
+                <div>
+                    <label>Total Siswa (Filtered)</label>
+                    <span id="totalStudentsCount" style="font-weight: bold; color: var(--primary-color);">0 siswa</span>
+                </div>
+            </div>
             <div style="overflow-x:auto;">
                 <table class="student-list-table">
                     <thead><tr><th>Nama Siswa</th><th>Level</th><th>Lesson Terakhir</th></tr></thead>
@@ -639,6 +649,10 @@
             <div class="report-filters">
                 <div><label for="reportFilterStudent">Filter Berdasarkan Siswa</label><select id="reportFilterStudent"></select></div>
                 <div><label for="reportFilterLevel">Filter Berdasarkan Level</label><select id="reportFilterLevel"></select></div>
+                <div style="flex-direction: column; display: flex; gap: 5px;">
+                    <label>Siswa di level ini:</label>
+                    <span id="totalStudentsByLevel" style="font-weight: bold; color: var(--primary-color);">0 siswa</span>
+                </div>
                 <div>
                     <label for="reportSort">Urutkan Berdasarkan</label>
                     <select id="reportSort">
@@ -722,7 +736,6 @@
         let allMyReports = [];
         let currentlyDisplayedReports = [];
         let brandSettings = {};
-
         let studentCurrentPage = 1;
         let studentRowsPerPage = 10;
         let reportCurrentPage = 1;
@@ -760,6 +773,8 @@ Terima kasih.`;
                 window.updateReadStatus();
                 myStudents = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
+                // Panggil fungsi untuk mengisi filter level dan merender tabel
+                populateStudentLevelFilter();
                 renderStudentTable();
             }, (error) => {
                 console.error("Gagal memuat daftar siswa:", error);
@@ -770,20 +785,48 @@ Terima kasih.`;
         
         function renderStudentTable() {
             const studentsTableBody = document.getElementById('myStudentsTableBody');
-            studentsTableBody.innerHTML = '';
+            const studentLevelFilter = document.getElementById('studentLevelFilter');
+            const selectedLevel = studentLevelFilter.value;
+            const totalStudentsCountEl = document.getElementById('totalStudentsCount');
 
-            const sortedStudents = myStudents.sort((a, b) => a.name.localeCompare(b.name));
-            
+            let filteredStudents = myStudents;
+            if (selectedLevel !== 'all') {
+                filteredStudents = myStudents.filter(student => student.studentLevel === selectedLevel);
+            }
+
+            // Perbarui info total siswa
+            totalStudentsCountEl.textContent = `${filteredStudents.length} siswa`;
+
+            studentsTableBody.innerHTML = '';
+            const sortedStudents = filteredStudents.sort((a, b) => a.name.localeCompare(b.name));
             const startIndex = (studentCurrentPage - 1) * studentRowsPerPage;
             const endIndex = startIndex + studentRowsPerPage;
             const paginatedStudents = sortedStudents.slice(startIndex, endIndex);
 
-            paginatedStudents.forEach(student => {
-                const lastLessonDisplay = student.lastLesson || 'Belum ada laporan';
-                studentsTableBody.innerHTML += `<tr><td>${student.name}</td><td>${student.studentLevel || ''}</td><td>${lastLessonDisplay}</td></tr>`;
-            });
-            updateStudentPagination(myStudents.length);
+            if (paginatedStudents.length === 0) {
+                studentsTableBody.innerHTML = `<tr><td colspan="3">Tidak ada siswa di level ini.</td></tr>`;
+            } else {
+                paginatedStudents.forEach(student => {
+                    const lastLessonDisplay = student.lastLesson || 'Belum ada laporan';
+                    studentsTableBody.innerHTML += `<tr><td>${student.name}</td><td>${student.studentLevel || ''}</td><td>${lastLessonDisplay}</td></tr>`;
+                });
+            }
+            updateStudentPagination(filteredStudents.length);
         }
+
+        function populateStudentLevelFilter() {
+            const studentLevelFilter = document.getElementById('studentLevelFilter');
+            const uniqueLevels = [...new Set(myStudents.map(student => student.studentLevel))].filter(Boolean);
+            uniqueLevels.sort();
+            
+            const currentLevel = studentLevelFilter.value;
+            studentLevelFilter.innerHTML = '<option value="all">Semua Level</option>';
+            uniqueLevels.forEach(level => {
+                studentLevelFilter.innerHTML += `<option value="${level}">${level}</option>`;
+            });
+            studentLevelFilter.value = currentLevel || 'all';
+        }
+
 
         function updateStudentPagination(totalItems) {
             const totalPages = Math.ceil(totalItems / studentRowsPerPage) || 1;
@@ -925,10 +968,12 @@ Terima kasih.`;
             const level = document.getElementById('reportFilterLevel').value;
             const sortOption = document.getElementById('reportSort').value;
             const reportsTableBody = document.getElementById('reportsTableBody');
+            const totalStudentsByLevelEl = document.getElementById('totalStudentsByLevel');
 
             if (allMyReports.length === 0) {
                 reportsTableBody.innerHTML = '<tr><td colspan="7">Tidak ada laporan yang cocok.</td></tr>';
                 window.updateReportPagination(0);
+                totalStudentsByLevelEl.textContent = "0 siswa";
                 return;
             }
 
@@ -950,6 +995,20 @@ Terima kasih.`;
             if (levels.includes(currentLevelValue)) {
                 levelFilter.value = currentLevelValue;
             }
+
+            // Hitung jumlah siswa berdasarkan level yang difilter
+            const uniqueStudentIdsInFilteredReports = [...new Set(filteredReports.map(r => r.studentId))];
+            let studentCount = 0;
+            if (level) {
+                const studentsInLevel = myStudents.filter(s => s.studentLevel === level);
+                studentCount = studentsInLevel.length;
+            } else if (studentId) {
+                 studentCount = 1;
+            } else {
+                 studentCount = myStudents.length;
+            }
+            totalStudentsByLevelEl.textContent = `${studentCount} siswa`;
+
 
             const processedReports = processAndSortReports(filteredReports);
             currentlyDisplayedReports = processedReports;
@@ -1196,6 +1255,12 @@ Terima kasih.`;
                     reportCurrentPage++;
                     window.renderReports(currentlyDisplayedReports, document.getElementById('reportSort').value);
                 }
+            });
+            
+            // Event listener untuk filter level siswa
+            document.getElementById('studentLevelFilter').addEventListener('change', () => {
+                studentCurrentPage = 1;
+                renderStudentTable();
             });
             isSetupDone = true;
         }
