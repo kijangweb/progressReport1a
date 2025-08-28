@@ -268,7 +268,6 @@
         </div>
         <div class="tabs">
             <button class="tab-btn active" onclick="openTab('pengguna-tab')">Pengguna</button>
-            <button class="tab-btn" onclick="openTab('siswa-tab')">Siswa & Kelas</button>
             <button class="tab-btn" onclick="openTab('kurikulum-tab')">Kurikulum</button>
             <button class="tab-btn" onclick="openTab('bank-tab')">Manajemen Bank</button>
             <button class="tab-btn" onclick="openTab('maintenance-tab')">Maintenance</button>
@@ -322,109 +321,6 @@
                     </div>
                     <div id="resetPasswordStatusMessage"></div>
                 </form>
-            </div>
-        </div>
-
-        <div id="siswa-tab" class="tab-content">
-            <div class="content-block">
-                <h4>Tambah Siswa Baru</h4>
-                <form id="addStudentForm">
-                    <div class="form-row">
-                        <div><input type="text" id="newStudentName" placeholder="Nama Lengkap Siswa" required></div>
-                        <div><input type="tel" id="newStudentPhone" placeholder="No. Telepon (cth: 0812...)"></div>
-                        <div><select id="coachForStudentSelector" required></select></div>
-                        <div><button type="submit" class="btn">Tambah Siswa</button></div>
-                    </div>
-                    <div id="studentStatusMessage"></div>
-                </form>
-            </div>
-            <div class="content-block">
-                <h4>Impor Siswa dari Excel</h4>
-                <p>Unggah file Excel (.xlsx) untuk menambahkan banyak siswa sekaligus. Template file hanya perlu memiliki kolom `nama` dan `phone`.</p>
-                <button type="button" id="downloadExcelTemplateBtn" class="btn" style="background-color: #17a2b8; margin-bottom: 15px;">Unduh Template Excel</button>
-                <form id="importStudentForm">
-                    <div class="form-row">
-                        <div>
-                            <input type="file" id="excelFileInput" accept=".xlsx" required>
-                        </div>
-                        <div>
-                            <button type="submit" class="btn" style="background-color: #007bff;">Muat File</button>
-                        </div>
-                    </div>
-                    <div id="importStatusMessage" style="margin-top: 15px; font-weight: bold;"></div>
-                </form>
-            </div>
-
-            <div class="content-block">
-                <h3>Daftar Tunggu Penugasan</h3>
-                <p>Siswa di bawah ini menunggu penetapan coach dan level sebelum disimpan ke database utama.</p>
-                <div class="table-container">
-                    <table class="student-table" id="pendingAssignmentTable">
-                        <thead>
-                            <tr>
-                                <th style="width: 5%;"><input type="checkbox" id="selectAllPendingCheckbox"></th>
-                                <th>Nama Siswa</th>
-                                <th>No. Telepon</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pendingAssignmentTableBody"></tbody>
-                    </table>
-                </div>
-                <div class="bulk-action-content" style="margin-top: 20px;">
-                    <div class="form-group">
-                        <label for="assignCoachSelector">Tetapkan Coach:</label>
-                        <select id="assignCoachSelector"></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="assignLevelSelector">Tetapkan Level:</label>
-                        <select id="assignLevelSelector"></select>
-                    </div>
-                    <button type="button" id="assignAndSaveBtn" style="background-color: #28a745;">Terapkan & Simpan</button>
-                    <button type="button" id="cancelImportBtn" style="background-color: #dc3545;">Batalkan Impor</button>
-                </div>
-                <div id="assignStatusMessage" style="margin-top: 15px; font-weight: bold;"></div>
-            </div>
-            <div class="content-block">
-                <h3>Daftar Siswa (Pembagian Coach)</h3>
-                <div class="filter-controls">
-                    <div><input type="checkbox" id="showDisabledStudents"><label for="showDisabledStudents">Tampilkan Siswa Nonaktif</label></div>
-                    <div><label for="coachFilterSelector">Filter berdasarkan Coach:</label><select id="coachFilterSelector"></select></div>
-                </div>
-                <div class="table-container">
-                    <table class="student-table" id="studentsTable"><thead><tr><th style="width: 5%;"><input type="checkbox" id="selectAllCheckbox"></th><th>Nama Siswa</th><th>Coach Saat Ini</th><th>Level Siswa</th><th style="width: 15%;">Aksi</th></tr></thead><tbody id="studentsTableBody"></tbody></table>
-                </div>
-                <div class="pagination-controls" id="studentPagination">
-                    <select id="studentRowsPerPage"><option value="5" selected>5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option></select>
-                    <div>
-                        <button type="button" id="studentPrevBtn" disabled>&laquo; Sebelumnya</button>
-                        <span style="margin: 0 10px;">Halaman <b id="studentCurrentPage">1</b> dari <b id="studentTotalPages">1</b></span>
-                        <button type="button" id="studentNextBtn" disabled>Berikutnya &raquo;</button>
-                    </div>
-                </div>
-            </div>
-            <div class="bulk-action-container">
-                <h3>Pilihan Ganti Coach</h3>
-                <div class="bulk-action-content">
-                    <div class="form-group">
-                        <label for="bulkCoachSelector">Ganti coach ke:</label>
-                        <select id="bulkCoachSelector"></select>
-                    </div>
-                    <button type="button" id="bulkChangeCoachBtn">Terapkan Perubahan Coach</button>
-                    <div class="form-group">
-                        <label for="bulkLevelSelector">Ganti level ke:</label>
-                        <select id="bulkLevelSelector"></select>
-                    </div>
-                    <button type="button" id="bulkChangeLevelBtn">Terapkan Perubahan Level</button>
-                </div>
-            </div>
-            <div class="transfer-section">
-                <h3>Pindah Grup Coach</h3>
-                <div class="form-row">
-                    <div><label for="sourceCoachSelector">Dari Coach:</label><br><select id="sourceCoachSelector"></select></div>
-                    <div><label for="destinationCoachSelector">Ke Coach:</label><br><select id="destinationCoachSelector"></select></div>
-                    <div><button type="button" id="transferStudentsBtn" style="background-color: #17a2b8;">Pindahkan Siswa</button></div>
-                </div>
-                <div id="transferStatusMessage"></div>
             </div>
         </div>
 
@@ -532,7 +428,6 @@
     </div>
     
     <div id="editUserModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Pengguna</h2><span class="close-btn">&times;</span></div><form id="editUserForm"><div class="modal-body"><p>Email: <strong id="editUserEmail"></strong></p><input type="hidden" id="editUserId"><div class="form-group"><label for="editFullName">Nama Lengkap</label><input type="text" id="editFullName" placeholder="Masukkan nama lengkap"></div><div class="form-group"><label for="editPhoneNumber">No. Telepon</label><input type="tel" id="editPhoneNumber" placeholder="Contoh: 08123456789"></div><div class="form-group" id="editUserLevelGroup"><label for="editUserLevel">Level (untuk Coach)</label><input type="text" id="editUserLevel" placeholder="Contoh: Master"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
-    <div id="editStudentModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Siswa</h2><span class="close-btn">&times;</span></div><form id="editStudentForm"><div class="modal-body"><input type="hidden" id="editStudentId"><div class="form-group"><label for="editStudentName">Nama Siswa</label><input type="text" id="editStudentName" required></div><div class="form-group"><label for="editStudentLevel">Level Siswa</label><select id="editStudentLevel"></select></div><div class="form-group"><label for="editStudentCoach">Pindahkan ke Coach</label><select id="editStudentCoach" required></select></div><div class="form-group"><label for="editStudentPhone">No. Telepon</label><input type="tel" id="editStudentPhone" placeholder="Contoh: 08123456789"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
     <div id="editBankModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Bank</h2><span class="close-btn">&times;</span></span></div><form id="editBankForm"><div class="modal-body"><input type="hidden" id="editBankId"><div class="form-group"><label for="editBankName">Nama Bank</label><input type="text" id="editBankName" required></div><div class="form-group"><label for="editBankColor">Warna</label><input type="color" id="editBankColor"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
     
     <script type="module">
@@ -559,18 +454,14 @@
             updateReadStatus();
         }
 
-        let allUsers = [], allStudents = [], allBanks = {}, allLevels = [], pendingImportStudents = [];
-        let userCurrentPage = 1, studentCurrentPage = 1;
+        let allUsers = [], allStudents = [], allBanks = {}, allLevels = [];
+        let userCurrentPage = 1;
         const sppYearToDeleteSelect = document.getElementById('sppYearToDelete');
         const sppMonthToDeleteSelect = document.getElementById('sppMonthToDelete');
         const sppDeleteStatusMessageDiv = document.getElementById('sppDeleteStatusMessage');
         const statusMessageDiv = document.getElementById('statusMessage');
         const resetPasswordStatusMessageDiv = document.getElementById('resetPasswordStatusMessage');
-        const studentStatusMessageDiv = document.getElementById('studentStatusMessage');
-        const transferStatusMessageDiv = document.getElementById('transferStatusMessage');
         const bankStatusMessageDiv = document.getElementById('bankStatusMessage');
-        const importStatusDiv = document.getElementById('importStatusMessage');
-        const excelFileInput = document.getElementById('excelFileInput');
         const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
         const sppSizeInfoDiv = document.getElementById('sppSizeInfo');
         const sppFileCountSpan = document.getElementById('sppFileCount');
@@ -628,9 +519,10 @@
 
                 const userSnapshot = await getDocs(collection(db, "users"));
                 sessionReadCount += userSnapshot.size;
-                
+
                 const studentSnapshot = await getDocs(collection(db, "students"));
                 sessionReadCount += studentSnapshot.size;
+                allStudents = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
                 const bankSnapshot = await getDocs(collection(db, "banks"));
                 sessionReadCount += bankSnapshot.size;
@@ -640,16 +532,11 @@
                 updateReadStatus();
 
                 allUsers = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                allStudents = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allBanks = {};
                 bankSnapshot.forEach(doc => { allBanks[doc.id] = {id: doc.id, ...doc.data()}; });
                 allLevels = curriculumSnapshot.docs.map(doc => doc.id).sort();
                 
-                pendingImportStudents = JSON.parse(localStorage.getItem('pendingImportStudents')) || [];
-
                 renderUserTable();
-                renderStudentTable();
-                renderPendingAssignmentTable();
                 renderBankTable();
                 populateCoachDropdowns();
                 populateLevelDropdowns();
@@ -663,7 +550,7 @@
                 alert("Gagal memuat data utama. Kemungkinan ada masalah dengan Security Rules. Periksa console (F12).");
             }
         }
-
+        
         async function loadBranding() {
             const brandingForm = document.getElementById('brandingForm');
             const companyNameInput = document.getElementById('companyNameInput');
@@ -695,36 +582,40 @@
                 brandingStatusMessage.style.color = 'red';
             }
         
-            brandingForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                brandingStatusMessage.textContent = 'Menyimpan...';
-                brandingStatusMessage.style.color = 'blue';
-                const companyName = companyNameInput.value;
-                const logoFile = document.getElementById('logoFileInput').files[0];
-                let logoBase64 = logoPreview.src;
-        
-                if (logoFile) {
-                    const reader = new FileReader();
-                    reader.onload = async function() {
-                        logoBase64 = reader.result;
+            if (brandingForm) {
+                brandingForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    brandingStatusMessage.textContent = 'Menyimpan...';
+                    brandingStatusMessage.style.color = 'blue';
+                    const companyName = companyNameInput.value;
+                    const logoFile = document.getElementById('logoFileInput').files[0];
+                    let logoBase64 = logoPreview.src;
+            
+                    if (logoFile) {
+                        const reader = new FileReader();
+                        reader.onload = async function() {
+                            logoBase64 = reader.result;
+                            await saveBranding(companyName, logoBase64);
+                        };
+                        reader.readAsDataURL(logoFile);
+                    } else {
                         await saveBranding(companyName, logoBase64);
-                    };
-                    reader.readAsDataURL(logoFile);
-                } else {
-                    await saveBranding(companyName, logoBase64);
-                }
-            });
-        
-            document.getElementById('logoFileInput').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        logoPreview.src = event.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
+                    }
+                });
+            }
+            const logoFileInput = document.getElementById('logoFileInput');
+            if (logoFileInput) {
+                logoFileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            logoPreview.src = event.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
         }
         async function saveBranding(companyName, logoBase64) {
             const brandingStatusMessage = document.getElementById('brandingStatusMessage');
@@ -808,7 +699,6 @@
                 console.error("Error fetching curriculum:", error);
             }
         }
-
         window.deleteSppAttachmentsByYearAndMonth = async function() {
             const yearToDelete = sppYearToDeleteSelect.value;
             const monthToDelete = sppMonthToDeleteSelect.value;
@@ -898,7 +788,6 @@
                 }
             }
         }
-
         function renderUserTable() {
             const tableBody = document.getElementById('usersTableBody');
             const showDisabled = document.getElementById('showDisabledUsers').checked;
@@ -972,6 +861,66 @@
             });
             updateUserPagination(totalItems);
         }
+        function renderBankTable() {
+            const tableBody = document.getElementById('bankTableBody');
+            tableBody.innerHTML = '';
+            Object.values(allBanks).forEach(bank => {
+                const status = bank.status || 'active';
+                const row = tableBody.insertRow();
+                row.className = status === 'disabled' ? 'disabled-row' : '';
+                const buttonText = status === 'active' ? 'Disable' : 'Enable';
+                const buttonClass = status === 'active' ? 'action-btn-disable' : 'action-btn-enable';
+                row.innerHTML = `<td>${bank.bankName}</td><td><div style="width:20px; height:20px; background-color:${bank.color}; border:1px solid #ccc;"></div></td><td style="white-space:nowrap;"><button class="${buttonClass}" onclick="toggleBankStatus('${bank.id}', '${status}')">${buttonText}</button> <button class="action-btn-edit" onclick="openEditBankModal('${bank.id}')">Edit</button></td>`;
+            });
+        }
+        function setupEventListeners() {
+            document.getElementById('userRowsPerPage').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
+            document.getElementById('userPrevBtn').addEventListener('click', () => { if (userCurrentPage > 1) { userCurrentPage--; renderUserTable(); } });
+            document.getElementById('userNextBtn').addEventListener('click', () => { const totalPages = parseInt(document.getElementById('userTotalPages').textContent); if (userCurrentPage < totalPages) { userCurrentPage++; renderUserTable(); } });
+            document.getElementById('showDisabledUsers').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
+            document.getElementById('showCoachesOnly').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
+            document.getElementById('addUserForm').addEventListener('submit', handleAddUser);
+            document.getElementById('resetPasswordForm').addEventListener('submit', handleResetPassword);
+            document.querySelector('#editUserModal .close-btn').onclick = () => document.getElementById('editUserModal').style.display = 'none';
+            document.querySelector('#editBankModal .close-btn').onclick = () => document.getElementById('editBankModal').style.display = 'none';
+            window.onclick = (event) => {
+                const modals = document.getElementsByClassName('modal');
+                for (let i = 0; i < modals.length; i++) {
+                    if (event.target == modals[i]) modals[i].style.display = "none";
+                }
+            };
+            document.getElementById('editUserForm').addEventListener('submit', handleEditUser);
+            document.getElementById('addLevelForm').addEventListener('submit', handleAddLevel);
+            document.getElementById('levelEditorSelector').addEventListener('change', handleLevelSelect);
+            document.getElementById('saveCurriculumBtn').addEventListener('click', handleSaveCurriculum);
+            document.getElementById('addBankForm').addEventListener('submit', handleAddBank);
+            document.getElementById('editBankForm').addEventListener('submit', handleEditBank);
+            document.getElementById('addLessonBtn').addEventListener('click', addNewLessonInput);
+            const sppYearToDeleteSelect = document.getElementById('sppYearToDelete');
+            if(sppYearToDeleteSelect) {
+                sppYearToDeleteSelect.addEventListener('change', () => {
+                    sppSizeInfoDiv.style.display = 'none';
+                    sppDeleteStatusMessageDiv.textContent = '';
+                });
+                sppYearToDeleteSelect.addEventListener('change', populateSppMonthsForDeletion);
+            }
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('onclick').match(/'(.*?)'/)[1];
+                    openTab(tabId);
+                });
+            });
+            const syncCountBtn = document.getElementById('syncCountBtn');
+            if(syncCountBtn) syncCountBtn.addEventListener('click', syncStudentCount);
+        }
+        function updateUserPagination(totalItems) {
+            const rowsPerPage = parseInt(document.getElementById('userRowsPerPage').value, 10);
+            const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
+            document.getElementById('userCurrentPage').textContent = userCurrentPage;
+            document.getElementById('userTotalPages').textContent = totalPages;
+            document.getElementById('userPrevBtn').disabled = userCurrentPage === 1;
+            document.getElementById('userNextBtn').disabled = userCurrentPage >= totalPages;
+        }
 
         /**
          * Regenerates a unique coachId for a user.
@@ -999,157 +948,6 @@
             }
         };
 
-        function updateUserPagination(totalItems) {
-            const rowsPerPage = parseInt(document.getElementById('userRowsPerPage').value, 10);
-            const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
-            document.getElementById('userCurrentPage').textContent = userCurrentPage;
-            document.getElementById('userTotalPages').textContent = totalPages;
-            document.getElementById('userPrevBtn').disabled = userCurrentPage === 1;
-            document.getElementById('userNextBtn').disabled = userCurrentPage >= totalPages;
-        }
-        function renderStudentTable() {
-            const tableBody = document.getElementById('studentsTableBody');
-            const showDisabled = document.getElementById('showDisabledStudents').checked;
-            const coachFilter = document.getElementById('coachFilterSelector').value;
-            let filteredStudents = allStudents;
-            if (coachFilter) { filteredStudents = filteredStudents.filter(s => s.coachEmail === coachFilter); }
-            if (!showDisabled) { filteredStudents = filteredStudents.filter(s => (s.status || 'active') === 'active'); }
-            const rowsPerPage = parseInt(document.getElementById('studentRowsPerPage').value, 10);
-            const totalItems = filteredStudents.length;
-            const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
-            if (studentCurrentPage > totalPages) studentCurrentPage = totalPages;
-            const start = (studentCurrentPage - 1) * rowsPerPage;
-            const paginatedStudents = filteredStudents.slice(start, start + rowsPerPage);
-            tableBody.innerHTML = '';
-            if (paginatedStudents.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="5">Tidak ada siswa yang cocok dengan filter.</td></tr>';
-            } else {
-                paginatedStudents.forEach(student => {
-                    const coachData = allUsers.find(u => u.id === student.coachEmail);
-                    const coachName = coachData ? coachData.name : (student.coachEmail || 'N/A');
-                    const status = student.status || 'active';
-                    const studentLevel = student.studentLevel || '';
-                    const row = tableBody.insertRow();
-                    row.className = status === 'disabled' ? 'disabled-row' : '';
-                    const buttonText = status === 'active' ? 'Disable' : 'Enable';
-                    const buttonClass = status === 'active' ? 'action-btn-disable' : 'action-btn-enable';
-                    row.innerHTML = `<td><input type="checkbox" class="student-checkbox" value="${student.id}" data-coach="${student.coachEmail}"></td><td>${student.name}</td><td>${coachName}</td><td>${studentLevel}</td><td style="white-space: nowrap;"><button type="button" class="${buttonClass}" onclick="toggleStudentStatus('${student.id}','${status}')">${buttonText}</button> <button type="button" class="action-btn-edit" onclick="openStudentEditModal('${student.id}')">Edit</button></td>`;
-                });
-            }
-            updateStudentPagination(totalItems);
-        }
-
-        function renderPendingAssignmentTable() {
-            const tableBody = document.getElementById('pendingAssignmentTableBody');
-            const assignAndSaveBtn = document.getElementById('assignAndSaveBtn');
-            const assignCoachSelector = document.getElementById('assignCoachSelector');
-            const assignLevelSelector = document.getElementById('assignLevelSelector');
-            const selectAllPendingCheckbox = document.getElementById('selectAllPendingCheckbox');
-            const cancelImportBtn = document.getElementById('cancelImportBtn');
-            
-            tableBody.innerHTML = '';
-            if (pendingImportStudents.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="3">Tidak ada siswa yang menunggu penugasan.</td></tr>';
-                assignAndSaveBtn.disabled = true;
-                assignCoachSelector.disabled = true;
-                assignLevelSelector.disabled = true;
-                selectAllPendingCheckbox.disabled = true;
-                cancelImportBtn.disabled = true;
-            } else {
-                assignAndSaveBtn.disabled = false;
-                assignCoachSelector.disabled = false;
-                assignLevelSelector.disabled = false;
-                selectAllPendingCheckbox.disabled = false;
-                cancelImportBtn.disabled = false;
-                pendingImportStudents.forEach((student, index) => {
-                    const row = tableBody.insertRow();
-                    row.innerHTML = `<td><input type="checkbox" class="pending-student-checkbox" value="${index}"></td><td>${student.name}</td><td>${student.phone || 'N/A'}</td>`;
-                });
-            }
-        }
-
-        function updateStudentPagination(totalItems) {
-            const rowsPerPage = parseInt(document.getElementById('studentRowsPerPage').value, 10);
-            const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
-            document.getElementById('studentCurrentPage').textContent = studentCurrentPage;
-            document.getElementById('studentTotalPages').textContent = totalPages;
-            document.getElementById('studentPrevBtn').disabled = studentCurrentPage === 1;
-            document.getElementById('studentNextBtn').disabled = studentCurrentPage >= totalPages;
-        }
-        function renderBankTable() {
-            const tableBody = document.getElementById('bankTableBody');
-            tableBody.innerHTML = '';
-            Object.values(allBanks).forEach(bank => {
-                const status = bank.status || 'active';
-                const row = tableBody.insertRow();
-                row.className = status === 'disabled' ? 'disabled-row' : '';
-                const buttonText = status === 'active' ? 'Disable' : 'Enable';
-                const buttonClass = status === 'active' ? 'action-btn-disable' : 'action-btn-enable';
-                row.innerHTML = `<td>${bank.bankName}</td><td><div style="width:20px; height:20px; background-color:${bank.color}; border:1px solid #ccc;"></div></td><td style="white-space:nowrap;"><button class="${buttonClass}" onclick="toggleBankStatus('${bank.id}', '${status}')">${buttonText}</button> <button class="action-btn-edit" onclick="openEditBankModal('${bank.id}')">Edit</button></td>`;
-            });
-        }
-        function setupEventListeners() {
-            document.getElementById('userRowsPerPage').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
-            document.getElementById('userPrevBtn').addEventListener('click', () => { if (userCurrentPage > 1) { userCurrentPage--; renderUserTable(); } });
-            document.getElementById('userNextBtn').addEventListener('click', () => { const totalPages = parseInt(document.getElementById('userTotalPages').textContent); if (userCurrentPage < totalPages) { userCurrentPage++; renderUserTable(); } });
-            document.getElementById('showDisabledUsers').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
-            document.getElementById('showCoachesOnly').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
-            document.getElementById('studentRowsPerPage').addEventListener('change', () => { studentCurrentPage = 1; renderStudentTable(); });
-            document.getElementById('studentPrevBtn').addEventListener('click', () => { if (studentCurrentPage > 1) { studentCurrentPage--; renderStudentTable(); } });
-            document.getElementById('studentNextBtn').addEventListener('click', () => { const totalPages = parseInt(document.getElementById('studentTotalPages').textContent); if (studentCurrentPage < totalPages) { studentCurrentPage++; renderStudentTable(); } });
-            document.getElementById('showDisabledStudents').addEventListener('change', () => { studentCurrentPage = 1; renderStudentTable(); });
-            document.getElementById('coachFilterSelector').addEventListener('change', () => { studentCurrentPage = 1; renderStudentTable(); });
-            document.getElementById('addUserForm').addEventListener('submit', handleAddUser);
-            document.getElementById('resetPasswordForm').addEventListener('submit', handleResetPassword);
-            document.getElementById('addStudentForm').addEventListener('submit', handleAddStudent);
-            document.getElementById('selectAllCheckbox').addEventListener('click', (e) => {
-                document.querySelectorAll('.student-checkbox').forEach(checkbox => {
-                    if (checkbox.closest('tr').style.display !== 'none') checkbox.checked = e.target.checked;
-                });
-            });
-            document.getElementById('selectAllPendingCheckbox').addEventListener('click', (e) => {
-                document.querySelectorAll('.pending-student-checkbox').forEach(checkbox => {
-                    checkbox.checked = e.target.checked;
-                });
-            });
-            document.getElementById('bulkChangeCoachBtn').addEventListener('click', handleBulkChange);
-            document.getElementById('bulkChangeLevelBtn').addEventListener('click', handleBulkLevelChange);
-            document.getElementById('assignAndSaveBtn').addEventListener('click', handleAssignAndSave);
-            document.getElementById('cancelImportBtn').addEventListener('click', handleCancelImport);
-            document.getElementById('transferStudentsBtn').addEventListener('click', handleTransfer);
-            document.querySelector('#editUserModal .close-btn').onclick = () => document.getElementById('editUserModal').style.display = 'none';
-            document.querySelector('#editStudentModal .close-btn').onclick = () => document.getElementById('editStudentModal').style.display = 'none';
-            document.querySelector('#editBankModal .close-btn').onclick = () => document.getElementById('editBankModal').style.display = 'none';
-            window.onclick = (event) => {
-                const modals = document.getElementsByClassName('modal');
-                for (let i = 0; i < modals.length; i++) {
-                    if (event.target == modals[i]) modals[i].style.display = "none";
-                }
-            };
-            document.getElementById('editUserForm').addEventListener('submit', handleEditUser);
-            document.getElementById('editStudentForm').addEventListener('submit', handleEditStudent);
-            document.getElementById('addLevelForm').addEventListener('submit', handleAddLevel);
-            document.getElementById('levelEditorSelector').addEventListener('change', handleLevelSelect);
-            document.getElementById('saveCurriculumBtn').addEventListener('click', handleSaveCurriculum);
-            document.getElementById('addBankForm').addEventListener('submit', handleAddBank);
-            document.getElementById('editBankForm').addEventListener('submit', handleEditBank);
-            document.getElementById('addLessonBtn').addEventListener('click', addNewLessonInput);
-            sppYearToDeleteSelect.addEventListener('change', () => {
-                sppSizeInfoDiv.style.display = 'none';
-                sppDeleteStatusMessageDiv.textContent = '';
-            });
-            sppYearToDeleteSelect.addEventListener('change', populateSppMonthsForDeletion);
-            document.querySelectorAll('.tab-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    const tabId = button.getAttribute('onclick').match(/'(.*?)'/)[1];
-                    openTab(tabId);
-                });
-            });
-            document.getElementById('syncCountBtn').addEventListener('click', syncStudentCount);
-            document.getElementById('downloadExcelTemplateBtn').addEventListener('click', downloadExcelTemplate);
-            document.getElementById('importStudentForm').addEventListener('submit', handleImportStudent);
-        }
-
         async function handleAddUser(e) {
             e.preventDefault();
             const email = document.getElementById('newUserEmail').value;
@@ -1159,20 +957,6 @@
             const statusMessageDiv = document.getElementById('statusMessage');
             statusMessageDiv.textContent = 'Memproses...';
             try {
-                // Fungsi untuk menghasilkan coachId acak dengan format 3 huruf dan 3 angka
-                const generateCoachId = () => {
-                    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                    const numbers = '0123456789';
-                    let result = '';
-                    for (let i = 0; i < 3; i++) {
-                        result += letters.charAt(Math.floor(Math.random() * letters.length));
-                    }
-                    for (let i = 0; i < 3; i++) {
-                        result += numbers.charAt(Math.floor(Math.random() * numbers.length));
-                    }
-                    return result;
-                };
-
                 let newCoachId = null;
                 if (role === 'user') {
                     newCoachId = generateCoachId();
@@ -1186,62 +970,6 @@
                 await loadAllData();
             } catch (error) { statusMessageDiv.textContent = `Error: ${error.message}`; }
         }
-        async function handleAddStudent(e) {
-            e.preventDefault();
-            const studentName = document.getElementById('newStudentName').value.trim();
-            const studentPhone = document.getElementById('newStudentPhone').value.trim();
-            const coachEmail = document.getElementById('coachForStudentSelector').value;
-            const statusMessageDiv = document.getElementById('studentStatusMessage');
-            if (!studentName || !coachEmail) { statusMessageDiv.textContent = 'Nama & coach harus diisi.'; return; }
-            try {
-                await addDoc(collection(db, "students"), { name: studentName, phone: studentPhone, coachEmail: coachEmail, status: 'active' });
-                await updateCoachStudentCount(coachEmail, 1);
-                alert('Siswa berhasil ditambahkan.');
-                document.getElementById('addStudentForm').reset();
-                await loadAllData();
-            } catch (error) { alert(`Error: ${error.message}`); }
-        }
-        async function handleEditStudent(e) {
-            e.preventDefault();
-            const studentId = document.getElementById('editStudentId').value;
-            const studentBefore = allStudents.find(s => s.id === studentId);
-            const oldCoachEmail = studentBefore.coachEmail;
-            const newCoachEmail = document.getElementById('editStudentCoach').value;
-            const updatedData = {
-                name: document.getElementById('editStudentName').value,
-                studentLevel: document.getElementById('editStudentLevel').value,
-                coachEmail: newCoachEmail,
-                phone: document.getElementById('editStudentPhone').value 
-            };
-            try {
-                const batch = writeBatch(db);
-                const studentDocRef = doc(db, "students", studentId);
-                batch.update(studentDocRef, updatedData);
-                if (oldCoachEmail !== newCoachEmail) {
-                    if (oldCoachEmail) {
-                        const oldCoachRef = doc(db, "users", oldCoachEmail);
-                        batch.update(oldCoachRef, { studentCount: increment(-1) });
-                    }
-                    if (newCoachEmail) {
-                        const newCoachRef = doc(db, "users", newCoachEmail);
-                        batch.update(newCoachRef, { studentCount: increment(1) });
-                    }
-                    const reportsQuery = query(collection(db, "reports"), where("studentId", "==", studentId));
-                    const reportsSnapshot = await getDocs(reportsQuery);
-                    reportsSnapshot.forEach(reportDoc => {
-                        const reportRef = doc(db, "reports", reportDoc.id);
-                        batch.update(reportRef, { coachEmail: newCoachEmail });
-                    });
-                }
-                await batch.commit();
-                alert('Detail siswa dan riwayat laporan berhasil diperbarui!');
-                document.getElementById('editStudentModal').style.display = 'none';
-                await loadAllData();
-            } catch(error) { 
-                console.error("Gagal menyimpan dan memindahkan riwayat:", error);
-                alert('Gagal menyimpan dan memindahkan riwayat. Periksa konsol untuk detail.'); 
-            }
-        }
         window.toggleUserStatus = async function(email, currentStatus) {
             const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
             const user = allUsers.find(u => u.id === email);
@@ -1254,341 +982,12 @@
                 await loadAllData();
             }
         };
-        window.toggleStudentStatus = async function(studentId, currentStatus) {
-            const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
-            if (confirm(`Yakin ingin ${newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan'} siswa ini?`)) {
-                await updateDoc(doc(db, "students", studentId), { status: newStatus });
-                const student = allStudents.find(s => s.id === studentId);
-                if (student.coachEmail) {
-                    const countChange = newStatus === 'active' ? 1 : -1;
-                    await updateCoachStudentCount(student.coachEmail, countChange);
-                }
-                await loadAllData();
-            }
-        };
         window.toggleBankStatus = async function(bankId, currentStatus) {
             const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
             if (confirm(`Yakin ingin ${newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan'} bank ini?`)) {
                 await updateDoc(doc(db, "banks", bankId), { status: newStatus });
                 await loadAllData();
             }
-        };
-        async function handleBulkChange() {
-            const allSelectedCheckboxes = document.querySelectorAll('.student-checkbox:checked');
-            const newCoachEmail = document.getElementById('bulkCoachSelector').value;
-            if (allSelectedCheckboxes.length === 0 || !newCoachEmail) return alert('Pilih siswa dan coach tujuan.');
-            
-            if (!confirm(`Yakin ingin memindahkan ${allSelectedCheckboxes.length} siswa ke coach baru?`)) return;
-
-            const batch = writeBatch(db);
-            const coachCountChanges = new Map();
-            const reportsToUpdate = [];
-
-            allSelectedCheckboxes.forEach(checkbox => {
-                const studentId = checkbox.value;
-                const oldCoachEmail = checkbox.dataset.coach;
-                if (oldCoachEmail !== newCoachEmail) {
-                    if (oldCoachEmail) coachCountChanges.set(oldCoachEmail, (coachCountChanges.get(oldCoachEmail) || 0) - 1);
-                    coachCountChanges.set(newCoachEmail, (coachCountChanges.get(newCoachEmail) || 0) + 1);
-                    
-                    batch.update(doc(db, "students", studentId), { coachEmail: newCoachEmail });
-                    reportsToUpdate.push(studentId);
-                }
-            });
-
-            if (reportsToUpdate.length === 0) return alert('Tidak ada perubahan yang diperlukan.');
-            
-            coachCountChanges.forEach((change, coachEmail) => {
-                batch.update(doc(db, "users", coachEmail), { studentCount: increment(change) });
-            });
-
-            for (const studentId of reportsToUpdate) {
-                const reportsQuery = query(collection(db, "reports"), where("studentId", "==", studentId));
-                const reportsSnapshot = await getDocs(reportsQuery);
-                reportsSnapshot.forEach(reportDoc => {
-                    const reportRef = doc(db, "reports", reportDoc.id);
-                    batch.update(reportRef, { coachEmail: newCoachEmail });
-                });
-            }
-
-            await batch.commit();
-            alert('Coach dan riwayat laporan berhasil diganti.');
-            await loadAllData();
-        }
-        async function handleBulkLevelChange() {
-            const allSelectedCheckboxes = document.querySelectorAll('.student-checkbox:checked');
-            const newStudentLevel = document.getElementById('bulkLevelSelector').value;
-            
-            if (allSelectedCheckboxes.length === 0 || !newStudentLevel) {
-                return alert('Pilih siswa dan level tujuan.');
-            }
-            
-            if (!confirm(`Yakin ingin mengubah level ${allSelectedCheckboxes.length} siswa menjadi '${newStudentLevel}'?`)) {
-                return;
-            }
-
-            try {
-                const batch = writeBatch(db);
-                let updatedCount = 0;
-
-                allSelectedCheckboxes.forEach(checkbox => {
-                    const studentId = checkbox.value;
-                    batch.update(doc(db, "students", studentId), { studentLevel: newStudentLevel });
-                    updatedCount++;
-                });
-
-                if (updatedCount === 0) {
-                    return alert('Tidak ada siswa yang dipilih.');
-                }
-
-                await batch.commit();
-                alert(`Sukses! ${updatedCount} siswa telah diperbarui levelnya.`);
-                await loadAllData();
-                document.getElementById('selectAllCheckbox').checked = false;
-            } catch (error) {
-                console.error("Gagal mengubah level siswa secara massal:", error);
-                alert('Gagal memperbarui level siswa. Periksa konsol untuk detail.');
-            }
-        }
-        async function handleAssignAndSave() {
-            const allSelectedCheckboxes = document.querySelectorAll('.pending-student-checkbox:checked');
-            const newCoachEmail = document.getElementById('assignCoachSelector').value;
-            const newStudentLevel = document.getElementById('assignLevelSelector').value;
-            const assignStatusDiv = document.getElementById('assignStatusMessage');
-
-            if (allSelectedCheckboxes.length === 0 || !newCoachEmail || !newStudentLevel) {
-                assignStatusDiv.textContent = 'Harap pilih siswa, coach, dan level.';
-                assignStatusDiv.style.color = 'red';
-                return;
-            }
-            
-            if (!confirm(`Yakin ingin menetapkan coach & level untuk ${allSelectedCheckboxes.length} siswa dan menyimpannya?`)) {
-                return;
-            }
-
-            assignStatusDiv.textContent = 'Menyimpan data...';
-            assignStatusDiv.style.color = 'blue';
-
-            try {
-                const batch = writeBatch(db);
-                const coachCountChanges = new Map();
-                const studentsToSave = [];
-
-                allSelectedCheckboxes.forEach(checkbox => {
-                    const studentIndex = parseInt(checkbox.value, 10);
-                    const studentData = pendingImportStudents[studentIndex];
-                    studentsToSave.push(studentData);
-
-                    const studentRef = doc(collection(db, "students"));
-                    batch.set(studentRef, {
-                        name: studentData.name,
-                        phone: studentData.phone || '',
-                        coachEmail: newCoachEmail,
-                        studentLevel: newStudentLevel,
-                        status: 'active'
-                    });
-
-                    coachCountChanges.set(newCoachEmail, (coachCountChanges.get(newCoachEmail) || 0) + 1);
-                });
-                
-                for (const [coachEmail, count] of coachCountChanges.entries()) {
-                    batch.update(doc(db, "users", coachEmail), { studentCount: increment(count) });
-                }
-
-                await batch.commit();
-
-                // Hapus siswa yang berhasil disimpan dari daftar tunggu
-                pendingImportStudents = pendingImportStudents.filter((_, index) => {
-                    return !Array.from(allSelectedCheckboxes).some(cb => parseInt(cb.value, 10) === index);
-                });
-                localStorage.setItem('pendingImportStudents', JSON.stringify(pendingImportStudents));
-                
-                assignStatusDiv.textContent = `Berhasil menyimpan ${studentsToSave.length} siswa!`;
-                assignStatusDiv.style.color = 'green';
-                await loadAllData();
-            } catch(error) {
-                assignStatusDiv.textContent = `Gagal menyimpan: ${error.message}`;
-                assignStatusDiv.style.color = 'red';
-                console.error("Gagal menetapkan dan menyimpan siswa:", error);
-            }
-        }
-        async function handleCancelImport() {
-            if (confirm('Yakin ingin membatalkan impor dan menghapus semua data di tabel ini?')) {
-                pendingImportStudents = [];
-                localStorage.removeItem('pendingImportStudents');
-                renderPendingAssignmentTable();
-                document.getElementById('assignStatusMessage').textContent = 'Impor dibatalkan. Data dibersihkan.';
-                document.getElementById('assignStatusMessage').style.color = 'green';
-            }
-        }
-        async function handleTransfer() {
-            const sourceCoachEmail = document.getElementById('sourceCoachSelector').value;
-            const destCoachEmail = document.getElementById('destinationCoachSelector').value;
-            if (!sourceCoachEmail || !destCoachEmail || sourceCoachEmail === destCoachEmail) return alert('Coach sumber dan tujuan harus berbeda.');
-            
-            const studentQuery = query(collection(db, "students"), where("coachEmail", "==", sourceCoachEmail), where("status", "==", "active"));
-            const studentSnapshot = await getDocs(studentQuery);
-            
-            const studentsToMove = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            if (studentsToMove.length === 0) return alert('Coach sumber tidak memiliki siswa aktif.');
-
-            if (confirm(`Yakin memindahkan ${studentsToMove.length} siswa dari coach sumber ke coach tujuan?`)) {
-                const batch = writeBatch(db);
-                
-                const studentIdsToUpdate = [];
-                studentsToMove.forEach(studentDoc => { 
-                    batch.update(doc(db, "students", studentDoc.id), { coachEmail: destCoachEmail }); 
-                    studentIdsToUpdate.push(studentDoc.id);
-                });
-
-                batch.update(doc(db, "users", sourceCoachEmail), { studentCount: increment(-studentsToMove.length) });
-                batch.update(doc(db, "users", destCoachEmail), { studentCount: increment(studentsToMove.length) });
-
-                for (const studentId of studentIdsToUpdate) {
-                    const reportsQuery = query(collection(db, "reports"), where("studentId", "==", studentId));
-                    const reportsSnapshot = await getDocs(reportsQuery);
-                    reportsSnapshot.forEach(reportDoc => {
-                        const reportRef = doc(db, "reports", reportDoc.id);
-                        batch.update(reportRef, { coachEmail: destCoachEmail });
-                    });
-                }
-                
-                await batch.commit();
-                alert(`Sukses! ${studentsToMove.length} siswa dan riwayat laporannya telah dipindahkan.`);
-                await loadAllData();
-            }
-        }
-        async function populateCoachDropdowns() {
-            const selectors = [
-                document.getElementById('coachForStudentSelector'),
-                document.getElementById('bulkCoachSelector'),
-                document.getElementById('sourceCoachSelector'),
-                document.getElementById('destinationCoachSelector'),
-                document.getElementById('coachFilterSelector'),
-                document.getElementById('editStudentCoach'),
-                document.getElementById('assignCoachSelector')
-            ];
-            const resetSelector = document.getElementById('resetEmailSelector');
-            const activeCoaches = allUsers.filter(u => u.role === 'user' && (u.status || 'active') === 'active');
-            let coachOptions = '<option value="">-- Pilih Coach --</option>';
-            activeCoaches.forEach(coach => {
-                coachOptions += `<option value="${coach.id}">${coach.name} (${coach.coachId || 'N/A'})</option>`;
-            });
-            selectors.forEach(selector => {
-                if (!selector) return;
-                const currentVal = selector.value;
-                if (selector.id === 'coachFilterSelector') {
-                    selector.innerHTML = '<option value="">-- Semua Coach --</option>' + coachOptions.replace('<option value="">-- Pilih Coach --</option>', '');
-                } else {
-                    selector.innerHTML = coachOptions;
-                }
-                selector.value = currentVal;
-            });
-            resetSelector.innerHTML = '<option value="">-- Pilih Pengguna --</option>';
-            const allActiveUsers = allUsers.filter(u => (u.status || 'active') === 'active');
-            allActiveUsers.forEach(user => {
-                let roleName = 'N/A';
-                switch (user.role) {
-                    case 'admin':
-                        roleName = 'DIREKTUR';
-                        break;
-                    case 'bendahara':
-                        roleName = 'ADMIN';
-                        break;
-                    case 'user':
-                        roleName = 'Coach';
-                        break;
-                }
-                resetSelector.innerHTML += `<option value="${user.id}">${user.name} (${roleName})</option>`;
-            });
-        }
-        function populateLevelDropdowns() {
-            const selectors = [
-                document.getElementById('editStudentLevel'),
-                document.getElementById('levelEditorSelector'),
-                document.getElementById('bulkLevelSelector'),
-                document.getElementById('assignLevelSelector')
-            ];
-            selectors.forEach(selector => {
-                if (!selector) return;
-                const currentVal = selector.value;
-                let options = '<option value="">-- Pilih Level --</option>';
-                allLevels.forEach(level => {
-                    options += `<option value="${level}">${level}</option>`;
-                });
-                selector.innerHTML = options;
-                selector.value = currentVal;
-            });
-        }
-        async function handleResetPassword(e) {
-            e.preventDefault();
-            const email = document.getElementById('resetEmailSelector').value;
-            const statusMessageDiv = document.getElementById('resetPasswordStatusMessage');
-            if (!email) { statusMessageDiv.textContent = 'Pilih pengguna.'; return; }
-            const user = allUsers.find(u => u.id === email);
-            if (user && user.role === 'admin') {
-                alert('Tidak dapat mereset kata sandi pengguna dengan peran direktur.');
-                return;
-            }
-            try {
-                await sendPasswordResetEmail(auth, email);
-                statusMessageDiv.textContent = `Email reset password telah dikirim ke ${email}.`;
-            } catch (error) { statusMessageDiv.textContent = `Error: ${error.message}`; }
-        }
-        async function handleEditUser(e) {
-            e.preventDefault();
-            const userId = document.getElementById('editUserId').value;
-            const user = allUsers.find(u => u.id === userId);
-            if (user && user.role === 'admin') {
-                alert('Tidak dapat mengedit detail pengguna dengan peran direktur.');
-                return;
-            }
-            const updatedData = {
-                name: document.getElementById('editFullName').value,
-                phone: document.getElementById('editPhoneNumber').value,
-                level: document.getElementById('editUserLevel').value,
-            };
-            try {
-                await updateDoc(doc(db, "users", userId), updatedData);
-                alert('Detail pengguna diperbarui!');
-                document.getElementById('editUserModal').style.display = 'none';
-                await loadAllData();
-            } catch(error) { alert('Gagal menyimpan.'); }
-        }
-        window.openEditModal = function(userId) {
-            const user = allUsers.find(u => u.id === userId);
-            if (!user) return;
-            if (user.role === 'admin') {
-                alert('Tidak dapat mengedit detail pengguna dengan peran direktur.');
-                return;
-            }
-            document.getElementById('editUserEmail').textContent = user.id;
-            document.getElementById('editUserId').value = user.id;
-            document.getElementById('editFullName').value = user.name || '';
-            document.getElementById('editPhoneNumber').value = user.phone || '';
-            document.getElementById('editUserLevelGroup').style.display = user.role === 'user' ? 'block' : 'none';
-            document.getElementById('editUserLevel').value = user.level || '';
-            document.getElementById('editUserModal').style.display = 'block';
-        };
-        window.openStudentEditModal = function(studentId) {
-            const student = allStudents.find(s => s.id === studentId);
-            if (!student) return;
-            document.getElementById('editStudentId').value = studentId;
-            document.getElementById('editStudentName').value = student.name;
-            const levelSelector = document.getElementById('editStudentLevel');
-            levelSelector.value = student.studentLevel || "";
-            const coachSelector = document.getElementById('editStudentCoach');
-            coachSelector.value = student.coachEmail;
-            document.getElementById('editStudentPhone').value = student.phone || '';
-            document.getElementById('editStudentModal').style.display = 'block';
-        };
-        window.openEditBankModal = function(bankId) {
-            const bank = allBanks[bankId];
-            if (!bank) return;
-            document.getElementById('editBankId').value = bankId;
-            document.getElementById('editBankName').value = bank.bankName;
-            document.getElementById('editBankColor').value = bank.color;
-            document.getElementById('editBankModal').style.display = 'block';
         };
         async function handleAddLevel(e) { e.preventDefault(); const name = document.getElementById('newLevelName').value.trim(); if (!name) return; await setDoc(doc(db, "kurikulum", name), {lessons: {}}); alert('Level berhasil dibuat'); await loadAllData(); }
         async function handleAddBank(e) { e.preventDefault(); const name = document.getElementById('newBankName').value.trim(); const color = document.getElementById('newBankColor').value; if (!name) return; await addDoc(collection(db, "banks"), {bankName: name, color: color, status: 'active'}); alert('Bank berhasil ditambah'); await loadAllData(); }
@@ -1608,9 +1007,11 @@
                     }
                 }
             });
-            sppGlobalTotalSizeSpan.textContent = formatFileSize(totalSize);
+            const sppGlobalTotalSizeSpan = document.getElementById('sppGlobalTotalSize');
+            if (sppGlobalTotalSizeSpan) sppGlobalTotalSizeSpan.textContent = formatFileSize(totalSize);
             const percentage = (totalSize / oneGigabyte) * 100;
-            sppGlobalSizePercentageSpan.textContent = percentage.toFixed(2) + '%';
+            const sppGlobalSizePercentageSpan = document.getElementById('sppGlobalSizePercentage');
+            if (sppGlobalSizePercentageSpan) sppGlobalSizePercentageSpan.textContent = percentage.toFixed(2) + '%';
         }
         window.calculateSppAttachmentSize = function() {
             const year = sppYearToDeleteSelect.value;
@@ -1656,6 +1057,7 @@
 
         function populateSppMonthsForDeletion() {
             const monthSelector = document.getElementById('sppMonthToDelete');
+            if (!monthSelector) return;
             monthSelector.innerHTML = '<option value="">-- Semua Bulan --</option>';
             monthNames.forEach((month, index) => {
                 monthSelector.innerHTML += `<option value="${index}">${month}</option>`;
@@ -1671,99 +1073,113 @@
             tabButtons.forEach(btn => {
                 btn.classList.remove('active');
             });
-            document.getElementById(tabName).classList.add('active');
-            document.querySelector(`.tab-btn[onclick="openTab('${tabName}')"]`).classList.add('active');
+            const selectedTab = document.getElementById(tabName);
+            const selectedTabButton = document.querySelector(`.tab-btn[onclick="openTab('${tabName}')"]`);
+            if (selectedTab) selectedTab.classList.add('active');
+            if (selectedTabButton) selectedTabButton.classList.add('active');
             sessionStorage.setItem('adminCurrentTab', tabName);
-            if(tabName === 'siswa-tab') {
-                renderStudentTable();
-                renderPendingAssignmentTable();
-            } else if (tabName === 'pengguna-tab') {
+            if(tabName === 'pengguna-tab') {
                 renderUserTable();
+            } else if (tabName === 'kurikulum-tab') {
+                // ... logic for kurikulum tab ...
             } else if (tabName === 'bank-tab') {
                 renderBankTable();
+            } else if (tabName === 'maintenance-tab') {
+                loadSppYearsForDeletion();
             }
         }
-
-        async function downloadExcelTemplate() {
-            const header = ['nama', 'phone'];
-            const ws = XLSX.utils.aoa_to_sheet([header]);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Siswa Baru");
-            XLSX.writeFile(wb, "Template_Siswa_Baru.xlsx");
+        
+        function populateCoachDropdowns() {
+            const resetEmailSelector = document.getElementById('resetEmailSelector');
+            const activeUsers = allUsers.filter(u => (u.status || 'active') === 'active');
+            
+            let userOptions = '<option value="">-- Pilih Pengguna --</option>';
+            activeUsers.forEach(user => {
+                let roleName = '';
+                switch (user.role) {
+                    case 'admin':
+                        roleName = 'DIREKTUR';
+                        break;
+                    case 'bendahara':
+                        roleName = 'ADMIN';
+                        break;
+                    case 'user':
+                        roleName = `Coach (${user.coachId || 'N/A'})`;
+                        break;
+                }
+                userOptions += `<option value="${user.id}">${user.name} (${roleName})</option>`;
+            });
+            if (resetEmailSelector) {
+                const currentVal = resetEmailSelector.value;
+                resetEmailSelector.innerHTML = userOptions;
+                resetEmailSelector.value = currentVal;
+            }
+        }
+        
+        function populateLevelDropdowns() {
+             const levelEditorSelector = document.getElementById('levelEditorSelector');
+             if (!levelEditorSelector) return;
+             const currentVal = levelEditorSelector.value;
+             let options = '<option value="">-- Pilih Level --</option>';
+             allLevels.forEach(level => {
+                 options += `<option value="${level}">${level}</option>`;
+             });
+             levelEditorSelector.innerHTML = options;
+             levelEditorSelector.value = currentVal;
         }
 
-        async function handleImportStudent(e) {
+        async function handleResetPassword(e) {
             e.preventDefault();
-            const file = excelFileInput.files[0];
-            const importStatusDiv = document.getElementById('importStatusMessage');
-        
-            if (!file) {
-                importStatusDiv.textContent = 'Pilih file Excel terlebih dahulu.';
-                importStatusDiv.style.color = 'red';
+            const email = document.getElementById('resetEmailSelector').value;
+            const statusMessageDiv = document.getElementById('resetPasswordStatusMessage');
+            if (!email) { statusMessageDiv.textContent = 'Pilih pengguna.'; return; }
+            const user = allUsers.find(u => u.id === email);
+            if (user && user.role === 'admin') {
+                alert('Tidak dapat mereset kata sandi pengguna dengan peran direktur.');
                 return;
             }
-            
-            importStatusDiv.textContent = 'Memproses file...';
-            importStatusDiv.style.color = 'blue';
-
-            const reader = new FileReader();
-            reader.onload = async function(event) {
-                try {
-                    const data = new Uint8Array(event.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const jsonStudents = XLSX.utils.sheet_to_json(worksheet);
-
-                    const existingStudentNames = new Set(allStudents.map(s => s.name.toLowerCase()));
-                    
-                    pendingImportStudents = [];
-                    let newStudentCount = 0;
-                    let skippedRows = 0;
-        
-                    for (const studentData of jsonStudents) {
-                        const name = studentData.nama;
-        
-                        if (!name) {
-                            console.warn(`Melewatkan baris karena nama siswa hilang: ${JSON.stringify(studentData)}`);
-                            skippedRows++;
-                            continue;
-                        }
-
-                        if (existingStudentNames.has(name.toLowerCase())) {
-                            console.warn(`Melewatkan siswa '${name}' karena sudah ada di database.`);
-                            skippedRows++;
-                            continue;
-                        }
-        
-                        pendingImportStudents.push({
-                            id: `temp_${newStudentCount}_${Date.now()}`,
-                            name: name,
-                            phone: studentData.phone || ''
-                        });
-                        newStudentCount++;
-                    }
-                    
-                    localStorage.setItem('pendingImportStudents', JSON.stringify(pendingImportStudents));
-                    
-                    if (newStudentCount === 0) {
-                        importStatusDiv.textContent = 'Tidak ada siswa baru yang valid untuk diimpor. Silakan periksa file Anda.';
-                        importStatusDiv.style.color = 'orange';
-                    } else {
-                        importStatusDiv.textContent = `Berhasil memuat ${newStudentCount} siswa. Silakan tetapkan coach & level di bawah.`;
-                        importStatusDiv.style.color = 'green';
-                    }
-
-                    renderPendingAssignmentTable();
-                    openTab('siswa-tab');
-        
-                } catch (error) {
-                    importStatusDiv.textContent = `Gagal mengimpor: ${error.message}`;
-                    importStatusDiv.style.color = 'red';
-                    console.error("Import Error:", error);
-                }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                statusMessageDiv.textContent = `Email reset password telah dikirim ke ${email}.`;
+            } catch (error) { statusMessageDiv.textContent = `Error: ${error.message}`; }
+        }
+        async function handleEditUser(e) {
+            e.preventDefault();
+            const userId = document.getElementById('editUserId').value;
+            const user = allUsers.find(u => u.id === userId);
+            if (user && user.role === 'admin') {
+                alert('Tidak dapat mengedit detail pengguna dengan peran direktur.');
+                return;
+            }
+            const updatedData = {
+                name: document.getElementById('editFullName').value,
+                phone: document.getElementById('editPhoneNumber').value,
+                level: document.getElementById('editUserLevel').value,
             };
-            reader.readAsArrayBuffer(file);
+            try {
+                await updateDoc(doc(db, "users", userId), updatedData);
+                alert('Detail pengguna diperbarui!');
+                document.getElementById('editUserModal').style.display = 'none';
+                await loadAllData();
+            } catch(error) { alert('Gagal menyimpan.'); }
+        }
+        window.openEditModal = function(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            if (user.role === 'admin') {
+                alert('Tidak dapat mengedit detail pengguna dengan peran direktur.');
+                return;
+            }
+            document.getElementById('editUserEmail').textContent = user.id;
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editFullName').value = user.name || '';
+            const editPhoneNumberInput = document.getElementById('editPhoneNumber');
+            if (editPhoneNumberInput) editPhoneNumberInput.value = user.phone || '';
+            const editUserLevelGroup = document.getElementById('editUserLevelGroup');
+            if (editUserLevelGroup) editUserLevelGroup.style.display = user.role === 'user' ? 'block' : 'none';
+            const editUserLevelInput = document.getElementById('editUserLevel');
+            if (editUserLevelInput) editUserLevelInput.value = user.level || '';
+            document.getElementById('editUserModal').style.display = 'block';
         };
     </script>
 </body>
