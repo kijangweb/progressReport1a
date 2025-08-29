@@ -574,7 +574,7 @@
         
         <div class="section-container">
             <h3>Daftar Siswa Anda</h3>
-            <div class="report-filters">
+            <div class="report-filters" style="margin-bottom: 10px;">
                 <div>
                     <label for="studentLevelFilter">Filter Berdasarkan Level</label>
                     <select id="studentLevelFilter"></select>
@@ -649,10 +649,6 @@
             <div class="report-filters">
                 <div><label for="reportFilterStudent">Filter Berdasarkan Siswa</label><select id="reportFilterStudent"></select></div>
                 <div><label for="reportFilterLevel">Filter Berdasarkan Level</label><select id="reportFilterLevel"></select></div>
-                <div style="flex-direction: column; display: flex; gap: 5px;">
-                    <label>Siswa di level ini:</label>
-                    <span id="totalStudentsByLevel" style="font-weight: bold; color: var(--primary-color);">0 siswa</span>
-                </div>
                 <div>
                     <label for="reportSort">Urutkan Berdasarkan</label>
                     <select id="reportSort">
@@ -773,7 +769,6 @@ Terima kasih.`;
                 window.updateReadStatus();
                 myStudents = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
-                // Panggil fungsi untuk mengisi filter level dan merender tabel
                 populateStudentLevelFilter();
                 renderStudentTable();
             }, (error) => {
@@ -794,7 +789,6 @@ Terima kasih.`;
                 filteredStudents = myStudents.filter(student => student.studentLevel === selectedLevel);
             }
 
-            // Perbarui info total siswa
             totalStudentsCountEl.textContent = `${filteredStudents.length} siswa`;
 
             studentsTableBody.innerHTML = '';
@@ -826,7 +820,6 @@ Terima kasih.`;
             });
             studentLevelFilter.value = currentLevel || 'all';
         }
-
 
         function updateStudentPagination(totalItems) {
             const totalPages = Math.ceil(totalItems / studentRowsPerPage) || 1;
@@ -968,12 +961,10 @@ Terima kasih.`;
             const level = document.getElementById('reportFilterLevel').value;
             const sortOption = document.getElementById('reportSort').value;
             const reportsTableBody = document.getElementById('reportsTableBody');
-            const totalStudentsByLevelEl = document.getElementById('totalStudentsByLevel');
 
             if (allMyReports.length === 0) {
                 reportsTableBody.innerHTML = '<tr><td colspan="7">Tidak ada laporan yang cocok.</td></tr>';
                 window.updateReportPagination(0);
-                totalStudentsByLevelEl.textContent = "0 siswa";
                 return;
             }
 
@@ -995,20 +986,6 @@ Terima kasih.`;
             if (levels.includes(currentLevelValue)) {
                 levelFilter.value = currentLevelValue;
             }
-
-            // Hitung jumlah siswa berdasarkan level yang difilter
-            const uniqueStudentIdsInFilteredReports = [...new Set(filteredReports.map(r => r.studentId))];
-            let studentCount = 0;
-            if (level) {
-                const studentsInLevel = myStudents.filter(s => s.studentLevel === level);
-                studentCount = studentsInLevel.length;
-            } else if (studentId) {
-                 studentCount = 1;
-            } else {
-                 studentCount = myStudents.length;
-            }
-            totalStudentsByLevelEl.textContent = `${studentCount} siswa`;
-
 
             const processedReports = processAndSortReports(filteredReports);
             currentlyDisplayedReports = processedReports;
@@ -1203,11 +1180,9 @@ Terima kasih.`;
             $('#studentSelectorForReport').on('change', handleStudentSelectForReport);
             document.getElementById('reportLessonSelector').addEventListener('change', handleLessonSelect);
             $('#reportFilterStudent').on('change', handleReportFilterChange);
-            document.getElementById('reportFilterLevel').addEventListener('change', handleReportFilterChange);
             document.getElementById('reportSort').addEventListener('change', handleReportFilterChange);
             document.getElementById('clearReportFilterBtn').addEventListener('click', () => {
                 $('#reportFilterStudent').val(null).trigger('change');
-                document.getElementById('reportFilterLevel').innerHTML = '<option value="">-- Semua Level --</option>';
                 document.getElementById('reportSort').value = 'activityNumber_desc';
                 handleReportFilterChange();
             });
@@ -1218,7 +1193,6 @@ Terima kasih.`;
             }
             document.querySelector('#settingsModal .close-btn').onclick = () => document.getElementById('settingsModal').style.display = 'none';
 
-            // Event listeners untuk pagination Daftar Siswa
             document.getElementById('studentRowsPerPage').addEventListener('change', (e) => {
                 studentRowsPerPage = parseInt(e.target.value);
                 studentCurrentPage = 1;
@@ -1284,10 +1258,9 @@ Terima kasih.`;
 
         window.generatePdfAndWhatsApp = async function() {
             const studentFilter = document.getElementById('reportFilterStudent');
-            const levelFilter = document.getElementById('reportFilterLevel');
             const studentId = studentFilter.value;
-            if (!studentId || !levelFilter.value) {
-                alert("Harap pilih filter Siswa dan Level spesifik terlebih dahulu sebelum membuat laporan.");
+            if (!studentId) {
+                alert("Harap pilih filter Siswa spesifik terlebih dahulu sebelum membuat laporan.");
                 return;
             }
             const student = myStudents.find(s => s.id === studentId);
@@ -1309,7 +1282,7 @@ Terima kasih.`;
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             const studentName = student.name;
-            const levelName = levelFilter.options[levelFilter.selectedIndex].text;
+            const levelName = student.studentLevel || 'N/A';
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageCenter = pageWidth / 2;
             let yPos = 15;
