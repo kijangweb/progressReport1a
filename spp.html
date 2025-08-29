@@ -432,9 +432,6 @@
             display: flex;
             border-bottom: 2px solid var(--border-color);
             margin-bottom: 20px;
-            overflow-x: auto;
-            white-space: nowrap;
-            -webkit-overflow-scrolling: touch;
         }
         .tab-btn {
             background-color: transparent;
@@ -447,7 +444,6 @@
             transition: color 0.2s, border-bottom 0.2s;
             border-bottom: 2px solid transparent;
             margin-bottom: -2px; 
-            flex-shrink: 0;
         }
         .tab-btn.active {
             color: var(--primary-color);
@@ -636,7 +632,6 @@
             <button class="tab-btn active" onclick="openTab('spp-tab')">Pembayaran SPP</button>
             <button class="tab-btn" onclick="openTab('nonspp-tab')">Laporan Non-SPP</button>
             <button class="tab-btn" onclick="openTab('manajemen-siswa-tab')">Manajemen Siswa</button>
-            <button class="tab-btn" onclick="openTab('riwayat-tab')">Riwayat Perubahan Siswa</button>
         </div>
 
         <div id="spp-tab" class="tab-content active">
@@ -802,16 +797,12 @@
                 <h3>Ringkasan Data</h3>
                 <div class="summary-dashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                     <div style="padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background-color: #fff;">
-                        <h4>Total Siswa Aktif</h4>
+                        <h4>Total Siswa</h4>
                         <h2 id="summaryTotalStudents">0</h2>
                     </div>
                     <div style="padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background-color: #fff;">
-                        <h4>Total Coach Aktif</h4>
+                        <h4>Total Coach</h4>
                         <h2 id="summaryTotalCoaches">0</h2>
-                    </div>
-                    <div style="padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background-color: #fff;">
-                        <h4>Total Pembayaran Tahun Ini</h4>
-                        <h2 id="summaryTotalPayments">Rp 0</h2>
                     </div>
                     <div style="padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background-color: #fff;">
                         <h4>Siswa Aktif per Level</h4>
@@ -962,36 +953,6 @@
                 <div id="transferStatusMessage" class="status-message"></div>
             </div>
         </div>
-        
-        <div id="riwayat-tab" class="tab-content">
-            <div class="content-block">
-                <h3>Riwayat Perubahan Data Siswa</h3>
-                <p>Lihat log perubahan data siswa, termasuk nama, coach, dan level.</p>
-                <div class="filter-controls">
-                    <div class="form-group">
-                        <label for="historySearchBox">Cari Siswa:</label>
-                        <input type="text" id="historySearchBox" placeholder="Ketik nama siswa...">
-                        <input type="hidden" id="historyStudentFilter" value="all">
-                    </div>
-                    <div class="form-group">
-                        <button class="btn-reset" onclick="resetHistoryFilter()">Reset Filter</button>
-                    </div>
-                </div>
-                <div class="spp-table-container">
-                    <table class="spp-table" id="historyTable">
-                        <thead>
-                            <tr>
-                                <th>Tanggal & Waktu</th>
-                                <th>Nama Siswa</th>
-                                <th>Perubahan</th>
-                                <th>Oleh</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
     </div>
     
     <div id="singleModal" class="modal">
@@ -1084,7 +1045,6 @@
         let allUsers = []; 
         let allLevels = []; 
         let allYearsWithPayments = [];
-        let allStudentHistory = [];
         let currentPage = 1;
         let studentCurrentPage = 1; 
         let otherCurrentPage = 1; 
@@ -1167,10 +1127,6 @@ Terima kasih.`;
                 sessionReadCount += curriculumSnapshot.size;
                 allLevels = curriculumSnapshot.docs.map(doc => doc.id).sort();
 
-                const historySnapshot = await getDocs(collection(db, "student_history"));
-                sessionReadCount += historySnapshot.size;
-                allStudentHistory = historySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
                 pendingImportStudents = JSON.parse(localStorage.getItem('pendingImportStudents')) || [];
 
                 updateReadStatus();
@@ -1179,7 +1135,6 @@ Terima kasih.`;
                 setupStudentFilterSearchBox();
                 setupOtherStudentSearchBox();
                 setupStudentListSearchBox();
-                setupHistorySearchBox();
                 populateLevelFilterDropdown();
                 renderSppTable();
                 
@@ -1199,22 +1154,23 @@ Terima kasih.`;
             const totalStudentsElement = document.getElementById('summaryTotalStudents');
             const totalCoachesElement = document.getElementById('summaryTotalCoaches');
             const studentsByLevelList = document.getElementById('summaryActiveStudentsByLevel');
-            const totalPaymentsElement = document.getElementById('summaryTotalPayments');
 
-            // 1. Total Siswa Aktif
-            const activeStudents = allStudents.filter(s => (s.status || 'active') === 'active');
-            totalStudentsElement.textContent = activeStudents.length;
+            // 1. Total Siswa
+            const totalStudents = allStudents.length;
+            totalStudentsElement.textContent = totalStudents;
 
-            // 2. Total Coach Aktif
+            // 2. Total Coach
             const totalCoaches = allUsers.filter(u => u.role === 'user' && (u.status || 'active') === 'active').length;
             totalCoachesElement.textContent = totalCoaches;
 
             // 3. Siswa Aktif per Level
+            const activeStudents = allStudents.filter(s => (s.status || 'active') === 'active');
             const studentsPerLevel = activeStudents.reduce((acc, student) => {
                 const level = student.studentLevel || 'Level Tidak Diketahui';
                 acc[level] = (acc[level] || 0) + 1;
                 return acc;
             }, {});
+
             studentsByLevelList.innerHTML = '';
             for (const level in studentsPerLevel) {
                 const listItem = document.createElement('li');
@@ -1226,24 +1182,6 @@ Terima kasih.`;
                  listItem.textContent = 'Tidak ada siswa aktif.';
                  studentsByLevelList.appendChild(listItem);
             }
-
-            // 4. Total Pembayaran Tahun Ini
-            const currentYear = new Date().getFullYear();
-            const paymentsThisYear = allStudents.reduce((total, student) => {
-                const studentSpp = student.spp || {};
-                Object.keys(studentSpp).forEach(key => {
-                    if (key.startsWith(currentYear)) {
-                        total += studentSpp[key].nominal;
-                    }
-                });
-                return total;
-            }, 0);
-            const formattedPayments = new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(paymentsThisYear);
-            if (totalPaymentsElement) totalPaymentsElement.textContent = formattedPayments;
         }
         
         window.showPaymentDetails = function(detailsJsonEncoded) {
@@ -1438,33 +1376,6 @@ Terima kasih.`;
                 }
             });
         }
-        
-        function setupHistorySearchBox() {
-            const searchBox = $('#historySearchBox');
-            const studentFilter = $('#historyStudentFilter');
-            const studentData = [{ label: 'Semua Siswa', value: 'all' }].concat(allStudents.map(student => ({
-                label: student.name,
-                value: student.id
-            })));
-            
-            searchBox.autocomplete({
-                source: studentData,
-                minLength: 2,
-                select: function(event, ui) {
-                    searchBox.val(ui.item.label);
-                    studentFilter.val(ui.item.value);
-                    renderHistoryTable();
-                    return false;
-                }
-            });
-            searchBox.on('input', function() {
-                if ($(this).val() === '') {
-                    studentFilter.val('all');
-                    renderHistoryTable();
-                }
-            });
-        }
-
 
         function populateLevelFilterDropdown() {
             const levelSelector = document.getElementById('levelFilterSelector');
@@ -2370,8 +2281,6 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 renderStudentTable();
                 renderPendingAssignmentTable();
                 renderSummaryDashboard();
-            } else if (tabName === 'riwayat-tab') {
-                renderHistoryTable();
             }
         }
 
@@ -2488,25 +2397,6 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 const batch = writeBatch(db);
                 const studentDocRef = doc(db, "students", studentId);
                 batch.update(studentDocRef, updatedData);
-
-                // --- Fitur Riwayat Perubahan (BARU) ---
-                const changes = [];
-                if (studentBefore.name !== updatedData.name) changes.push(`Nama diubah dari '${studentBefore.name}' menjadi '${updatedData.name}'`);
-                if (studentBefore.studentLevel !== updatedData.studentLevel) changes.push(`Level diubah dari '${studentBefore.studentLevel || 'N/A'}' menjadi '${updatedData.studentLevel}'`);
-                if (studentBefore.coachEmail !== updatedData.coachEmail) changes.push(`Coach diubah dari '${studentBefore.coachEmail || 'N/A'}' menjadi '${updatedData.coachEmail}'`);
-                if (studentBefore.phone !== updatedData.phone) changes.push(`Telepon diubah dari '${studentBefore.phone || 'N/A'}' menjadi '${updatedData.phone}'`);
-
-                if (changes.length > 0) {
-                    const historyData = {
-                        timestamp: Timestamp.now(),
-                        user: currentBendaharaName,
-                        changes: changes.join('; '),
-                        studentId: studentId
-                    };
-                    batch.add(collection(db, "student_history"), historyData);
-                }
-                // --- Akhir Fitur Riwayat Perubahan ---
-
                 if (oldCoachEmail !== newCoachEmail) {
                     if (oldCoachEmail) {
                         const oldCoachRef = doc(db, "users", oldCoachEmail);
@@ -2567,26 +2457,12 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             try {
                 const batch = writeBatch(db);
                 const coachCountChanges = new Map();
-                const studentIdsToUpdate = [];
+                const reportsToUpdate = [];
 
                 const selectedStudents = Array.from(allSelectedCheckboxes).map(checkbox => {
                     const studentId = checkbox.value;
-                    const studentData = allStudents.find(s => s.id === studentId);
-                    studentIdsToUpdate.push(studentId);
-                    return studentData;
+                    return allStudents.find(s => s.id === studentId);
                 });
-                
-                // --- Fitur Riwayat Perubahan (BARU) ---
-                const changes = [`${selectedStudents.length} siswa dipindahkan ke coach '${newCoachEmail}'`];
-                const historyData = {
-                    timestamp: Timestamp.now(),
-                    user: currentBendaharaName,
-                    changes: changes.join('; '),
-                    studentIds: studentIdsToUpdate
-                };
-                batch.add(collection(db, "student_history"), historyData);
-                // --- Akhir Fitur Riwayat Perubahan ---
-
 
                 selectedStudents.forEach(student => {
                     const oldCoachEmail = student.coachEmail;
@@ -2597,10 +2473,11 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                         coachCountChanges.set(newCoachEmail, (coachCountChanges.get(newCoachEmail) || 0) + 1);
                         
                         batch.update(doc(db, "students", student.id), { coachEmail: newCoachEmail });
+                        reportsToUpdate.push(student.id);
                     }
                 });
 
-                if (studentIdsToUpdate.length === 0) {
+                if (reportsToUpdate.length === 0) {
                     statusMessageDiv.textContent = 'Tidak ada perubahan yang diperlukan.';
                     statusMessageDiv.style.color = 'green';
                     return;
@@ -2610,7 +2487,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                     batch.update(doc(db, "users", coachEmail), { studentCount: increment(change) });
                 });
 
-                for (const studentId of studentIdsToUpdate) {
+                for (const studentId of reportsToUpdate) {
                     const reportsQuery = query(collection(db, "reports"), where("studentId", "==", studentId));
                     const reportsSnapshot = await getDocs(reportsQuery);
                     reportsSnapshot.forEach(reportDoc => {
@@ -2651,33 +2528,22 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
 
             try {
                 const batch = writeBatch(db);
-                const studentIdsToUpdate = [];
-                
+                let updatedCount = 0;
+
                 allSelectedCheckboxes.forEach(checkbox => {
                     const studentId = checkbox.value;
                     batch.update(doc(db, "students", studentId), { studentLevel: newStudentLevel });
-                    studentIdsToUpdate.push(studentId);
+                    updatedCount++;
                 });
 
-                if (studentIdsToUpdate.length === 0) {
+                if (updatedCount === 0) {
                     statusMessageDiv.textContent = 'Tidak ada siswa yang dipilih.';
                     statusMessageDiv.style.color = 'orange';
                     return;
                 }
-                
-                // --- Fitur Riwayat Perubahan (BARU) ---
-                const changes = [`${studentIdsToUpdate.length} siswa diubah levelnya menjadi '${newStudentLevel}'`];
-                const historyData = {
-                    timestamp: Timestamp.now(),
-                    user: currentBendaharaName,
-                    changes: changes.join('; '),
-                    studentIds: studentIdsToUpdate
-                };
-                batch.add(collection(db, "student_history"), historyData);
-                // --- Akhir Fitur Riwayat Perubahan ---
 
                 await batch.commit();
-                statusMessageDiv.textContent = `Sukses! ${studentIdsToUpdate.length} siswa telah diperbarui levelnya.`;
+                statusMessageDiv.textContent = `Sukses! ${updatedCount} siswa telah diperbarui levelnya.`;
                 statusMessageDiv.style.color = 'green';
                 document.getElementById('selectAllBulkCheckbox').checked = false; 
                 await loadAllData();
@@ -2952,46 +2818,6 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             };
             reader.readAsArrayBuffer(file);
         };
-
-        // --- Fungsi Riwayat Perubahan (BARU) ---
-        async function renderHistoryTable() {
-            const tableBody = document.getElementById('historyTableBody');
-            const studentId = document.getElementById('historyStudentFilter').value;
-            
-            let filteredHistory = allStudentHistory.filter(h => studentId === 'all' || h.studentId === studentId || (h.studentIds && h.studentIds.includes(studentId)));
-
-            filteredHistory.sort((a, b) => {
-                const dateA = a.timestamp && typeof a.timestamp.toDate === 'function' ? a.timestamp.toDate() : new Date(0);
-                const dateB = b.timestamp && typeof b.timestamp.toDate === 'function' ? b.timestamp.toDate() : new Date(0);
-                return dateB - dateA;
-            });
-
-            tableBody.innerHTML = '';
-            if (filteredHistory.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="4" class="no-data">Tidak ada riwayat perubahan.</td></tr>`;
-                return;
-            }
-
-            filteredHistory.forEach(item => {
-                const student = allStudents.find(s => s.id === item.studentId) || (item.studentIds && item.studentIds.length === 1 ? allStudents.find(s => s.id === item.studentIds[0]) : null);
-                const studentName = (student) ? student.name : ((item.studentIds && item.studentIds.length > 1) ? 'Aksi Massal' : 'Tidak Dikenal');
-
-                const row = tableBody.insertRow();
-                const dateString = item.timestamp.toDate().toLocaleString('id-ID');
-                row.innerHTML = `
-                    <td>${dateString}</td>
-                    <td>${studentName}</td>
-                    <td>${item.changes}</td>
-                    <td>${item.user || 'Sistem'}</td>
-                `;
-            });
-        }
-        window.resetHistoryFilter = function() {
-            document.getElementById('historySearchBox').value = '';
-            document.getElementById('historyStudentFilter').value = 'all';
-            renderHistoryTable();
-        }
-        // --- Akhir Fungsi Riwayat Perubahan ---
     </script>
 </body>
 </html>
