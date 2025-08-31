@@ -352,12 +352,13 @@
         <div id="bank-tab" class="tab-content">
             <div class="content-block">
                 <h3>Manajemen Bank</h3>
-                <div class="form-row">
-                    <div><input type="text" id="newBankName" placeholder="Nama Bank (cth: BCA)" required form="addBankForm"></div>
-                    <div><input type="color" id="newBankColor" value="#007bff" form="addBankForm"></div>
-                    <div><button type="submit" class="btn" form="addBankForm">Tambah Bank</button></div>
-                </div>
-                <form id="addBankForm"></form>
+                <form id="addBankForm">
+                    <div class="form-row">
+                        <div><input type="text" id="newBankName" placeholder="Nama Bank (cth: BCA)" required></div>
+                        <div><input type="color" id="newBankColor" value="#007bff"></div>
+                        <div><button type="submit" class="btn">Tambah Bank</button></div>
+                    </div>
+                </form>
                 <div id="bankStatusMessage"></div>
                 <h4 style="margin-top: 20px;">Daftar Bank</h4>
                 <div class="table-container">
@@ -1180,6 +1181,16 @@
             const editUserLevelInput = document.getElementById('editUserLevel');
             if (editUserLevelInput) editUserLevelInput.value = user.level || '';
             document.getElementById('editUserModal').style.display = 'block';
+        };
+
+        // Fungsi baru yang ditambahkan untuk mengedit bank
+        window.openEditBankModal = function(bankId) {
+            const bank = allBanks[bankId];
+            if (!bank) return;
+            document.getElementById('editBankId').value = bankId;
+            document.getElementById('editBankName').value = bank.bankName;
+            document.getElementById('editBankColor').value = bank.color;
+            document.getElementById('editBankModal').style.display = 'block';
         };
     </script>
 </body>
