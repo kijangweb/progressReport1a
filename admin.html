@@ -10,7 +10,6 @@
     
     .main-header { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 10px; }
     h1 { margin: 0; color: #007bff; }
-    /* Tombol Logout dibuat proporsional */
     .logout-btn { padding: 8px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; text-align: center; }
 
     h3, h4 { color: #333; }
@@ -42,8 +41,6 @@
     .branding-management-section input {
       padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; 
     }
-
-    /* Tombol-tombol formulir dibuat proporsional di mobile */
     .add-user-section button, .reset-password-section button, 
     .transfer-section button, .bank-management-section button, 
     .spp-management-section button, .add-user-section .btn,
@@ -56,7 +53,6 @@
     }
     
     h3, h4 { text-align: left; }
-
     #statusMessage, #resetPasswordStatusMessage, #studentStatusMessage, #transferStatusMessage, #bankStatusMessage, #sppDeleteStatusMessage, #sppSizeInfo, #sppGlobalStats, #brandingStatusMessage, #pinStatusMessage, #changePasswordStatusMessage { margin-top: 15px; font-weight: bold; }
     
     .bulk-action-container { margin-top: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9; display: flex; flex-direction: column; align-items: stretch; gap: 15px; }
@@ -64,7 +60,6 @@
     .bulk-action-container select, .bulk-action-container button { width: 100%; }
     
     .pagination-controls select { width: auto; }
-    /* Tombol navigasi pagination tetap fleksibel */
     .pagination-controls button { width: 100%; }
 
     .filter-controls { margin: 15px 0 5px 0; display: flex; flex-direction: column; gap: 10px; align-items: stretch; flex-wrap: wrap; }
@@ -106,7 +101,6 @@
     .transfer-section select { width: 100%; }
     .transfer-section button { align-self: stretch; margin-top: 10px; }
 
-    /* Aksi bulk dibuat proporsional */
     .bulk-action-content {
       display: flex;
       flex-direction: column;
@@ -192,7 +186,6 @@
       .filter-spp-options button { margin-left: auto; width: auto; }
       
       .bulk-action-container { flex-direction: column; align-items: flex-start; gap: 15px; }
-      /* Penyesuaian agar tombol bulk action sejajar di desktop */
       .bulk-action-content {
         display: flex;
         flex-direction: row;
@@ -228,7 +221,6 @@
         gap: 10px;
       }
 
-      /* Perbaikan khusus untuk form tambah pengguna agar sejajar di layar menengah */
       #addUserForm .form-row {
         display: flex;
         flex-wrap: wrap;
@@ -249,7 +241,6 @@
       }
     }
     @media (min-width: 900px) {
-      /* Penyesuaian untuk layar yang lebih besar */
       #addUserForm .form-row > div {
         flex: 1;
       }
@@ -259,7 +250,6 @@
       }
     }
 
-    /* New styles for responsive export filters */
     .export-filters {
       display: flex;
       flex-direction: column;
@@ -568,13 +558,45 @@
   <div id="editUserModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Pengguna</h2><span class="close-btn">&times;</span></div><form id="editUserForm"><div class="modal-body"><p>Email: <strong id="editUserEmail"></strong></p><input type="hidden" id="editUserId"><div class="form-group"><label for="editFullName">Nama Lengkap</label><input type="text" id="editFullName" placeholder="Masukkan nama lengkap"></div><div class="form-group"><label for="editPhoneNumber">No. Telepon</label><input type="tel" id="editPhoneNumber" placeholder="Contoh: 08123456789"></div><div class="form-group" id="editUserLevelGroup"><label for="editUserLevel">Level (untuk Coach)</label><input type="text" id="editUserLevel" placeholder="Contoh: Master"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
   <div id="editBankModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Bank</h2><span class="close-btn">&times;</span></span></div><form id="editBankForm"><div class="modal-body"><input type="hidden" id="editBankId"><div class="form-group"><label for="editBankName">Nama Bank</label><input type="text" id="editBankName" required></div><div class="form-group"><label for="editBankColor">Warna</label><input type="color" id="editBankColor"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
   
+  <div id="editStudentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Detail Siswa</h2>
+            <span class="close-btn" onclick="document.getElementById('editStudentModal').style.display='none';">&times;</span>
+        </div>
+        <form id="editStudentFormInAdmin">
+            <div class="modal-body">
+                <input type="hidden" id="editStudentId">
+                <div class="form-group">
+                    <label for="editStudentName">Nama Siswa</label>
+                    <input type="text" id="editStudentName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editStudentLevel">Level Siswa</label>
+                    <select id="editStudentLevel"></select>
+                </div>
+                <div class="form-group">
+                    <label for="editStudentCoach">Pindahkan ke Coach</label>
+                    <select id="editStudentCoach" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="editStudentPhone">No. Telepon</label>
+                    <input type="tel" id="editStudentPhone" placeholder="Contoh: 08123456789">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="action-btn" style="background-color: #28a745;">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
     import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, query, where, updateDoc, writeBatch, increment, deleteDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
     
-    // Konfigurasi Firebase Anda
     const firebaseConfig = { apiKey: "AIzaSyBm3SkLLtl9LvczDDht-OQ6-R4OYLPYAJQ", authDomain: "progres-report-5d199.firebaseapp.com", projectId: "progres-report-5d199", storageBucket: "progres-report-5d199.firebasestorage.app", messagingSenderId: "363573365137", appId: "1:363573365137:web:98f32d5ff8fae05617b230", measurementId: "G-CPX04R69F5" };
     
     const mainApp = initializeApp(firebaseConfig);
@@ -786,7 +808,6 @@
       }
     }
 
-    // Fungsi untuk memuat PIN dari `settings/appEditPin`
     async function loadPin() {
         try {
             const docRef = doc(db, "settings", "appEditPin");
@@ -805,7 +826,6 @@
         }
     }
     
-    // Fungsi untuk menyimpan PIN ke `settings/appEditPin`
     async function handlePinForm(e) {
         e.preventDefault();
         const pin = document.getElementById('pinInput').value.trim();
@@ -849,19 +869,9 @@
         
         const batch = writeBatch(db);
         
-        // Update studentCount for all coaches in the studentCounts map
-        for (const coachEmail in studentCounts) {
-          const coachRef = doc(db, "users", coachEmail);
-          batch.update(coachRef, { studentCount: increment(studentCounts[coachEmail]) });
-        }
-        
-        // Set studentCount to 0 for coaches who no longer have active students
         const allCoaches = allUsers.filter(u => u.role === 'user').map(u => u.id);
         allCoaches.forEach(coachEmail => {
-          if (!studentCounts.hasOwnProperty(coachEmail)) {
-            const coachRef = doc(db, "users", coachEmail);
-            batch.update(coachRef, { studentCount: 0 });
-          }
+            batch.update(doc(db, "users", coachEmail), { studentCount: studentCounts[coachEmail] || 0 });
         });
         
         await batch.commit();
@@ -1111,16 +1121,18 @@
       const pinForm = document.getElementById('pinForm');
       if (pinForm) pinForm.addEventListener('submit', handlePinForm);
       
-      // New event listener for password change form
       const changePasswordForm = document.getElementById('changePasswordForm');
       if(changePasswordForm) changePasswordForm.addEventListener('submit', handleChangePassword);
 
-      // New export selectors listeners
       document.getElementById('exportCoachSelector').addEventListener('change', populateExportStudentSelector);
       document.getElementById('exportStudentSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
       document.getElementById('exportBankSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
       document.getElementById('exportYearSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
       document.getElementById('exportMonthSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
+      
+      // Event listener untuk modal edit siswa
+      document.getElementById('editStudentFormInAdmin').addEventListener('submit', handleEditStudent);
+      document.querySelector('#editStudentModal .close-btn').onclick = () => document.getElementById('editStudentModal').style.display = 'none';
     }
     function updateUserPagination(totalItems) {
       const rowsPerPage = parseInt(document.getElementById('userRowsPerPage').value, 10);
@@ -1131,26 +1143,16 @@
       document.getElementById('userNextBtn').disabled = userCurrentPage >= totalPages;
     }
 
-    /**
-    * Regenerates a unique coachId for a user.
-    * @param {string} userEmail - The email of the user to update.
-    */
     window.regenerateCoachId = async function(userEmail) {
       if (!confirm(`Yakin ingin meregenerasi ID unik untuk coach: ${userEmail}?`)) {
         return;
       }
-
       try {
         const userRef = doc(db, "users", userEmail);
         const newCoachId = generateCoachId();
-
-        await updateDoc(userRef, {
-          coachId: newCoachId
-        });
-        
+        await updateDoc(userRef, { coachId: newCoachId });
         alert(`ID unik baru '${newCoachId}' berhasil dibuat untuk ${userEmail}.`);
         await loadAllData();
-
       } catch (error) {
         console.error("Gagal meregenerasi coach ID:", error);
         alert(`Gagal meregenerasi ID. Error: ${error.message}`);
@@ -1170,7 +1172,6 @@
         if (role === 'user') {
           newCoachId = generateCoachId();
         }
-        
         await createUserWithEmailAndPassword(secondaryAuth, email, password);
         const userData = { email, name, role, status: 'active', coachId: newCoachId };
         if (role === 'user') { userData.studentCount = 0; }
@@ -1290,7 +1291,6 @@
       if(tabName === 'pengguna-tab') {
         renderUserTable();
       } else if (tabName === 'kurikulum-tab') {
-        // ... logic for kurikulum tab ...
       } else if (tabName === 'bank-tab') {
         renderBankTable();
       } else if (tabName === 'maintenance-tab') {
@@ -1445,7 +1445,6 @@
       document.getElementById('editUserModal').style.display = 'block';
     };
 
-    // Fungsi baru yang ditambahkan untuk mengedit bank
     window.openEditBankModal = function(bankId) {
       const bank = allBanks[bankId];
       if (!bank) return;
@@ -1461,7 +1460,6 @@
         const bankSelector = document.getElementById('exportBankSelector');
         const yearSelector = document.getElementById('exportYearSelector');
 
-        // Populate Coach Selector
         const activeCoaches = allUsers.filter(u => (u.status || 'active') === 'active');
         coachSelector.innerHTML = '<option value="all">Semua Coach</option>';
         activeCoaches.forEach(coach => {
@@ -1470,19 +1468,16 @@
             }
         });
 
-        // Populate Student Selector (initially with all students)
         studentSelector.innerHTML = '<option value="all">Semua Siswa</option>';
         allStudents.forEach(student => {
             studentSelector.innerHTML += `<option value="${student.id}">${student.name}</option>`;
         });
 
-        // Populate Bank Selector
         bankSelector.innerHTML = '<option value="all">Semua Bank</option>';
         allActiveBankNames.forEach(bankName => {
              bankSelector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
         });
         
-        // Populate Year Selector
         const years = new Set();
         allStudents.forEach(student => {
             if (student.spp) {
@@ -1512,7 +1507,6 @@
         });
     }
     
-    // Normalisasi nomor HP (0xxxx -> 62xxxx)
     function normalizePhone(nomor) {
         nomor = nomor ? nomor.toString().trim().replace(/\D/g, "") : "";
         if (nomor.startsWith("0")) return "62" + nomor.substring(1);
@@ -1520,7 +1514,6 @@
         return nomor;
     }
 
-    // Deteksi apakah mobile
     function isMobile() {
         return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     }
@@ -1563,13 +1556,12 @@
         
         const headerRow = sheet.addRow(header);
         
-        // Styling header
         headerRow.eachCell((cell) => {
             cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
             cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: { argb: 'FF4472C4' } // Biru
+                fgColor: { argb: 'FF4472C4' }
             };
             cell.alignment = { vertical: 'middle', horizontal: 'center' };
             cell.border = {
@@ -1637,11 +1629,9 @@
             return;
         }
         
-        // Tambahkan baris data dan styling
         rows.forEach(rowData => {
             const row = sheet.addRow(rowData);
             row.eachCell((cell, colNumber) => {
-                // Terapkan border
                 cell.border = {
                     top: {style:'thin'},
                     left: {style:'thin'},
@@ -1649,17 +1639,14 @@
                     right: {style:'thin'}
                 };
                 
-                // Format Tanggal (Kolom ke-4)
                 if (colNumber === 4 && cell.value) {
                     cell.numFmt = 'dd/mm/yyyy';
                 }
                 
-                // Format Nominal (Kolom ke-7)
                 if (colNumber === 7 && cell.value) {
                     cell.numFmt = '#,##0';
                 }
 
-                // Styling Hyperlink (Kolom No. Telp jika ada)
                 const phoneColIndex = columnKeys.indexOf('phone');
                 if (includePhone && colNumber === phoneColIndex + 1 && cell.value && cell.value.hyperlink) {
                     cell.font = { color: { argb: "FF1D8F14" }, underline: true };
@@ -1667,7 +1654,6 @@
             });
         });
 
-        // Sesuaikan lebar kolom otomatis
         sheet.columns = columnKeys.map(key => ({
             key: key,
             width: key === 'phone' ? 18 : 
@@ -1677,16 +1663,13 @@
                    key === 'bank' ? 15 : 10
         }));
         
-        // Bekukan header
         sheet.views = [{ state: 'frozen', ySplit: 1 }];
 
-        // Buat nama file unik
         const now = new Date();
         const dateString = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
         const timeString = `${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}-${now.getSeconds().toString().padStart(2, '0')}`;
         const fileName = `Laporan_SPP_${dateString}_${timeString}.xlsx`;
 
-        // Buat dan unduh file XLSX
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
         const link = document.createElement("a");
@@ -1697,6 +1680,81 @@
         statusDiv.textContent = `Data berhasil diexport ke ${fileName}!`;
         statusDiv.style.color = 'green';
     };
+
+    // --- Tambahkan kode di bawah ini ---
+
+    // Fungsi untuk membuka modal edit siswa
+    window.openStudentEditModal = function(studentId) {
+        const student = allStudents.find(s => s.id === studentId);
+        if (!student) return;
+        
+        document.getElementById('editStudentId').value = studentId;
+        document.getElementById('editStudentName').value = student.name;
+        
+        // Mengisi dropdown level
+        const levelSelector = document.getElementById('editStudentLevel');
+        levelSelector.innerHTML = allLevels.map(l => `<option value="${l}">${l}</option>`).join('');
+        levelSelector.value = student.studentLevel || "";
+        
+        // Mengisi dropdown coach
+        const coachSelector = document.getElementById('editStudentCoach');
+        const activeCoaches = allUsers.filter(u => u.role === 'user');
+        coachSelector.innerHTML = activeCoaches.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+        coachSelector.value = student.coachEmail;
+        
+        document.getElementById('editStudentPhone').value = student.phone || '';
+        document.getElementById('editStudentModal').style.display = 'block';
+    };
+
+    // Fungsi untuk menangani pengiriman form edit siswa
+    async function handleEditStudent(e) {
+        e.preventDefault();
+        const studentId = document.getElementById('editStudentId').value;
+        const studentBefore = allStudents.find(s => s.id === studentId);
+        const oldCoachEmail = studentBefore.coachEmail;
+        const newCoachEmail = document.getElementById('editStudentCoach').value;
+        
+        const updatedData = {
+            name: document.getElementById('editStudentName').value,
+            studentLevel: document.getElementById('editStudentLevel').value,
+            coachEmail: newCoachEmail,
+            phone: document.getElementById('editStudentPhone').value
+        };
+        
+        try {
+            const batch = writeBatch(db);
+            const studentDocRef = doc(db, "students", studentId);
+            batch.update(studentDocRef, updatedData);
+            
+            // Perbarui jumlah siswa hanya jika coach berubah
+            if (oldCoachEmail !== newCoachEmail) {
+                if (oldCoachEmail) {
+                    const oldCoachRef = doc(db, "users", oldCoachEmail);
+                    batch.update(oldCoachRef, { studentCount: increment(-1) });
+                }
+                if (newCoachEmail) {
+                    const newCoachRef = doc(db, "users", newCoachEmail);
+                    batch.update(newCoachRef, { studentCount: increment(1) });
+                }
+                
+                // Perbarui semua laporan siswa dengan coachEmail yang baru
+                const reportsQuery = query(collection(db, "reports"), where("studentId", "==", studentId));
+                const reportsSnapshot = await getDocs(reportsQuery);
+                reportsSnapshot.forEach(reportDoc => {
+                    const reportRef = doc(db, "reports", reportDoc.id);
+                    batch.update(reportRef, { coachEmail: newCoachEmail });
+                });
+            }
+            
+            await batch.commit();
+            alert('Detail siswa dan riwayat laporan berhasil diperbarui!');
+            document.getElementById('editStudentModal').style.display = 'none';
+            await loadAllData();
+        } catch(error) {
+            console.error("Gagal menyimpan dan memindahkan riwayat:", error);
+            alert('Gagal menyimpan dan memindahkan riwayat. Periksa konsol untuk detail.');
+        }
+    }
   </script>
 </body>
 </html>
