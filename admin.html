@@ -549,6 +549,11 @@
                         <option value="11">Desember</option>
                     </select>
                 </div>
+                <div class="filter-group" style="align-self: center;">
+                    <label>
+                        <input type="checkbox" id="includePhone"> Sertakan Nomor Telepon
+                    </label>
+                </div>
                 <button type="button" class="btn" onclick="exportSppData()">Export ke Excel</button>
             </div>
             <div id="exportStatusMessage" style="margin-top: 10px;"></div>
@@ -1506,6 +1511,19 @@
             studentSelector.innerHTML += `<option value="${student.id}">${student.name}</option>`;
         });
     }
+    
+    // Normalisasi nomor HP (0xxxx -> 62xxxx)
+    function normalizePhone(nomor) {
+        nomor = nomor ? nomor.toString().trim().replace(/\D/g, "") : "";
+        if (nomor.startsWith("0")) return "62" + nomor.substring(1);
+        if (!nomor.startsWith("62") && nomor.length > 5) return "62" + nomor;
+        return nomor;
+    }
+
+    // Deteksi apakah mobile
+    function isMobile() {
+        return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
 
     window.exportSppData = async function() {
         const coachFilter = document.getElementById('exportCoachSelector').value;
@@ -1513,6 +1531,7 @@
         const bankFilter = document.getElementById('exportBankSelector').value;
         const yearFilter = document.getElementById('exportYearSelector').value;
         const monthFilter = document.getElementById('exportMonthSelector').value;
+        const includePhone = document.getElementById('includePhone').checked;
         const statusDiv = document.getElementById('exportStatusMessage');
 
         statusDiv.textContent = 'Memproses data...';
@@ -1534,9 +1553,32 @@
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet('Laporan SPP');
 
-        // Tambahkan header
         const header = ["No", "Nama Siswa", "Coach", "Tanggal Bayar", "Tahun", "Bulan", "Nominal (Rp)", "Bank"];
-        sheet.addRow(header);
+        const columnKeys = ['no', 'studentName', 'coach', 'paymentDate', 'year', 'month', 'nominal', 'bank'];
+
+        if (includePhone) {
+            header.push("No. Telepon");
+            columnKeys.push("phone");
+        }
+        
+        const headerRow = sheet.addRow(header);
+        
+        // Styling header
+        headerRow.eachCell((cell) => {
+            cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4472C4' } // Biru
+            };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            cell.border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
+        });
 
         let rowNum = 1;
         let foundPayments = false;
@@ -1547,6 +1589,7 @@
             const coachName = allUsers.find(u => u.id === student.coachEmail)?.name || 'N/A';
             const studentSpp = student.spp || {};
             const paymentKeys = Object.keys(studentSpp);
+            const studentPhone = student.phone || '';
 
             paymentKeys.forEach(key => {
                 const payment = studentSpp[key];
@@ -1558,19 +1601,32 @@
 
                 if (matchesYear && matchesMonth && matchesBank) {
                     foundPayments = true;
-                    const paymentDate = (payment.date && typeof payment.date.toDate === 'function') ? payment.date.toDate().toLocaleDateString('id-ID') : 'N/A';
+                    const paymentDateValue = (payment.date && typeof payment.date.toDate === 'function') ? payment.date.toDate() : null;
                     const monthName = monthNames[parseInt(paymentMonth)];
 
-                    rows.push([
+                    const rowData = [
                         rowNum++,
                         student.name,
                         coachName,
-                        paymentDate,
+                        paymentDateValue,
                         parseInt(paymentYear),
                         monthName,
                         payment.nominal, 
                         payment.bank
-                    ]);
+                    ];
+
+                    if (includePhone) {
+                        const normalizedPhone = normalizePhone(studentPhone);
+                        if (normalizedPhone) {
+                             const link = isMobile()
+                               ? `https://api.whatsapp.com/send?phone=${normalizedPhone}`
+                               : `https://web.whatsapp.com/send/?phone=${normalizedPhone}&text&type=phone_number&app_absent=1`;
+                             rowData.push({ text: studentPhone, hyperlink: link });
+                        } else {
+                            rowData.push('');
+                        }
+                    }
+                    rows.push(rowData);
                 }
             });
         });
@@ -1581,45 +1637,64 @@
             return;
         }
         
-        // Tambahkan baris data
-        sheet.addRows(rows);
-
-        // Styling tabel
-        sheet.columns = [
-          { key: 'no', width: 5 },
-          { key: 'studentName', width: 25 },
-          { key: 'coach', width: 25 },
-          { key: 'paymentDate', width: 15 },
-          { key: 'year', width: 8 },
-          { key: 'month', width: 12 },
-          { key: 'nominal', width: 20 },
-          { key: 'bank', width: 15 },
-        ];
-
-        // Terapkan border ke semua cell
-        sheet.eachRow((row, rowNumber) => {
+        // Tambahkan baris data dan styling
+        rows.forEach(rowData => {
+            const row = sheet.addRow(rowData);
             row.eachCell((cell, colNumber) => {
+                // Terapkan border
                 cell.border = {
                     top: {style:'thin'},
                     left: {style:'thin'},
                     bottom: {style:'thin'},
                     right: {style:'thin'}
                 };
+                
+                // Format Tanggal (Kolom ke-4)
+                if (colNumber === 4 && cell.value) {
+                    cell.numFmt = 'dd/mm/yyyy';
+                }
+                
+                // Format Nominal (Kolom ke-7)
+                if (colNumber === 7 && cell.value) {
+                    cell.numFmt = '#,##0';
+                }
+
+                // Styling Hyperlink (Kolom No. Telp jika ada)
+                const phoneColIndex = columnKeys.indexOf('phone');
+                if (includePhone && colNumber === phoneColIndex + 1 && cell.value && cell.value.hyperlink) {
+                    cell.font = { color: { argb: "FF1D8F14" }, underline: true };
+                }
             });
         });
 
-        // Atur format nominal
-        sheet.getColumn('nominal').numFmt = '#,##0';
+        // Sesuaikan lebar kolom otomatis
+        sheet.columns = columnKeys.map(key => ({
+            key: key,
+            width: key === 'phone' ? 18 : 
+                   key === 'studentName' || key === 'coach' ? 25 : 
+                   key === 'paymentDate' ? 15 : 
+                   key === 'nominal' ? 20 : 
+                   key === 'bank' ? 15 : 10
+        }));
+        
+        // Bekukan header
+        sheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+        // Buat nama file unik
+        const now = new Date();
+        const dateString = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+        const timeString = `${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}-${now.getSeconds().toString().padStart(2, '0')}`;
+        const fileName = `Laporan_SPP_${dateString}_${timeString}.xlsx`;
 
         // Buat dan unduh file XLSX
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "Laporan_SPP.xlsx";
+        link.download = fileName;
         link.click();
         
-        statusDiv.textContent = 'Data berhasil diexport!';
+        statusDiv.textContent = `Data berhasil diexport ke ${fileName}!`;
         statusDiv.style.color = 'green';
     };
   </script>
