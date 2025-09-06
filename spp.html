@@ -99,7 +99,7 @@
             font-weight: 600;
             color: var(--dark-text);
         }
-        input[type="text"], input[type="number"], input[type="email"], input[type="tel"], select, textarea, input[type="date"], input[type="file"] {
+        input[type="text"], input[type="number"], input[type="email"], input[type="tel"], select, textarea, input[type="date"], input[type="file"], input[type="password"] {
             width: 100%;
             padding: 10px;
             border: 1px solid #ced4da;
@@ -202,7 +202,7 @@
             display: flex;
             align-items: center;
         }
-        #statusMessage, #otherStatusMessage, #studentStatusMessage, #importStatusMessage, #assignStatusMessage, #transferStatusMessage, #bulkActionStatusMessage {
+        #statusMessage, #otherStatusMessage, #studentStatusMessage, #importStatusMessage, #assignStatusMessage, #transferStatusMessage, #bulkActionStatusMessage, #pinVerificationMessage, #pinStatusMessage {
             margin-top: 15px;
             font-weight: 600;
         }
@@ -219,16 +219,16 @@
             flex-direction: column;
             gap: 5px;
         }
-        .spp-table-container, .student-table-container {
+        .spp-table-container, .student-table-container, #otherPaymentsTable-container {
             border: 1px solid var(--border-color);
             border-radius: 8px;
             overflow-x: auto;
         }
-        .spp-table, .student-table {
+        .spp-table, .student-table, #otherPaymentsTable {
             width: 100%;
             border-collapse: collapse;
         }
-        .spp-table th, .spp-table td, .student-table th, .student-table td {
+        .spp-table th, .spp-table td, .student-table th, .student-table td, #otherPaymentsTable th, #otherPaymentsTable td {
             border: 1px solid var(--border-color);
             padding: 10px;
             text-align: center;
@@ -236,7 +236,7 @@
             font-size: 14px;
             min-width: 90px;
         }
-        .spp-table th, .student-table th {
+        .spp-table th, .student-table th, #otherPaymentsTable th {
             font-weight: 600;
             background-color: #e9ecef;
         }
@@ -399,7 +399,7 @@
         #addOtherPaymentBtn:hover {
             background-color: #138496;
         }
-        .spp-table .checkbox-cell, .student-table .checkbox-cell {
+        .spp-table .checkbox-cell, .student-table .checkbox-cell, #otherPaymentsTable .checkbox-cell {
             width: 30px; 
             min-width: 10%;
             padding: 5px;
@@ -569,7 +569,7 @@
             .spp-table-controls .filter-group, .filter-controls > div {
                 flex-direction: row;
             }
-            .spp-table .checkbox-cell, .student-table .checkbox-cell {
+            .spp-table .checkbox-cell, .student-table .checkbox-cell, #otherPaymentsTable .checkbox-cell {
                 width: 30px; 
                 min-width: 10%;
             }
@@ -656,6 +656,7 @@
     <div class="container">
         <div class="header-section">
             <h1>Panel Bendahara</h1>
+            <h4 id="userGreeting">Halo, Bendahara!</h4>
             <div class="header-buttons">
                 <button class="btn-export" onclick="openWhatsappSettings()">Pengaturan WhatsApp Templates</button>
                 <button class="logout-btn" onclick="logout()">Logout</button>
@@ -741,7 +742,6 @@
                     </div>
                     <div class="legend" id="bankLegend"></div>
                     <button class="btn-whatsapp" onclick="generateAndSendPaymentProof()">Kirim Bukti Bayar via WhatsApp</button>
-                    <button class="btn-export" onclick="exportToExcel()">Export ke Excel</button>
                 </div>
                 <div class="spp-table-container">
                     <table class="spp-table" id="sppTable">
@@ -818,6 +818,7 @@
                             <input type="date" id="otherPaymentDate" required>
                         </div>
                         <div class="form-group full-width"><label for="otherKeterangan">Keterangan</label><textarea id="otherKeterangan" rows="2" required></textarea></div>
+                        <div class="form-group full-width"><label for="otherAttachment">Upload Bukti Bayar</label><input type="file" id="otherAttachment" accept="image/*,.pdf"></div>
                     </div>
                     <button type="submit" id="addOtherPaymentBtn">Simpan Laporan</button>
                     <div id="otherStatusMessage"></div>
@@ -836,10 +837,16 @@
                         <label for="otherYearFilter">Tahun:</label>
                         <select id="otherYearFilter"></select>
                     </div>
+                    <div class="filter-group">
+                        <label for="otherBankFilter">Bank:</label>
+                        <select id="otherBankFilter">
+                            <option value="all">Semua Bank</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="spp-table-container">
                     <table class="spp-table" id="otherPaymentsTable">
-                        <thead><tr><th class="checkbox-cell"><input type="checkbox" id="selectAllCheckbox" title="Pilih Semua"></th><th>Tanggal</th><th>Nama Siswa</th><th>Keterangan</th><th>Bank</th><th>Nominal</th></tr></thead>
+                        <thead><tr><th class="checkbox-cell"><input type="checkbox" id="selectAllCheckbox" title="Pilih Semua"></th><th>Tanggal</th><th>Nama Siswa</th><th>Keterangan</th><th>Bukti Bayar</th><th>Bank</th><th>Nominal</th><th>Aksi</th></tr></thead>
                         <tbody id="otherPaymentsTableBody"></tbody>
                     </table>
                 </div>
@@ -1073,7 +1080,109 @@
                 <div class="modal-footer" style="padding-top: 20px;">
                     <button type="submit" class="action-btn" style="background-color: var(--success-color);">Simpan Perubahan</button>
                 </div>
-            </div >
+            </form>
+        </div>
+    </div>
+
+    <div id="pinModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Verifikasi PIN</h3>
+                <span class="close-btn" onclick="document.getElementById('pinModal').style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Masukkan PIN untuk mengedit data ini.</p>
+                <div class="form-group">
+                    <label for="pinInput">PIN</label>
+                    <input type="password" id="pinInput" placeholder="PIN" required>
+                </div>
+                <div class="form-group">
+                    <button type="button" id="verifyPinBtn" class="action-btn" style="background-color: var(--success-color);">Verifikasi</button>
+                </div>
+                <div id="pinVerificationMessage" class="status-message" style="margin-top:10px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editSppModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Pembayaran SPP</h3>
+                <span class="close-btn" onclick="document.getElementById('editSppModal').style.display='none'">&times;</span>
+            </div>
+            <form id="editSppForm">
+                <input type="hidden" id="editSppStudentId">
+                <input type="hidden" id="editSppYearMonthKey">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editSppNominal">Nominal (Rp)</label>
+                        <input type="text" id="editSppNominal" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editSppBank">Bank</label>
+                        <select id="editSppBank" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editSppPaymentDate">Tanggal Bayar</label>
+                        <input type="date" id="editSppPaymentDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editSppKeterangan">Keterangan</label>
+                        <textarea id="editSppKeterangan" rows="2"></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="editSppAttachment">Ganti Bukti Bayar</label>
+                        <input type="file" id="editSppAttachment" accept="image/*,.pdf">
+                        <p style="font-size: 0.8em; color: gray; margin-top: 5px;">Abaikan jika tidak ingin mengganti.</p>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding-top: 20px;">
+                    <button type="submit" class="action-btn" style="background-color: var(--success-color);">Simpan Perubahan</button>
+                    <button type="button" class="action-btn" style="background-color: var(--danger-color); margin-top: 10px;" onclick="deleteSppPayment()">Hapus Pembayaran</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="editNonSppModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Laporan Non-SPP</h3>
+                <span class="close-btn" onclick="document.getElementById('editNonSppModal').style.display='none'">&times;</span>
+            </div>
+            <form id="editNonSppForm">
+                <input type="hidden" id="editNonSppId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editNonSppStudentName">Nama Siswa</label>
+                        <input type="text" id="editNonSppStudentName" required disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="editNonSppNominal">Nominal (Rp)</label>
+                        <input type="text" id="editNonSppNominal" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editNonSppBank">Bank</label>
+                        <select id="editNonSppBank" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editNonSppPaymentDate">Tanggal Bayar</label>
+                        <input type="date" id="editNonSppPaymentDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editNonSppKeterangan">Keterangan</label>
+                        <textarea id="editNonSppKeterangan" rows="2"></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="editNonSppAttachment">Ganti Bukti Bayar</label>
+                        <input type="file" id="editNonSppAttachment" accept="image/*,.pdf">
+                        <p style="font-size: 0.8em; color: gray; margin-top: 5px;">Abaikan jika tidak ingin mengganti.</p>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding-top: 20px;">
+                    <button type="submit" class="action-btn" style="background-color: var(--success-color);">Simpan Perubahan</button>
+                    <button type="button" class="action-btn" style="background-color: var(--danger-color); margin-top: 10px;" onclick="deleteNonSppPayment()">Hapus Laporan</button>
+                </div>
             </form>
         </div>
     </div>
@@ -1081,7 +1190,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, updateDoc, query, where, writeBatch, increment, Timestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, updateDoc, query, where, writeBatch, increment, Timestamp, deleteField, deleteDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
         import * as XLSX from 'https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs';
 
         const firebaseConfig = {
@@ -1122,6 +1231,7 @@
         const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
         let allOtherPayments = [];
         let pendingImportStudents = []; 
+        let appEditPin = '';
 
         window.logout = function() { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
         const singleModal = document.getElementById('singleModal');
@@ -1130,6 +1240,9 @@
         const settingsModal = document.getElementById('settingsModal');
         const whatsappTemplateTextarea = document.getElementById('whatsappTemplateTextarea');
         const settingsStatusMessage = document.getElementById('settingsStatusMessage');
+        const pinModal = document.getElementById('pinModal');
+        const editSppModal = document.getElementById('editSppModal');
+        const editNonSppModal = document.getElementById('editNonSppModal');
         const defaultWhatsappTemplate = `Halo Bapak/Ibu, ini adalah bukti pembayaran SPP untuk *{nama_siswa}* tahun *{tahun_bayar}*.
 Pembayaran yang tercatat:
 {rincian_pembayaran}
@@ -1147,6 +1260,15 @@ Terima kasih.`;
             if (event.target == document.getElementById('editStudentModal')) {
                  document.getElementById('editStudentModal').style.display = 'none';
             }
+            if (event.target == pinModal) {
+                 pinModal.style.display = 'none';
+            }
+            if (event.target == editSppModal) {
+                editSppModal.style.display = 'none';
+            }
+            if (event.target == editNonSppModal) {
+                editNonSppModal.style.display = 'none';
+            }
         }
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -1161,12 +1283,18 @@ Terima kasih.`;
                     currentBendaharaName = docSnap.data().name || 'Bendahara';
                     await loadBrandSettings();
                     await loadBanks();
+                    await loadAppEditPin();
                     await loadAllData();
                     await loadWhatsappTemplate();
                     setupEventListeners();
                     populateMonths();
                     initializeNonSppModule();
                     openTab('spp-tab');
+                    const userGreeting = document.getElementById('userGreeting');
+                    if (userGreeting) {
+                        const loggedInUser = allUsers.find(u => u.id === user.email);
+                        userGreeting.textContent = `Halo, ${loggedInUser.name || loggedInUser.id}!`;
+                    }
                 } else {
                     alert("Akses ditolak. Halaman ini hanya untuk Bendahara.");
                     await signOut(auth);
@@ -1176,6 +1304,40 @@ Terima kasih.`;
                 window.location.href = 'login.html';
             }
         });
+        
+        async function loadAppEditPin() {
+            try {
+                const docSnap = await getDoc(doc(db, "settings", "appEditPin"));
+                sessionReadCount++; updateReadStatus();
+                if (docSnap.exists() && docSnap.data().pin) {
+                    appEditPin = docSnap.data().pin;
+                } else {
+                    appEditPin = '';
+                }
+            } catch (error) {
+                console.error("Gagal memuat PIN:", error);
+                appEditPin = '';
+            }
+        }
+
+        async function saveAppEditPin() {
+            const pin = document.getElementById('appEditPin').value;
+            const pinStatusDiv = document.getElementById('pinStatusMessage');
+            if (!pin || pin.length < 4 || pin.length > 6) {
+                pinStatusDiv.textContent = 'PIN harus 4-6 digit.';
+                pinStatusDiv.style.color = 'red';
+                return;
+            }
+            try {
+                await setDoc(doc(db, "settings", "appEditPin"), { pin: pin });
+                appEditPin = pin;
+                pinStatusDiv.textContent = 'PIN berhasil disimpan!';
+                pinStatusDiv.style.color = 'green';
+            } catch (error) {
+                pinStatusDiv.textContent = `Gagal menyimpan PIN: ${error.message}`;
+                pinStatusDiv.style.color = 'red';
+            }
+        }
 
         async function loadAllData() {
             try {
@@ -1338,6 +1500,7 @@ Terima kasih.`;
                 });
                 populateBankLegend();
                 populateBankSelector();
+                populateEditBankSelectors();
             } catch (error) {
                 console.error("Gagal memuat data bank:", error);
             }
@@ -1499,6 +1662,16 @@ Terima kasih.`;
                     otherSelector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
                 }
             }
+        }
+        function populateEditBankSelectors() {
+            const editSppBankSelector = document.getElementById('editSppBank');
+            const editNonSppBankSelector = document.getElementById('editNonSppBank');
+            let options = '<option value="">Pilih Bank</option>';
+            for (const bankName in bankColors) {
+                options += `<option value="${bankName}">${bankName}</option>`;
+            }
+            editSppBankSelector.innerHTML = options;
+            editNonSppBankSelector.innerHTML = options;
         }
         function populateMonths() {
             const monthSelector = document.getElementById('monthSelector');
@@ -1744,14 +1917,7 @@ Terima kasih.`;
                                  const paymentDate = (paymentData.date && typeof paymentData.date.toDate === 'function') ? paymentData.date.toDate() : new Date(paymentData.date);
                                  const dateFormatted = paymentDate.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
                                  const studentLevel = paymentData.studentLevel || 'Level tidak tersedia';
-                                 cell.innerHTML = `
-                                     <div class="payment-bank-color" style="background-color: ${bankColor};"></div>
-                                     <div class="payment-info">
-                                         <span class="payment-amount">Rp ${nominalFormatted}</span>
-                                         <span class="payment-date">${dateFormatted}</span>
-                                         <span class="payment-level">${studentLevel}</span>
-                                     </div>
-                                 `;
+                                 
                                  const details = {
                                      paymentId: paymentData.paymentId || 'ID tidak tersedia',
                                      nominal: paymentData.nominal || 0,
@@ -1759,9 +1925,21 @@ Terima kasih.`;
                                      date: paymentDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
                                      studentLevel: paymentData.studentLevel || 'N/A',
                                      keterangan: paymentData.keterangan || '',
-                                     attachmentBase64: paymentData.attachmentBase64 || ''
+                                     attachmentBase64: paymentData.attachmentBase64 || '',
+                                     key: key,
+                                     studentId: student.id
                                  };
                                  const detailsJson = encodeURIComponent(JSON.stringify(details));
+                                 
+                                 cell.innerHTML = `
+                                     <div class="payment-bank-color" style="background-color: ${bankColor};"></div>
+                                     <div class="payment-info">
+                                         <span class="payment-amount">Rp ${nominalFormatted}</span>
+                                         <span class="payment-date">${dateFormatted}</span>
+                                         <span class="payment-level">${studentLevel}</span>
+                                         <button type="button" class="action-btn-edit" style="margin-top:5px; padding: 5px 10px; font-size:12px;" onclick="openPinModal('spp', '${student.id}', '${key}')">Edit</button>
+                                     </div>
+                                 `;
                                  if (details.keterangan || details.attachmentBase64) {
                                      cell.innerHTML += `<a href="#" onclick="event.preventDefault(); showPaymentDetails('${detailsJson}')" class="attachment-link">Detail</a>`;
                                  }
@@ -1774,6 +1952,140 @@ Terima kasih.`;
             }
             updatePaginationControls('spp', currentPage, totalPages);
         }
+
+        window.openPinModal = function(type, ...params) {
+            pinModal.style.display = 'flex';
+            document.getElementById('pinInput').value = '';
+            const verifyBtn = document.getElementById('verifyPinBtn');
+            verifyBtn.onclick = () => verifyPinAndOpenEdit(type, ...params);
+        };
+
+        async function verifyPinAndOpenEdit(type, ...params) {
+            const enteredPin = document.getElementById('pinInput').value;
+            const pinVerificationMessage = document.getElementById('pinVerificationMessage');
+            if (enteredPin === appEditPin) {
+                pinModal.style.display = 'none';
+                pinVerificationMessage.textContent = '';
+                if (type === 'spp') {
+                    const [studentId, yearMonthKey] = params;
+                    await openEditSppModal(studentId, yearMonthKey);
+                } else if (type === 'nonspp') {
+                    const [paymentId] = params;
+                    await openEditNonSppModal(paymentId);
+                }
+            } else {
+                pinVerificationMessage.textContent = 'PIN salah!';
+                pinVerificationMessage.style.color = 'red';
+            }
+        }
+        
+        async function openEditSppModal(studentId, yearMonthKey) {
+            const student = allStudents.find(s => s.id === studentId);
+            if (!student || !student.spp[yearMonthKey]) {
+                alert("Pembayaran tidak ditemukan.");
+                return;
+            }
+
+            const paymentData = student.spp[yearMonthKey];
+            
+            document.getElementById('editSppStudentId').value = studentId;
+            document.getElementById('editSppYearMonthKey').value = yearMonthKey;
+            document.getElementById('editSppNominal').value = new Intl.NumberFormat('id-ID').format(paymentData.nominal);
+            document.getElementById('editSppBank').value = paymentData.bank || '';
+            document.getElementById('editSppPaymentDate').value = (paymentData.date && typeof paymentData.date.toDate === 'function') ? paymentData.date.toDate().toISOString().slice(0, 10) : '';
+            document.getElementById('editSppKeterangan').value = paymentData.keterangan || '';
+            document.getElementById('editSppAttachment').value = '';
+
+            setupNominalInput('editSppNominal');
+            
+            const bankSelector = document.getElementById('editSppBank');
+            bankSelector.innerHTML = '<option value="">Pilih Bank</option>';
+            for (const bankName in bankColors) {
+                bankSelector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
+            }
+            bankSelector.value = paymentData.bank;
+
+            editSppModal.style.display = 'flex';
+        }
+
+        async function handleUpdateSppPayment(e) {
+            e.preventDefault();
+            const studentId = document.getElementById('editSppStudentId').value;
+            const yearMonthKey = document.getElementById('editSppYearMonthKey').value;
+            const nominalInput = document.getElementById('editSppNominal').value;
+            const nominal = parseFloat(nominalInput.replace(/\./g, ''));
+            const bank = document.getElementById('editSppBank').value;
+            const paymentDate = document.getElementById('editSppPaymentDate').value;
+            const keterangan = document.getElementById('editSppKeterangan').value;
+            const attachmentFile = document.getElementById('editSppAttachment').files[0];
+            
+            if (isNaN(nominal) || nominal <= 0 || !bank || !paymentDate) {
+                alert('Semua field wajib diisi.');
+                return;
+            }
+
+            try {
+                const studentRef = doc(db, "students", studentId);
+                const studentSnap = await getDoc(studentRef);
+                if (!studentSnap.exists()) {
+                    alert('Siswa tidak ditemukan.');
+                    return;
+                }
+                const studentData = studentSnap.data();
+                const updatedSppData = { ...studentData.spp };
+                
+                const oldPaymentData = updatedSppData[yearMonthKey];
+                
+                let newAttachmentBase64 = oldPaymentData.attachmentBase64;
+                if (attachmentFile) {
+                    if (attachmentFile.type.startsWith('image/')) {
+                        newAttachmentBase64 = await compressImage(attachmentFile, 0.2); 
+                    } else if (attachmentFile.type === 'application/pdf') {
+                        newAttachmentBase64 = await getBase64(attachmentFile);
+                    }
+                }
+                
+                updatedSppData[yearMonthKey] = {
+                    nominal: nominal,
+                    bank: bank,
+                    date: Timestamp.fromDate(new Date(paymentDate)),
+                    keterangan: keterangan,
+                    attachmentBase64: newAttachmentBase64,
+                    paymentId: oldPaymentData.paymentId || '',
+                    studentLevel: oldPaymentData.studentLevel || 'Level belum diatur'
+                };
+
+                await updateDoc(studentRef, { spp: updatedSppData });
+                alert('Pembayaran SPP berhasil diperbarui!');
+                editSppModal.style.display = 'none';
+                await loadAllData();
+            } catch (error) {
+                console.error("Gagal memperbarui pembayaran SPP:", error);
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        window.deleteSppPayment = async function() {
+            if (!confirm('Apakah Anda yakin ingin menghapus pembayaran ini?')) return;
+            
+            const studentId = document.getElementById('editSppStudentId').value;
+            const yearMonthKey = document.getElementById('editSppYearMonthKey').value;
+            
+            try {
+                const studentRef = doc(db, "students", studentId);
+                const updateData = {};
+                updateData[`spp.${yearMonthKey}`] = deleteField();
+                
+                await updateDoc(studentRef, updateData);
+                alert('Pembayaran SPP berhasil dihapus!');
+                editSppModal.style.display = 'none';
+                await loadAllData();
+            } catch (error) {
+                console.error("Gagal menghapus pembayaran SPP:", error);
+                alert(`Error: ${error.message}`);
+            }
+        };
+
         function updatePaginationControls(type, current, total) {
             let pageDisplay, totalDisplay, prevBtn, nextBtn;
             if (type === 'spp') {
@@ -1801,6 +2113,8 @@ Terima kasih.`;
 
         function setupEventListeners() {
             document.getElementById('sppPaymentForm').addEventListener('submit', handleAddPayment);
+            document.getElementById('editSppForm').addEventListener('submit', handleUpdateSppPayment);
+            document.getElementById('editNonSppForm').addEventListener('submit', handleUpdateNonSppPayment);
             document.getElementById('studentFilterSearchBox').addEventListener('input', () => {
                 const searchBoxValue = document.getElementById('studentFilterSearchBox').value;
                 const studentFilterValue = document.getElementById('studentFilter').value;
@@ -1835,6 +2149,8 @@ Terima kasih.`;
             });
             setupNominalInput('nominal');
             setupNominalInput('otherNominal');
+            setupNominalInput('editSppNominal');
+            setupNominalInput('editNonSppNominal');
 
             document.getElementById('addStudentForm').addEventListener('submit', handleAddStudent);
             document.getElementById('selectAllBulkCheckbox').addEventListener('click', (e) => {
@@ -1868,6 +2184,10 @@ Terima kasih.`;
             document.getElementById('otherRowsPerPage').addEventListener('change', (e) => {
                 otherRowsPerPage = parseInt(e.target.value, 10);
                 otherCurrentPage = 1; renderOtherPaymentsTable(filterNonSppData()); 
+            });
+            document.getElementById('otherBankFilter').addEventListener('change', () => {
+                otherCurrentPage = 1;
+                renderOtherPaymentsTable(filterNonSppData());
             });
             document.getElementById('levelFilterSelector').addEventListener('change', () => {
                 studentCurrentPage = 1;
@@ -1935,6 +2255,9 @@ Terima kasih.`;
             let fileNameSuffix;
             let title;
             let message = '';
+            
+            const now = new Date();
+            const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
 
             if (selectedMonth === 'all') {
                 paymentsToPrint = Object.keys(paymentsForYear)
@@ -1949,7 +2272,7 @@ Terima kasih.`;
                 title = `Bukti Pembayaran SPP Tahun ${selectedYear}`;
                 const totalNominal = paymentsToPrint.reduce((sum, p) => sum + p.data.nominal, 0);
                 const totalNominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal);
-                const rincianPembayaran = paymentsToPrint.map(p => `• ${monthNames[p.monthIndex]}: ${new Intl.NumberBakanhumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(p.data.nominal)}`).join('\n');
+                const rincianPembayaran = paymentsToPrint.map(p => `• ${monthNames[p.monthIndex]}: ${new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(p.data.nominal)}`).join('\n');
                 
                 message = whatsappTemplateText
                     .replace(/{nama_siswa}/g, studentName)
@@ -2010,7 +2333,8 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 });
                 yPos = doc.autoTable.previous.finalY + 10;
                 doc.text(`Total Terbayar: ${new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal)}`, 14, yPos);
-                const fileName = `Bukti_Bayar_SPP_${studentName.replace(/ /g, '_')}_${fileNameSuffix}.pdf`;
+                
+                const fileName = `Bukti_Bayar_SPP_${studentName.replace(/ /g, '_')}_${fileNameSuffix}_${timestamp}.pdf`;
                 
                 message = message.replace(/{nama_file}/g, fileName);
                 
@@ -2043,75 +2367,6 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             } else {
                 addContentAndSave();
             }
-        }
-        window.exportToExcel = function() {
-            const selectedStudentId = document.getElementById('studentFilter').value;
-            const selectedYear = document.getElementById('yearFilter').value;
-            let fileName = `Laporan_SPP_${selectedYear === 'all' ? 'Semua_Tahun' : selectedYear}`;
-            const filteredStudents = allStudents.filter(student => {
-                let matchesStudent = selectedStudentId === 'all' || student.id === selectedStudentId;
-                if (selectedYear === 'all') {
-                    return matchesStudent && student.spp && Object.keys(student.spp).length > 0;
-                } else {
-                    return matchesStudent && Object.keys(student.spp || {}).some(key => key.startsWith(selectedYear));
-                }
-            });
-            if (selectedStudentId !== 'all') {
-                const studentName = allStudents.find(s => s.id === selectedStudentId)?.name || 'Siswa_Tidak_Ditemukan';
-                fileName = `Laporan_SPP_${studentName}_${selectedYear === 'all' ? 'Semua_Tahun' : selectedYear}`;
-            }
-            const yearsToExport = selectedYear === 'all' ? allYearsWithPayments : [selectedYear];
-            const headerNames = ['Nama Siswa'];
-            yearsToExport.forEach(year => {
-                monthNames.forEach(month => {
-                    headerNames.push(`${month} ${year}`);
-                });
-            });
-            const bodyData = filteredStudents.map(student => {
-                const rowData = [];
-                rowData.push(student.name);
-                const studentSpp = student.spp || {};
-                yearsToExport.forEach(year => {
-                    monthNames.forEach((month, monthIndex) => {
-                        const key = `${year}-${monthIndex}`;
-                        const paymentData = studentSpp[key];
-                        if (paymentData) {
-                            const nominalFormatted = new Intl.NumberFormat('id-ID').format(paymentData.nominal);
-                            const paymentDate = (paymentData.date && typeof paymentData.date.toDate === 'function') ? paymentData.date.toDate() : new Date(paymentData.date);
-                            const dateFormatted = paymentDate.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                            rowData.push(`Rp ${nominalFormatted} (${dateFormatted})`);
-                        } else {
-                            rowData.push('');
-                        }
-                    });
-                });
-                return rowData;
-            });
-            const table = document.createElement('table');
-            const thead = table.createTHead();
-            const headerRow = thead.insertRow();
-            headerNames.forEach(headerText => {
-                const th = document.createElement('th');
-                th.textContent = headerText;
-                headerRow.appendChild(th);
-            });
-            const tbody = table.createTBody();
-            bodyData.forEach(rowData => {
-                const row = tbody.insertRow();
-                rowData.forEach(cellData => {
-                    const cell = row.insertCell();
-                    cell.textContent = cellData;
-                });
-            });
-            const uri = 'data:application/vnd.ms-excel;base64,';
-            const template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table>' + table.innerHTML + '</table></body></html>';
-            const base64 = btoa(unescape(encodeURIComponent(template)));
-            const link = document.createElement('a');
-            link.href = uri + base64;
-            link.download = `${fileName}.xls`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
         window.openWhatsappSettings = function() {
             settingsModal.style.display = 'flex';
@@ -2184,9 +2439,17 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
         function populateNonSppSelectors() {
             const bankSelector = document.getElementById('otherBankSelector');
             const yearFilter = document.getElementById('otherYearFilter');
-            bankSelector.innerHTML = '<option value="">Pilih Bank</option>';
+            const otherBankFilter = document.getElementById('otherBankFilter');
+
+            let bankOptions = '<option value="all">Semua Bank</option>';
             for (const bankName in bankColors) {
-                bankSelector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
+                bankOptions += `<option value="${bankName}">${bankName}</option>`;
+            }
+            if (bankSelector) {
+                bankSelector.innerHTML = '<option value="">Pilih Bank</option>' + bankOptions;
+            }
+            if (otherBankFilter) {
+                otherBankFilter.innerHTML = bankOptions;
             }
             const years = new Set(allOtherPayments
                 .filter(p => p.timestamp && typeof p.timestamp.toDate === 'function')
@@ -2274,6 +2537,11 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             setupNominalInput('otherNominal');
             document.getElementById('summaryYearFilter').addEventListener('change', populateNonSppSummaryDashboard);
             document.getElementById('summaryMonthFilter').addEventListener('change', populateNonSppSummaryDashboard);
+            document.getElementById('editNonSppForm').addEventListener('submit', handleUpdateNonSppPayment);
+            document.getElementById('otherBankFilter').addEventListener('change', () => {
+                otherCurrentPage = 1;
+                renderOtherPaymentsTable(filterNonSppData());
+            });
         }
         async function handleAddOtherPayment(e) {
             e.preventDefault();
@@ -2284,7 +2552,9 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             const bank = document.getElementById('otherBankSelector').value;
             const paymentDate = document.getElementById('otherPaymentDate').value;
             const keterangan = document.getElementById('otherKeterangan').value;
+            const attachmentFile = document.getElementById('otherAttachment').files[0];
             const statusMessageDiv = document.getElementById('otherStatusMessage');
+            
             if (!studentId || isNaN(nominal) || !bank || !paymentDate || !keterangan) {
                 statusMessageDiv.textContent = 'Semua field harus diisi.';
                 statusMessageDiv.style.color = 'red';
@@ -2293,10 +2563,28 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             statusMessageDiv.textContent = 'Menyimpan laporan...';
             statusMessageDiv.style.color = 'blue';
             try {
+                let attachmentBase64 = '';
+                if (attachmentFile) {
+                    if (attachmentFile.size > 3 * 1024 * 1024) {
+                        statusMessageDiv.textContent = 'Error: Ukuran file terlalu besar. Maksimum 3MB.';
+                        statusMessageDiv.style.color = 'red';
+                        return;
+                    }
+                    if (attachmentFile.type.startsWith('image/')) {
+                        attachmentBase64 = await compressImage(attachmentFile, 0.2); // Menggunakan kompresi default
+                    } else if (attachmentFile.type === 'application/pdf') {
+                        attachmentBase64 = await getBase64(attachmentFile);
+                    } else {
+                        statusMessageDiv.textContent = 'Error: Jenis file tidak didukung.';
+                        statusMessageDiv.style.color = 'red';
+                        return;
+                    }
+                }
                 const docData = {
                     timestamp: Timestamp.fromDate(new Date(paymentDate)),
                     studentId, siswa: studentName, keterangan, bank, nominal,
-                    bendaharaEmail: auth.currentUser.email
+                    bendaharaEmail: auth.currentUser.email,
+                    attachmentBase64: attachmentBase64
                 };
                 await addDoc(collection(db, "other_payments"), docData);
                 statusMessageDiv.textContent = 'Laporan berhasil disimpan!';
@@ -2312,17 +2600,15 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
         function filterNonSppData() {
             const studentId = document.getElementById('otherStudentFilter').value;
             const year = document.getElementById('otherYearFilter').value;
+            const bank = document.getElementById('otherBankFilter').value;
+
             return allOtherPayments.filter(p => {
-                const matchesStudent = (studentId === 'all' || p.studentId === studentId);
-                let matchesYear = true;
-                if (year !== 'all') {
-                    if (p.timestamp && typeof p.timestamp.toDate === 'function') {
-                        matchesYear = p.timestamp.toDate().getFullYear() == year;
-                    } else {
-                        matchesYear = false; 
-                    }
-                }
-                return matchesStudent && matchesYear;
+                const paymentDate = p.timestamp ? p.timestamp.toDate() : null;
+                let matchesStudent = (studentId === 'all' || p.studentId === studentId);
+                let matchesYear = year === 'all' || (paymentDate && paymentDate.getFullYear() == year);
+                let matchesBank = bank === 'all' || p.bank === bank;
+
+                return matchesStudent && matchesYear && matchesBank;
             });
         }
         function renderOtherPaymentsTable(data) {
@@ -2332,7 +2618,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             const paginatedData = data.slice((otherCurrentPage - 1) * otherRowsPerPage, otherCurrentPage * otherRowsPerPage);
             tableBody.innerHTML = '';
             if (paginatedData.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="6" class="no-data">Tidak ada laporan yang cocok dengan filter.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="8" class="no-data">Tidak ada laporan yang cocok dengan filter.</td></tr>';
             } else {
                 paginatedData
                     .sort((a, b) => {
@@ -2345,19 +2631,110 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                             ? item.timestamp.toDate().toLocaleDateString('id-ID')
                             : '<i style="color:red;">Tgl Invalid</i>';
                         const row = tableBody.insertRow();
+                        
+                        let attachmentLink = 'N/A';
+                        if (item.attachmentBase64) {
+                            const detailsJson = encodeURIComponent(JSON.stringify({
+                                nominal: item.nominal,
+                                bank: item.bank,
+                                date: dateString,
+                                keterangan: item.keterangan,
+                                attachmentBase64: item.attachmentBase64,
+                            }));
+                            attachmentLink = `<a href="#" onclick="event.preventDefault(); showPaymentDetails('${detailsJson}')">Lihat Bukti</a>`;
+                        }
+
                         row.innerHTML = `
                             <td class="checkbox-cell"><input type="checkbox" class="report-checkbox" data-id="${item.id}"></td>
                             <td>${dateString}</td>
                             <td>${item.siswa || '-'}</td>
                             <td>${item.keterangan || '-'}</td>
+                            <td>${attachmentLink}</td>
                             <td>${item.bank || '-'}</td>
                             <td>Rp ${new Intl.NumberFormat('id-ID').format(item.nominal || 0)}</td>
+                            <td><button type="button" class="action-btn-edit" onclick="openPinModal('nonspp', '${item.id}')">Edit</button></td>
                         `;
                     });
             }
             updatePaginationControls('non-spp', otherCurrentPage, totalPages);
             document.getElementById('selectAllCheckbox').checked = false;
         }
+
+        async function openEditNonSppModal(paymentId) {
+            const payment = allOtherPayments.find(p => p.id === paymentId);
+            if (!payment) return;
+            document.getElementById('editNonSppId').value = paymentId;
+            document.getElementById('editNonSppStudentName').value = payment.siswa || 'Tidak Diketahui';
+            document.getElementById('editNonSppNominal').value = new Intl.NumberFormat('id-ID').format(payment.nominal);
+            document.getElementById('editNonSppBank').value = payment.bank;
+            document.getElementById('editNonSppPaymentDate').value = (payment.timestamp && typeof payment.timestamp.toDate === 'function') ? payment.timestamp.toDate().toISOString().slice(0, 10) : '';
+            document.getElementById('editNonSppKeterangan').value = payment.keterangan;
+            document.getElementById('editNonSppAttachment').value = '';
+
+            setupNominalInput('editNonSppNominal');
+            editNonSppModal.style.display = 'flex';
+        }
+
+        async function handleUpdateNonSppPayment(e) {
+            e.preventDefault();
+            const paymentId = document.getElementById('editNonSppId').value;
+            const nominalInput = document.getElementById('editNonSppNominal').value;
+            const nominal = parseFloat(nominalInput.replace(/\./g, ''));
+            const bank = document.getElementById('editNonSppBank').value;
+            const paymentDate = document.getElementById('editNonSppPaymentDate').value;
+            const keterangan = document.getElementById('editNonSppKeterangan').value;
+            const attachmentFile = document.getElementById('editNonSppAttachment').files[0];
+            const compressionQuality = 0.2; // Nilai kompresi default
+            
+            if (isNaN(nominal) || nominal <= 0 || !bank || !paymentDate || !keterangan) {
+                alert('Semua field wajib diisi.');
+                return;
+            }
+
+            try {
+                const oldPayment = allOtherPayments.find(p => p.id === paymentId);
+                let newAttachmentBase64 = oldPayment.attachmentBase64; // Ambil nilai lama sebagai default
+                
+                if (attachmentFile) {
+                    if (attachmentFile.type.startsWith('image/')) {
+                        newAttachmentBase64 = await compressImage(attachmentFile, compressionQuality);
+                    } else if (attachmentFile.type === 'application/pdf') {
+                        newAttachmentBase64 = await getBase64(attachmentFile);
+                    }
+                }
+                
+                const updatedData = {
+                    nominal: nominal,
+                    bank: bank,
+                    timestamp: Timestamp.fromDate(new Date(paymentDate)),
+                    keterangan: keterangan,
+                    attachmentBase64: newAttachmentBase64 // Gunakan nilai yang sudah dipastikan valid
+                };
+
+                await updateDoc(doc(db, "other_payments", paymentId), updatedData);
+                alert('Laporan Non-SPP berhasil diperbarui!');
+                editNonSppModal.style.display = 'none';
+                await loadNonSppData();
+            } catch (error) {
+                console.error("Gagal memperbarui laporan Non-SPP:", error);
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        window.deleteNonSppPayment = async function() {
+            if (!confirm('Apakah Anda yakin ingin menghapus laporan ini?')) return;
+            const paymentId = document.getElementById('editNonSppId').value;
+            try {
+                await deleteDoc(doc(db, "other_payments", paymentId));
+                alert('Laporan Non-SPP berhasil dihapus!');
+                editNonSppModal.style.display = 'none';
+                await loadNonSppData();
+            } catch (error) {
+                console.error("Gagal menghapus laporan Non-SPP:", error);
+                alert(`Error: ${error.message}`);
+            }
+        };
+
         window.generateAndSendSelectedOtherPaymentProof = async function() {
             const selectedCheckboxes = document.querySelectorAll('.report-checkbox:checked');
             if (selectedCheckboxes.length === 0) return alert('Harap centang setidaknya satu laporan.');
@@ -2392,7 +2769,11 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                         return [dateString, p.keterangan, p.bank, `Rp ${new Intl.NumberFormat('id-ID').format(p.nominal)}`];
                     })
                 });
-                const fileName = `Laporan_Non-SPP_${student.name.replace(/ /g, '_')}.pdf`;
+                
+                const now = new Date();
+                const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+                const fileName = `Laporan_Non-SPP_${student.name.replace(/ /g, '_')}_${timestamp}.pdf`;
+                
                 const message = `Halo, ini rincian laporan non-SPP untuk *${student.name}*.\n\n*Mohon lampirkan file PDF "${fileName}" yang baru saja Anda unduh.*`;
                 
                 const encodedMessage = encodeURIComponent(message);
