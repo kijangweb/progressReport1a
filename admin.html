@@ -258,6 +258,44 @@
         align-self: flex-end;
       }
     }
+
+    /* New styles for responsive export filters */
+    .export-filters {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .export-filters .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .export-filters label {
+      font-weight: bold;
+    }
+    .export-filters select,
+    .export-filters button {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    @media (min-width: 768px) {
+      .export-filters {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+      .export-filters .filter-group {
+        flex: 1;
+        min-width: 150px;
+      }
+      .export-filters button {
+        flex: 0;
+        width: auto;
+        align-self: flex-end;
+        margin-bottom: 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -275,6 +313,7 @@
       <button class="tab-btn" onclick="openTab('kurikulum-tab')">Kurikulum</button>
       <button class="tab-btn" onclick="openTab('bank-tab')">Manajemen Bank</button>
       <button class="tab-btn" onclick="openTab('maintenance-tab')">Maintenance</button>
+      <button class="tab-btn" onclick="openTab('spp-export-tab')">Export SPP</button>
     </div>
 
     <div id="pengguna-tab" class="tab-content active">
@@ -445,6 +484,55 @@
           </form>
       </div>
     </div>
+    
+    <div id="spp-export-tab" class="tab-content">
+        <div class="content-block">
+            <h3>Export Data SPP</h3>
+            <p>Gunakan filter di bawah ini untuk menentukan data SPP yang akan diexport.</p>
+            <div class="export-filters">
+                <div class="filter-group">
+                    <label for="exportCoachSelector">Pilih Coach:</label>
+                    <select id="exportCoachSelector"></select>
+                </div>
+                <div class="filter-group">
+                    <label for="exportStudentSelector">Pilih Siswa:</label>
+                    <select id="exportStudentSelector"></select>
+                </div>
+                <div class="filter-group">
+                    <label for="exportBankSelector">Pilih Bank:</label>
+                    <select id="exportBankSelector"></select>
+                </div>
+                <div class="filter-group">
+                    <label for="exportYearSelector">Pilih Tahun:</label>
+                    <select id="exportYearSelector"></select>
+                </div>
+                <div class="filter-group">
+                    <label for="exportMonthSelector">Pilih Bulan:</label>
+                    <select id="exportMonthSelector">
+                        <option value="all">Semua Bulan</option>
+                        <option value="0">Januari</option>
+                        <option value="1">Februari</option>
+                        <option value="2">Maret</option>
+                        <option value="3">April</option>
+                        <option value="4">Mei</option>
+                        <option value="5">Juni</option>
+                        <option value="6">Juli</option>
+                        <option value="7">Agustus</option>
+                        <option value="8">September</option>
+                        <option value="9">Oktober</option>
+                        <option value="10">November</option>
+                        <option value="11">Desember</option>
+                    </select>
+                </div>
+                <button type="button" class="btn" onclick="exportSppData()">Export ke Excel</button>
+            </div>
+            <div id="exportStatusMessage" style="margin-top: 10px;"></div>
+            
+            <div style="display:none;">
+                <table id="exportTable" border="1"></table>
+            </div>
+        </div>
+    </div>
   </div>
   
   <div id="editUserModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Pengguna</h2><span class="close-btn">&times;</span></div><form id="editUserForm"><div class="modal-body"><p>Email: <strong id="editUserEmail"></strong></p><input type="hidden" id="editUserId"><div class="form-group"><label for="editFullName">Nama Lengkap</label><input type="text" id="editFullName" placeholder="Masukkan nama lengkap"></div><div class="form-group"><label for="editPhoneNumber">No. Telepon</label><input type="tel" id="editPhoneNumber" placeholder="Contoh: 08123456789"></div><div class="form-group" id="editUserLevelGroup"><label for="editUserLevel">Level (untuk Coach)</label><input type="text" id="editUserLevel" placeholder="Contoh: Master"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
@@ -493,6 +581,8 @@
     
     const pinStatusMessageDiv = document.getElementById('pinStatusMessage');
     let appEditPin = '';
+    let allYearsWithPayments = [];
+    let allBankNames = [];
 
     window.logout = function() { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
 
@@ -555,8 +645,11 @@
 
         allUsers = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allBanks = {};
-        bankSnapshot.forEach(doc => { allBanks[doc.id] = {id: doc.id, ...doc.data()}; });
+        bankSnapshot.forEach(doc => { 
+            allBanks[doc.id] = {id: doc.id, ...doc.data()}; 
+        });
         allLevels = curriculumSnapshot.docs.map(doc => doc.id).sort();
+        allBankNames = Object.values(allBanks).map(b => b.bankName);
         
         renderUserTable();
         renderBankTable();
@@ -567,6 +660,7 @@
         setupEventListeners();
         loadBranding();
         loadPin(); 
+        populateExportSelectors();
         openTab(currentTab);
       } catch (error) {
         console.error("ERROR di dalam loadAllData:", error);
@@ -985,6 +1079,13 @@
       if(syncCountBtn) syncCountBtn.addEventListener('click', syncStudentCount);
       const pinForm = document.getElementById('pinForm');
       if (pinForm) pinForm.addEventListener('submit', handlePinForm);
+      
+      // New export selectors listeners
+      document.getElementById('exportCoachSelector').addEventListener('change', populateExportStudentSelector);
+      document.getElementById('exportStudentSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
+      document.getElementById('exportBankSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
+      document.getElementById('exportYearSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
+      document.getElementById('exportMonthSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
     }
     function updateUserPagination(totalItems) {
       const rowsPerPage = parseInt(document.getElementById('userRowsPerPage').value, 10);
@@ -1159,6 +1260,8 @@
         renderBankTable();
       } else if (tabName === 'maintenance-tab') {
         loadSppYearsForDeletion();
+      } else if (tabName === 'spp-export-tab') {
+        populateExportSelectors();
       }
     }
     
@@ -1263,6 +1366,164 @@
       document.getElementById('editBankName').value = bank.bankName;
       document.getElementById('editBankColor').value = bank.color;
       document.getElementById('editBankModal').style.display = 'block';
+    };
+    
+    function populateExportSelectors() {
+        const coachSelector = document.getElementById('exportCoachSelector');
+        const studentSelector = document.getElementById('exportStudentSelector');
+        const bankSelector = document.getElementById('exportBankSelector');
+        const yearSelector = document.getElementById('exportYearSelector');
+
+        // Populate Coach Selector
+        const activeCoaches = allUsers.filter(u => u.role === 'user' && (u.status || 'active') === 'active');
+        coachSelector.innerHTML = '<option value="all">Semua Coach</option>';
+        activeCoaches.forEach(coach => {
+            coachSelector.innerHTML += `<option value="${coach.id}">${coach.name}</option>`;
+        });
+
+        // Populate Student Selector (initially with all students)
+        studentSelector.innerHTML = '<option value="all">Semua Siswa</option>';
+        allStudents.forEach(student => {
+            studentSelector.innerHTML += `<option value="${student.id}">${student.name}</option>`;
+        });
+
+        // Populate Bank Selector
+        bankSelector.innerHTML = '<option value="all">Semua Bank</option>';
+        Object.values(allBanks).forEach(bank => {
+             bankSelector.innerHTML += `<option value="${bank.bankName}">${bank.bankName}</option>`;
+        });
+        
+        // Populate Year Selector
+        const years = new Set();
+        allStudents.forEach(student => {
+            if (student.spp) {
+                Object.keys(student.spp).forEach(key => {
+                    const year = key.split('-')[0];
+                    if (year) {
+                        years.add(parseInt(year));
+                    }
+                });
+            }
+        });
+        allYearsWithPayments = Array.from(years).sort((a, b) => b - a);
+        yearSelector.innerHTML = '<option value="all">Semua Tahun</option>';
+        allYearsWithPayments.forEach(year => {
+            yearSelector.innerHTML += `<option value="${year}">${year}</option>`;
+        });
+    }
+
+    function populateExportStudentSelector() {
+        const coachFilter = document.getElementById('exportCoachSelector').value;
+        const studentSelector = document.getElementById('exportStudentSelector');
+        studentSelector.innerHTML = '<option value="all">Semua Siswa</option>';
+        
+        const filteredStudents = allStudents.filter(s => coachFilter === 'all' || s.coachEmail === coachFilter);
+        filteredStudents.forEach(student => {
+            studentSelector.innerHTML += `<option value="${student.id}">${student.name}</option>`;
+        });
+    }
+
+    window.exportSppData = function() {
+        const coachFilter = document.getElementById('exportCoachSelector').value;
+        const studentFilter = document.getElementById('exportStudentSelector').value;
+        const bankFilter = document.getElementById('exportBankSelector').value;
+        const yearFilter = document.getElementById('exportYearSelector').value;
+        const monthFilter = document.getElementById('exportMonthSelector').value;
+        const statusDiv = document.getElementById('exportStatusMessage');
+
+        statusDiv.textContent = 'Memproses data...';
+        statusDiv.style.color = 'blue';
+
+        let filteredStudents = allStudents.filter(student => {
+            let matchesCoach = coachFilter === 'all' || student.coachEmail === coachFilter;
+            let matchesStudent = studentFilter === 'all' || student.id === studentFilter;
+            return matchesCoach && matchesStudent && student.spp;
+        });
+
+        if (filteredStudents.length === 0) {
+            statusDiv.textContent = 'Tidak ada data yang cocok dengan filter.';
+            statusDiv.style.color = 'red';
+            return;
+        }
+
+        const exportTable = document.getElementById('exportTable');
+        let tableHTML = "<table border='1'><thead><tr><th>No</th><th>Nama Siswa</th><th>Coach</th><th>Tanggal Bayar</th><th>Tahun</th><th>Bulan</th><th>Nominal (Rp)</th><th>Bank</th></tr></thead><tbody>";
+        let rowNum = 1;
+        let foundPayments = false;
+
+        filteredStudents.forEach(student => {
+            const coachName = allUsers.find(u => u.id === student.coachEmail)?.name || 'N/A';
+            const studentSpp = student.spp || {};
+
+            const paymentKeys = Object.keys(studentSpp);
+
+            paymentKeys.forEach(key => {
+                const payment = studentSpp[key];
+                const [paymentYear, paymentMonth] = key.split('-');
+
+                const matchesYear = yearFilter === 'all' || paymentYear === yearFilter;
+                const matchesMonth = monthFilter === 'all' || paymentMonth === monthFilter;
+                const matchesBank = bankFilter === 'all' || payment.bank === bankFilter;
+
+                if (matchesYear && matchesMonth && matchesBank) {
+                    foundPayments = true;
+                    const nominalFormatted = new Intl.NumberFormat('id-ID').format(payment.nominal);
+                    const paymentDate = (payment.date && typeof payment.date.toDate === 'function') ? payment.date.toDate().toLocaleDateString('id-ID') : 'N/A';
+                    const monthName = monthNames[parseInt(paymentMonth)];
+
+                    tableHTML += `
+                        <tr>
+                            <td>${rowNum++}</td>
+                            <td>${student.name}</td>
+                            <td>${coachName}</td>
+                            <td>${paymentDate}</td>
+                            <td>${paymentYear}</td>
+                            <td>${monthName}</td>
+                            <td>${nominalFormatted}</td>
+                            <td>${payment.bank}</td>
+                        </tr>
+                    `;
+                }
+            });
+        });
+
+        if (!foundPayments) {
+            statusDiv.textContent = 'Tidak ada pembayaran yang cocok dengan kombinasi filter yang dipilih.';
+            statusDiv.style.color = 'orange';
+            return;
+        }
+
+        tableHTML += "</tbody></table>";
+        exportTable.innerHTML = tableHTML;
+
+        // Use the export logic from the provided reference file
+        const table = document.getElementById('exportTable');
+        let tableToExport = "<table border='1'>";
+        for (let i = 0; i < table.rows.length; i++) {
+            tableToExport += "<tr>";
+            for (let j = 0; j < table.rows[i].cells.length; j++) {
+                const cell = table.rows[i].cells[j];
+                if (cell.tagName === "TH") {
+                    tableToExport += "<th>" + cell.innerText + "</th>";
+                } else {
+                    tableToExport += "<td>" + cell.innerText + "</td>";
+                }
+            }
+            tableToExport += "</tr>";
+        }
+        tableToExport += "</table>";
+        tableToExport = tableToExport.replace(/ /g, '%20');
+
+        const downloadLink = document.createElement("a");
+        downloadLink.href = 'data:application/vnd.ms-excel,' + tableToExport;
+        downloadLink.download = 'Laporan_SPP.xls';
+
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        statusDiv.textContent = 'Data berhasil diexport!';
+        statusDiv.style.color = 'green';
     };
   </script>
 </body>
