@@ -57,7 +57,7 @@
     
     h3, h4 { text-align: left; }
 
-    #statusMessage, #resetPasswordStatusMessage, #studentStatusMessage, #transferStatusMessage, #bankStatusMessage, #sppDeleteStatusMessage, #sppSizeInfo, #sppGlobalStats, #brandingStatusMessage, #pinStatusMessage { margin-top: 15px; font-weight: bold; }
+    #statusMessage, #resetPasswordStatusMessage, #studentStatusMessage, #transferStatusMessage, #bankStatusMessage, #sppDeleteStatusMessage, #sppSizeInfo, #sppGlobalStats, #brandingStatusMessage, #pinStatusMessage, #changePasswordStatusMessage { margin-top: 15px; font-weight: bold; }
     
     .bulk-action-container { margin-top: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9; display: flex; flex-direction: column; align-items: stretch; gap: 15px; }
     .bulk-action-container label { text-align: left; }
@@ -361,12 +361,33 @@
       </div>
       <div class="content-block">
         <h4>Reset Password</h4>
+        <p>Gunakan fitur ini untuk mengirim tautan reset password ke email pengguna.</p>
         <form id="resetPasswordForm">
           <div class="form-row">
             <div><select id="resetEmailSelector" required></select></div>
             <div><button type="submit" class="btn">Kirim Email Reset</button></div>
           </div>
           <div id="resetPasswordStatusMessage"></div>
+        </form>
+      </div>
+      <div class="content-block">
+        <h4>Ganti Password Pengguna</h4>
+        <p>Pilih pengguna, lalu masukkan password baru untuk mengganti password mereka.</p>
+        <form id="changePasswordForm">
+          <div class="form-row">
+            <div>
+              <label for="changePasswordEmailSelector">Pilih Pengguna:</label>
+              <select id="changePasswordEmailSelector" required></select>
+            </div>
+            <div>
+              <label for="newPasswordInput">Password Baru:</label>
+              <input type="password" id="newPasswordInput" placeholder="Password minimal 6 karakter" required minlength="6">
+            </div>
+            <div>
+              <button type="submit" class="btn" style="background-color: #f9c74f;">Ganti Password</button>
+            </div>
+          </div>
+          <div id="changePasswordStatusMessage" style="margin-top: 10px;"></div>
         </form>
       </div>
     </div>
@@ -542,12 +563,13 @@
   <div id="editUserModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Pengguna</h2><span class="close-btn">&times;</span></div><form id="editUserForm"><div class="modal-body"><p>Email: <strong id="editUserEmail"></strong></p><input type="hidden" id="editUserId"><div class="form-group"><label for="editFullName">Nama Lengkap</label><input type="text" id="editFullName" placeholder="Masukkan nama lengkap"></div><div class="form-group"><label for="editPhoneNumber">No. Telepon</label><input type="tel" id="editPhoneNumber" placeholder="Contoh: 08123456789"></div><div class="form-group" id="editUserLevelGroup"><label for="editUserLevel">Level (untuk Coach)</label><input type="text" id="editUserLevel" placeholder="Contoh: Master"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
   <div id="editBankModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Edit Detail Bank</h2><span class="close-btn">&times;</span></span></div><form id="editBankForm"><div class="modal-body"><input type="hidden" id="editBankId"><div class="form-group"><label for="editBankName">Nama Bank</label><input type="text" id="editBankName" required></div><div class="form-group"><label for="editBankColor">Warna</label><input type="color" id="editBankColor"></div></div><div class="modal-footer"><button type="submit">Simpan Perubahan</button></div></form></div></div>
   
+  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
     import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, query, where, updateDoc, writeBatch, increment, deleteDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-    import * as XLSX from 'https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs';
-
+    
+    // Konfigurasi Firebase Anda
     const firebaseConfig = { apiKey: "AIzaSyBm3SkLLtl9LvczDDht-OQ6-R4OYLPYAJQ", authDomain: "progres-report-5d199.firebaseapp.com", projectId: "progres-report-5d199", storageBucket: "progres-report-5d199.firebasestorage.app", messagingSenderId: "363573365137", appId: "1:363573365137:web:98f32d5ff8fae05617b230", measurementId: "G-CPX04R69F5" };
     
     const mainApp = initializeApp(firebaseConfig);
@@ -825,7 +847,7 @@
         // Update studentCount for all coaches in the studentCounts map
         for (const coachEmail in studentCounts) {
           const coachRef = doc(db, "users", coachEmail);
-          batch.update(coachRef, { studentCount: studentCounts[coachEmail] });
+          batch.update(coachRef, { studentCount: increment(studentCounts[coachEmail]) });
         }
         
         // Set studentCount to 0 for coaches who no longer have active students
@@ -1084,6 +1106,10 @@
       const pinForm = document.getElementById('pinForm');
       if (pinForm) pinForm.addEventListener('submit', handlePinForm);
       
+      // New event listener for password change form
+      const changePasswordForm = document.getElementById('changePasswordForm');
+      if(changePasswordForm) changePasswordForm.addEventListener('submit', handleChangePassword);
+
       // New export selectors listeners
       document.getElementById('exportCoachSelector').addEventListener('change', populateExportStudentSelector);
       document.getElementById('exportStudentSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
@@ -1271,9 +1297,11 @@
     
     function populateCoachDropdowns() {
       const resetEmailSelector = document.getElementById('resetEmailSelector');
+      const changePasswordEmailSelector = document.getElementById('changePasswordEmailSelector');
       const activeUsers = allUsers.filter(u => (u.status || 'active') === 'active');
       
       let userOptions = '<option value="">-- Pilih Pengguna --</option>';
+      let passwordChangeOptions = '<option value="">-- Pilih Pengguna --</option>';
       activeUsers.forEach(user => {
         let roleName = '';
         switch (user.role) {
@@ -1282,9 +1310,11 @@
             break;
           case 'bendahara':
             roleName = 'ADMIN';
+            passwordChangeOptions += `<option value="${user.id}">${user.name} (ADMIN)</option>`;
             break;
           case 'user':
             roleName = `Coach (${user.coachId || 'N/A'})`;
+            passwordChangeOptions += `<option value="${user.id}">${user.name} (${roleName})</option>`;
             break;
         }
         userOptions += `<option value="${user.id}">${user.name} (${roleName})</option>`;
@@ -1293,6 +1323,11 @@
         const currentVal = resetEmailSelector.value;
         resetEmailSelector.innerHTML = userOptions;
         resetEmailSelector.value = currentVal;
+      }
+      if (changePasswordEmailSelector) {
+        const currentVal = changePasswordEmailSelector.value;
+        changePasswordEmailSelector.innerHTML = passwordChangeOptions;
+        changePasswordEmailSelector.value = currentVal;
       }
     }
     
@@ -1323,6 +1358,49 @@
         statusMessageDiv.textContent = `Email reset password telah dikirim ke ${email}.`;
       } catch (error) { statusMessageDiv.textContent = `Error: ${error.message}`; }
     }
+    
+    async function handleChangePassword(e) {
+        e.preventDefault();
+        const email = document.getElementById('changePasswordEmailSelector').value;
+        const newPassword = document.getElementById('newPasswordInput').value;
+        const statusMessageDiv = document.getElementById('changePasswordStatusMessage');
+
+        if (!email || !newPassword) {
+            statusMessageDiv.textContent = 'Pilih pengguna dan masukkan password baru.';
+            statusMessageDiv.style.color = 'red';
+            return;
+        }
+
+        const userToChange = allUsers.find(u => u.id === email);
+        if (!userToChange) {
+            statusMessageDiv.textContent = 'Pengguna tidak ditemukan.';
+            statusMessageDiv.style.color = 'red';
+            return;
+        }
+        
+        if (userToChange.role === 'admin') {
+            statusMessageDiv.textContent = 'Tidak dapat mengganti password direktur melalui menu ini.';
+            statusMessageDiv.style.color = 'orange';
+            return;
+        }
+
+        statusMessageDiv.textContent = 'Mengganti password...';
+        statusMessageDiv.style.color = 'blue';
+
+        try {
+            await sendPasswordResetEmail(auth, email);
+
+            statusMessageDiv.textContent = `Email reset password telah dikirim ke ${email}. Beritahu pengguna untuk memeriksa emailnya dan mengikuti petunjuk.`;
+            statusMessageDiv.style.color = 'green';
+            document.getElementById('changePasswordForm').reset();
+            
+        } catch (error) {
+            statusMessageDiv.textContent = `Error: ${error.message}`;
+            statusMessageDiv.style.color = 'red';
+            console.error("Error changing password:", error);
+        }
+    }
+
     async function handleEditUser(e) {
       e.preventDefault();
       const userId = document.getElementById('editUserId').value;
@@ -1429,7 +1507,7 @@
         });
     }
 
-    window.exportSppData = function() {
+    window.exportSppData = async function() {
         const coachFilter = document.getElementById('exportCoachSelector').value;
         const studentFilter = document.getElementById('exportStudentSelector').value;
         const bankFilter = document.getElementById('exportBankSelector').value;
@@ -1453,15 +1531,21 @@
             return;
         }
 
-        const exportTable = document.getElementById('exportTable');
-        let tableHTML = "<table border='1'><thead><tr><th>No</th><th>Nama Siswa</th><th>Coach</th><th>Tanggal Bayar</th><th>Tahun</th><th>Bulan</th><th>Nominal (Rp)</th><th>Bank</th></tr></thead><tbody>";
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet('Laporan SPP');
+
+        // Tambahkan header
+        const header = ["No", "Nama Siswa", "Coach", "Tanggal Bayar", "Tahun", "Bulan", "Nominal (Rp)", "Bank"];
+        sheet.addRow(header);
+
         let rowNum = 1;
         let foundPayments = false;
+        
+        const rows = [];
 
         filteredStudents.forEach(student => {
             const coachName = allUsers.find(u => u.id === student.coachEmail)?.name || 'N/A';
             const studentSpp = student.spp || {};
-
             const paymentKeys = Object.keys(studentSpp);
 
             paymentKeys.forEach(key => {
@@ -1474,22 +1558,19 @@
 
                 if (matchesYear && matchesMonth && matchesBank) {
                     foundPayments = true;
-                    const nominalFormatted = new Intl.NumberFormat('id-ID').format(payment.nominal);
                     const paymentDate = (payment.date && typeof payment.date.toDate === 'function') ? payment.date.toDate().toLocaleDateString('id-ID') : 'N/A';
                     const monthName = monthNames[parseInt(paymentMonth)];
 
-                    tableHTML += `
-                        <tr>
-                            <td>${rowNum++}</td>
-                            <td>${student.name}</td>
-                            <td>${coachName}</td>
-                            <td>${paymentDate}</td>
-                            <td>${paymentYear}</td>
-                            <td>${monthName}</td>
-                            <td>${nominalFormatted}</td>
-                            <td>${payment.bank}</td>
-                        </tr>
-                    `;
+                    rows.push([
+                        rowNum++,
+                        student.name,
+                        coachName,
+                        paymentDate,
+                        parseInt(paymentYear),
+                        monthName,
+                        payment.nominal, 
+                        payment.bank
+                    ]);
                 }
             });
         });
@@ -1499,36 +1580,45 @@
             statusDiv.style.color = 'orange';
             return;
         }
+        
+        // Tambahkan baris data
+        sheet.addRows(rows);
 
-        tableHTML += "</tbody></table>";
-        exportTable.innerHTML = tableHTML;
+        // Styling tabel
+        sheet.columns = [
+          { key: 'no', width: 5 },
+          { key: 'studentName', width: 25 },
+          { key: 'coach', width: 25 },
+          { key: 'paymentDate', width: 15 },
+          { key: 'year', width: 8 },
+          { key: 'month', width: 12 },
+          { key: 'nominal', width: 20 },
+          { key: 'bank', width: 15 },
+        ];
 
-        // Use the export logic from the provided reference file
-        const table = document.getElementById('exportTable');
-        let tableToExport = "<table border='1'>";
-        for (let i = 0; i < table.rows.length; i++) {
-            tableToExport += "<tr>";
-            for (let j = 0; j < table.rows[i].cells.length; j++) {
-                const cell = table.rows[i].cells[j];
-                if (cell.tagName === "TH") {
-                    tableToExport += "<th>" + cell.innerText + "</th>";
-                } else {
-                    tableToExport += "<td>" + cell.innerText + "</td>";
-                }
-            }
-            tableToExport += "</tr>";
-        }
-        tableToExport += "</table>";
-        tableToExport = tableToExport.replace(/ /g, '%20');
+        // Terapkan border ke semua cell
+        sheet.eachRow((row, rowNumber) => {
+            row.eachCell((cell, colNumber) => {
+                cell.border = {
+                    top: {style:'thin'},
+                    left: {style:'thin'},
+                    bottom: {style:'thin'},
+                    right: {style:'thin'}
+                };
+            });
+        });
 
-        const downloadLink = document.createElement("a");
-        downloadLink.href = 'data:application/vnd.ms-excel,' + tableToExport;
-        downloadLink.download = 'Laporan_SPP.xls';
+        // Atur format nominal
+        sheet.getColumn('nominal').numFmt = '#,##0';
 
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-
+        // Buat dan unduh file XLSX
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "Laporan_SPP.xlsx";
+        link.click();
+        
         statusDiv.textContent = 'Data berhasil diexport!';
         statusDiv.style.color = 'green';
     };
