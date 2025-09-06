@@ -320,8 +320,12 @@
       <div class="content-block">
         <h3>Daftar Pengguna</h3>
         <div class="filter-controls">
-          <div><input type="checkbox" id="showDisabledUsers"><label for="showDisabledUsers">Tampilkan Pengguna Nonaktif</label></div>
-          <div><input type="checkbox" id="showCoachesOnly"><label for="showCoachesOnly">Hanya Tampilkan Coach</label></div>
+          <div>
+            <input type="checkbox" id="showDisabledUsers"><label for="showDisabledUsers">Tampilkan Pengguna Nonaktif</label>
+          </div>
+          <div>
+            <input type="checkbox" id="showCoachesOnly"><label for="showCoachesOnly">Hanya Tampilkan Coach</label>
+          </div>
           <button type="button" id="syncCountBtn" style="background-color: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Sinkronkan Jumlah Siswa</button>
         </div>
         <div class="table-container">
@@ -582,7 +586,7 @@
     const pinStatusMessageDiv = document.getElementById('pinStatusMessage');
     let appEditPin = '';
     let allYearsWithPayments = [];
-    let allBankNames = [];
+    let allActiveBankNames = [];
 
     window.logout = function() { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
 
@@ -649,7 +653,7 @@
             allBanks[doc.id] = {id: doc.id, ...doc.data()}; 
         });
         allLevels = curriculumSnapshot.docs.map(doc => doc.id).sort();
-        allBankNames = Object.values(allBanks).map(b => b.bankName);
+        allActiveBankNames = Object.values(allBanks).filter(b => (b.status || 'active') === 'active').map(b => b.bankName);
         
         renderUserTable();
         renderBankTable();
@@ -1375,10 +1379,12 @@
         const yearSelector = document.getElementById('exportYearSelector');
 
         // Populate Coach Selector
-        const activeCoaches = allUsers.filter(u => u.role === 'user' && (u.status || 'active') === 'active');
+        const activeCoaches = allUsers.filter(u => (u.status || 'active') === 'active');
         coachSelector.innerHTML = '<option value="all">Semua Coach</option>';
         activeCoaches.forEach(coach => {
-            coachSelector.innerHTML += `<option value="${coach.id}">${coach.name}</option>`;
+            if (coach.role === 'user') {
+                coachSelector.innerHTML += `<option value="${coach.id}">${coach.name}</option>`;
+            }
         });
 
         // Populate Student Selector (initially with all students)
@@ -1389,8 +1395,8 @@
 
         // Populate Bank Selector
         bankSelector.innerHTML = '<option value="all">Semua Bank</option>';
-        Object.values(allBanks).forEach(bank => {
-             bankSelector.innerHTML += `<option value="${bank.bankName}">${bank.bankName}</option>`;
+        allActiveBankNames.forEach(bankName => {
+             bankSelector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
         });
         
         // Populate Year Selector
@@ -1437,7 +1443,8 @@
         let filteredStudents = allStudents.filter(student => {
             let matchesCoach = coachFilter === 'all' || student.coachEmail === coachFilter;
             let matchesStudent = studentFilter === 'all' || student.id === studentFilter;
-            return matchesCoach && matchesStudent && student.spp;
+            const studentStatus = student.status || 'active';
+            return matchesCoach && matchesStudent && student.spp && studentStatus === 'active';
         });
 
         if (filteredStudents.length === 0) {
@@ -1462,7 +1469,7 @@
                 const [paymentYear, paymentMonth] = key.split('-');
 
                 const matchesYear = yearFilter === 'all' || paymentYear === yearFilter;
-                const matchesMonth = monthFilter === 'all' || paymentMonth === monthFilter;
+                const matchesMonth = monthFilter === 'all' || paymentMonth == monthFilter;
                 const matchesBank = bankFilter === 'all' || payment.bank === bankFilter;
 
                 if (matchesYear && matchesMonth && matchesBank) {
