@@ -89,11 +89,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             background-color: #3a75c1;
         }
-        .logout-btn, .btn-reset {
-            background-color: var(--container-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-        }
         .logout-btn:hover, .btn-reset:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -213,10 +208,6 @@
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        #clearReportFilterBtn {
-            background-color: var(--accent-color);
-            color: white;
-        }
         #clearReportFilterBtn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -251,9 +242,9 @@
             background-color: var(--background-color);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            max-height: 200px; /* Batasi tinggi maksimum */
-            overflow-y: auto;  /* Tambahkan scrollbar vertikal otomatis */
-            padding-right: 10px; /* Tambahan padding untuk scrollbar */
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 10px;
         }
         #activityCheckboxes label, #editActivityCheckboxes label {
             font-weight: normal;
@@ -379,7 +370,22 @@
         }
 
         /* Report Table */
-        .student-list-table, .report-table-container {
+        /* Kontainer khusus untuk tabel yang bisa digeser */
+        .table-scroll-wrapper {
+            overflow-x: auto;
+        }
+        /* Style untuk tabel di dalam kontainer */
+        .student-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        /* Ini adalah bagian dari file lama yang Anda berikan, saya pastikan tidak berubah */
+        .report-table-container {
             overflow-x: auto;
         }
         .report-table {
@@ -389,35 +395,39 @@
             border-radius: 8px;
             overflow: hidden;
         }
-        .report-table th, .report-table td {
+        /* Batas akhir bagian file lama */
+
+        /* Styles umum untuk kedua tabel */
+        .student-list-table th, .student-list-table td, .report-table th, .report-table td {
             border: 1px solid var(--border-color);
             padding: 15px;
             text-align: left;
             word-wrap: break-word;
         }
-        .report-table th { 
-            background-color: var(--primary-color); 
+        .student-list-table th, .report-table th {
+            background-color: var(--primary-color);
             color: white;
+            font-weight: bold;
         }
-        .report-table tr:nth-child(even) {
+        .student-list-table tr:nth-child(even), .report-table tr:nth-child(even) {
             background-color: #f6f6f6;
         }
-        .report-table tr:hover {
+        .student-list-table tr:hover, .report-table tr:hover {
             background-color: #e9f5ff;
         }
         
-        /* --- CSS UNTUK FITUR PENANDA WARNA --- */
+        /* CSS UNTUK FITUR PENANDA WARNA */
         .report-table tr.sent-report {
-            background-color: #e8f5e9; /* Hijau muda */
+            background-color: #e8f5e9;
         }
         .report-table tr.sent-report:hover {
-            background-color: #c8e6c9; /* Hijau sedikit lebih gelap saat hover */
+            background-color: #c8e6c9;
         }
         .action-btn-delete {
             padding: 8px 12px;
             border-radius: 4px;
             font-weight: normal;
-            background-color: #F44336; /* Merah */
+            background-color: var(--error-color);
             color: white;
             border: none;
             box-shadow: none;
@@ -426,7 +436,6 @@
         .action-btn-delete:hover {
             background-color: #d32f2f;
         }
-        /* --- AKHIR CSS BARU --- */
 
         /* Pagination */
         .pagination-controls {
@@ -466,7 +475,7 @@
             color: var(--text-color);
         }
 
-        /* Select2 Specific Styling (Disempurnakan) */
+        /* Select2 Specific Styling */
         .select2-container {
             width: 100% !important;
             box-sizing: border-box;
@@ -545,6 +554,7 @@
             background-color: #e6e6e6 !important;
             color: var(--text-color) !important;
         }
+        
         /* Media Queries untuk Desktop */
         @media (min-width: 768px) {
             .header-info {
@@ -573,8 +583,14 @@
             #clearReportFilterBtn, #sendPdfBtn { width: auto; }
             #activityCheckboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
 
-            .report-table-container { overflow-x: unset; }
-            .report-table { display: table; table-layout: fixed; white-space: normal; width: 100%; }
+            .table-scroll-wrapper, .report-table-container {
+                overflow-x: unset;
+            }
+            .student-list-table, .report-table { 
+                table-layout: fixed;
+                white-space: normal;
+                width: 100%;
+            }
             .report-table th, .report-table td { min-width: unset; }
 
             .report-table .col-sesi { width: 5%; text-align: center; }
@@ -585,6 +601,18 @@
             .report-table .col-aktivitas { width: 25%; }
             .report-table .col-hasil { width: 20%; }
             .report-table .col-aksi { width: 10%; text-align: center; }
+        }
+        
+        /* New CSS for Mobile Optimization */
+        @media (max-width: 767px) {
+            .table-scroll-wrapper, .report-table-container {
+                overflow-x: auto;
+            }
+            .student-list-table, .report-table {
+                white-space: nowrap;
+                table-layout: auto;
+                width: auto;
+            }
         }
     </style>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -618,7 +646,7 @@
                     <span id="totalStudentsCount" style="font-weight: bold; color: var(--primary-color);">0 siswa</span>
                 </div>
             </div>
-            <div style="overflow-x:auto;">
+            <div class="table-scroll-wrapper">
                 <table class="student-list-table">
                     <thead><tr><th>Nama Siswa</th><th>Level</th><th>Lesson Terakhir</th><th>Status Terkirim</th></tr></thead>
                     <tbody id="myStudentsTableBody"></tbody>
@@ -628,8 +656,8 @@
                 <div>
                     <label for="studentRowsPerPage">Baris per Halaman:</label>
                     <select id="studentRowsPerPage">
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
                         <option value="15">15</option>
                         <option value="20">20</option>
                     </select>
@@ -722,8 +750,8 @@
                 <div>
                     <label for="reportRowsPerPage">Baris per Halaman:</label>
                     <select id="reportRowsPerPage">
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
                         <option value="15">15</option>
                         <option value="20">20</option>
                     </select>
@@ -842,9 +870,9 @@
         let filteredAndSortedReports = [];
         let brandSettings = {};
         let studentCurrentPage = 1;
-        let studentRowsPerPage = 10;
+        let studentRowsPerPage = 5;
         let reportCurrentPage = 1;
-        let reportRowsPerPage = 10;
+        let reportRowsPerPage = 5;
         let appEditPin = '';
 
         const defaultReportWhatsappTemplate = `Halo Bapak/Ibu, ini adalah laporan aktivitas harian sempoa untuk *{nama_siswa}*.
@@ -1125,21 +1153,18 @@ Terima kasih.`;
             const reportLessonSelector = document.getElementById('reportLessonSelector');
             const activityCheckboxesContainer = document.getElementById('activityCheckboxesContainer');
 
-            // Validasi 1: Memastikan siswa telah dipilih
             if (!studentId) {
                 statusMessageDiv.textContent = 'Harap pilih siswa terlebih dahulu.'; 
                 statusMessageDiv.classList.add('error-message');
                 return;
             }
             
-            // Validasi 2: Memastikan level siswa tidak kosong
             if (!reportLevelInput.value) {
                 statusMessageDiv.textContent = 'Level siswa tidak ditemukan. Harap periksa data siswa atau kurikulum.';
                 statusMessageDiv.classList.add('error-message');
                 return;
             }
             
-            // Validasi 3: Memastikan semua isian terisi
             const lessonName = reportLessonSelector.value;
             const reportDate = document.getElementById('reportDate').value;
             const checkedActivities = Array.from(document.querySelectorAll('#activityCheckboxes input:checked')).map(cb => cb.value);
@@ -1398,9 +1423,11 @@ Terima kasih.`;
                     });
                     editActivityContainer.style.display = 'block';
                 } else {
+                    editActivityCheckboxes.innerHTML = '';
                     editActivityContainer.style.display = 'none';
                 }
             } else {
+                editActivityCheckboxes.innerHTML = '';
                 editActivityContainer.style.display = 'none';
             }
 
