@@ -811,14 +811,16 @@
                         <div class="form-group"><label for="otherNominal">Nominal (Rp)</label><input type="text" id="otherNominal" required></div>
                         <div class="form-group">
                             <label for="otherBankSelector">Bank</label>
-                            <select id="otherBankSelector" required></select>
+                            <select id="otherBankSelector" required>
+                                <option value="">Pilih Bank</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="otherPaymentDate">Tanggal Bayar</label>
                             <input type="date" id="otherPaymentDate" required>
                         </div>
                         <div class="form-group full-width"><label for="otherKeterangan">Keterangan</label><textarea id="otherKeterangan" rows="2" required></textarea></div>
-                        <div class="form-group full-width"><label for="otherAttachment">Upload Bukti Bayar</label><input type="file" id="otherAttachment" accept="image/*,.pdf"></div>
+                        <div class="form-group full-width"><label for="otherAttachment">Upload Bukti Bayar</label><input type="file" id="otherAttachment" accept="image/*,.pdf" required></div>
                     </div>
                     <button type="submit" id="addOtherPaymentBtn">Simpan Laporan</button>
                     <div id="otherStatusMessage"></div>
@@ -2441,15 +2443,15 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             const yearFilter = document.getElementById('otherYearFilter');
             const otherBankFilter = document.getElementById('otherBankFilter');
 
-            let bankOptions = '<option value="all">Semua Bank</option>';
+            let bankOptions = '<option value="">Pilih Bank</option>';
             for (const bankName in bankColors) {
                 bankOptions += `<option value="${bankName}">${bankName}</option>`;
             }
             if (bankSelector) {
-                bankSelector.innerHTML = '<option value="">Pilih Bank</option>' + bankOptions;
+                bankSelector.innerHTML = bankOptions;
             }
             if (otherBankFilter) {
-                otherBankFilter.innerHTML = bankOptions;
+                otherBankFilter.innerHTML = '<option value="all">Semua Bank</option>' + bankOptions;
             }
             const years = new Set(allOtherPayments
                 .filter(p => p.timestamp && typeof p.timestamp.toDate === 'function')
@@ -2635,13 +2637,10 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                         let attachmentLink = 'N/A';
                         if (item.attachmentBase64) {
                             const detailsJson = encodeURIComponent(JSON.stringify({
-                                nominal: item.nominal,
-                                bank: item.bank,
-                                date: dateString,
-                                keterangan: item.keterangan,
+                                studentName: item.siswa,
                                 attachmentBase64: item.attachmentBase64,
                             }));
-                            attachmentLink = `<a href="#" onclick="event.preventDefault(); showPaymentDetails('${detailsJson}')">Lihat Bukti</a>`;
+                            attachmentLink = `<a href="#" onclick="event.preventDefault(); showOtherPaymentDetails('${detailsJson}')">Lihat Bukti</a>`;
                         }
 
                         row.innerHTML = `
@@ -2659,6 +2658,28 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             updatePaginationControls('non-spp', otherCurrentPage, totalPages);
             document.getElementById('selectAllCheckbox').checked = false;
         }
+
+        window.showOtherPaymentDetails = function(detailsJsonEncoded) {
+            const detailsJson = decodeURIComponent(detailsJsonEncoded);
+            const details = JSON.parse(detailsJson);
+            modalTitle.textContent = `Bukti Bayar Non-SPP untuk ${details.studentName}`;
+            let contentHTML = ``;
+            if (details.attachmentBase64) {
+                const mimeType = details.attachmentBase64.split(';')[0].split(':')[1];
+                contentHTML += `
+                    <div style="margin-top: 15px;">
+                        <p><strong>Bukti Pembayaran (Snapshot):</strong></p>
+                `;
+                if (mimeType.startsWith('image/')) {
+                    contentHTML += `<img src="${details.attachmentBase64}" alt="Bukti Pembayaran" class="attachment-preview">`;
+                } else if (mimeType === 'application/pdf') {
+                    contentHTML += `<iframe src="${details.attachmentBase64}" class="attachment-iframe"></iframe>`;
+                }
+                contentHTML += `</div>`;
+            }
+            modalBodyContent.innerHTML = contentHTML;
+            singleModal.style.display = 'flex';
+        };
 
         async function openEditNonSppModal(paymentId) {
             const payment = allOtherPayments.find(p => p.id === paymentId);
