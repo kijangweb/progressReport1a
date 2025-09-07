@@ -2933,16 +2933,24 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             const studentBefore = allStudents.find(s => s.id === studentId);
             const oldCoachEmail = studentBefore.coachEmail;
             const newCoachEmail = document.getElementById('editStudentCoach').value;
+
+            // Ambil nama coach baru dari data allUsers
+            const newCoachData = allUsers.find(u => u.id === newCoachEmail);
+            const newCoachName = newCoachData ? newCoachData.name : newCoachEmail;
+
             const updatedData = {
                 name: document.getElementById('editStudentName').value,
                 studentLevel: document.getElementById('editStudentLevel').value,
                 coachEmail: newCoachEmail,
-                phone: document.getElementById('editStudentPhone').value 
+                phone: document.getElementById('editStudentPhone').value
             };
+
             try {
                 const batch = writeBatch(db);
                 const studentDocRef = doc(db, "students", studentId);
                 batch.update(studentDocRef, updatedData);
+
+                // Perbarui jumlah siswa hanya jika coach berubah
                 if (oldCoachEmail !== newCoachEmail) {
                     if (oldCoachEmail) {
                         const oldCoachRef = doc(db, "users", oldCoachEmail);
@@ -2952,13 +2960,19 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                         const newCoachRef = doc(db, "users", newCoachEmail);
                         batch.update(newCoachRef, { studentCount: increment(1) });
                     }
+                    
+                    // Perbarui semua laporan siswa dengan coachEmail & nama coach yang baru
                     const reportsQuery = query(collection(db, "reports"), where("studentId", "==", studentId));
                     const reportsSnapshot = await getDocs(reportsQuery);
                     reportsSnapshot.forEach(reportDoc => {
                         const reportRef = doc(db, "reports", reportDoc.id);
-                        batch.update(reportRef, { coachEmail: newCoachEmail });
+                        batch.update(reportRef, { 
+                            coachEmail: newCoachEmail,
+                            coach: newCoachName 
+                        });
                     });
                 }
+                
                 await batch.commit();
                 alert('Detail siswa dan riwayat laporan berhasil diperbarui!');
                 document.getElementById('editStudentModal').style.display = 'none';
@@ -3009,6 +3023,9 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                     const studentId = checkbox.value;
                     return allStudents.find(s => s.id === studentId);
                 });
+                
+                const newCoachData = allUsers.find(u => u.id === newCoachEmail);
+                const newCoachName = newCoachData ? newCoachData.name : newCoachEmail;
 
                 selectedStudents.forEach(student => {
                     const oldCoachEmail = student.coachEmail;
@@ -3038,7 +3055,10 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                     const reportsSnapshot = await getDocs(reportsQuery);
                     reportsSnapshot.forEach(reportDoc => {
                         const reportRef = doc(db, "reports", reportDoc.id);
-                        batch.update(reportRef, { coachEmail: newCoachEmail });
+                        batch.update(reportRef, { 
+                            coachEmail: newCoachEmail,
+                            coach: newCoachName
+                        });
                     });
                 }
 
@@ -3200,6 +3220,11 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 const batch = writeBatch(db);
                 
                 const studentIdsToUpdate = [];
+                
+                // Ambil data coach baru untuk mendapatkan namanya
+                const newCoachData = allUsers.find(u => u.id === destCoachEmail);
+                const newCoachName = newCoachData ? newCoachData.name : destCoachEmail;
+                
                 studentsToMove.forEach(studentDoc => { 
                     batch.update(doc(db, "students", studentDoc.id), { coachEmail: destCoachEmail }); 
                     studentIdsToUpdate.push(studentDoc.id);
@@ -3214,7 +3239,10 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                     sessionReadCount += reportsSnapshot.size; updateReadStatus();
                     reportsSnapshot.forEach(reportDoc => {
                         const reportRef = doc(db, "reports", reportDoc.id);
-                        batch.update(reportRef, { coachEmail: destCoachEmail });
+                        batch.update(reportRef, { 
+                            coachEmail: destCoachEmail,
+                            coach: newCoachName // Tambahkan baris ini
+                        });
                     });
                 }
                 
