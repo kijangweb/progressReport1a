@@ -66,7 +66,7 @@
             width: 100%;
             margin-top: 15px;
         }
-        .btn-export, .logout-btn, .btn-reset, .report-form-section button {
+        .btn-export, .logout-btn, .btn-reset, .report-form-section button, .action-btn-edit {
             padding: 12px 20px;
             border: none;
             border-radius: 25px;
@@ -80,6 +80,9 @@
         .btn-export, .report-form-section button {
             background-color: var(--primary-color);
             color: white;
+        }
+        .action-btn-edit:hover {
+            background-color: #0b7dda;
         }
         .btn-export:hover, .report-form-section button:hover {
             transform: translateY(-2px);
@@ -173,8 +176,13 @@
         #reportStatusMessage {
             margin-top: 15px;
             font-weight: bold;
-            color: var(--success-color);
             text-align: center;
+        }
+        .error-message {
+            color: var(--error-color);
+        }
+        .success-message {
+            color: var(--success-color);
         }
 
         /* Report Controls dan Filter */
@@ -234,7 +242,7 @@
         }
 
         /* Aktivitas Checkbox */
-        #activityCheckboxes {
+        #activityCheckboxes, #editActivityCheckboxes {
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -243,13 +251,16 @@
             background-color: var(--background-color);
             border: 1px solid var(--border-color);
             border-radius: 8px;
+            max-height: 200px; /* Batasi tinggi maksimum */
+            overflow-y: auto;  /* Tambahkan scrollbar vertikal otomatis */
+            padding-right: 10px; /* Tambahan padding untuk scrollbar */
         }
-        #activityCheckboxes label {
+        #activityCheckboxes label, #editActivityCheckboxes label {
             font-weight: normal;
             display: flex;
             align-items: center;
         }
-        #activityCheckboxes input {
+        #activityCheckboxes input, #editActivityCheckboxes input {
             width: auto;
             margin-right: 10px;
         }
@@ -394,6 +405,28 @@
         .report-table tr:hover {
             background-color: #e9f5ff;
         }
+        
+        /* --- CSS UNTUK FITUR PENANDA WARNA --- */
+        .report-table tr.sent-report {
+            background-color: #e8f5e9; /* Hijau muda */
+        }
+        .report-table tr.sent-report:hover {
+            background-color: #c8e6c9; /* Hijau sedikit lebih gelap saat hover */
+        }
+        .action-btn-delete {
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: normal;
+            background-color: #F44336; /* Merah */
+            color: white;
+            border: none;
+            box-shadow: none;
+            cursor: pointer;
+        }
+        .action-btn-delete:hover {
+            background-color: #d32f2f;
+        }
+        /* --- AKHIR CSS BARU --- */
 
         /* Pagination */
         .pagination-controls {
@@ -551,6 +584,7 @@
             .report-table .col-lesson { width: 15%; }
             .report-table .col-aktivitas { width: 25%; }
             .report-table .col-hasil { width: 20%; }
+            .report-table .col-aksi { width: 10%; text-align: center; }
         }
     </style>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -586,7 +620,7 @@
             </div>
             <div style="overflow-x:auto;">
                 <table class="student-list-table">
-                    <thead><tr><th>Nama Siswa</th><th>Level</th><th>Lesson Terakhir</th></tr></thead>
+                    <thead><tr><th>Nama Siswa</th><th>Level</th><th>Lesson Terakhir</th><th>Status Terkirim</th></tr></thead>
                     <tbody id="myStudentsTableBody"></tbody>
                 </table>
             </div>
@@ -668,7 +702,21 @@
                 </div>
             </div>
             <div class="report-table-container">
-                <table class="report-table" id="reportTableForPdf"><thead><tr><th class="col-sesi">Sesi</th><th class="col-siswa">Siswa</th><th class="col-level">Level</th><th class="col-tanggal">Tanggal</th><th class="col-lesson">Lesson</th><th class="col-aktivitas">Aktivitas</th><th class="col-hasil">Hasil</th></tr></thead><tbody id="reportsTableBody"></tbody></table>
+                <table class="report-table" id="reportTableForPdf">
+                    <thead>
+                        <tr>
+                            <th class="col-sesi">Sesi</th>
+                            <th class="col-siswa">Siswa</th>
+                            <th class="col-level">Level</th>
+                            <th class="col-tanggal">Tanggal</th>
+                            <th class="col-lesson">Lesson</th>
+                            <th class="col-aktivitas">Aktivitas</th>
+                            <th class="col-hasil">Hasil</th>
+                            <th class="col-aksi">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTableBody"></tbody>
+                </table>
             </div>
             <div class="pagination-controls" id="reportPagination">
                 <div>
@@ -702,7 +750,68 @@
                     <button class="btn-export" onclick="window.saveWhatsappTemplate()">Simpan Template</button>
                     <button class="btn-reset" onclick="window.resetWhatsappTemplate()">Reset ke Awal</button>
                 </div>
-                <div id="settingsStatusMessage" style="margin-top:10px;"></div>
+                <div id="settingsStatusMessage"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="editReportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Laporan</h3>
+                <span class="close-btn" onclick="document.getElementById('editReportModal').style.display='none'">&times;</span>
+            </div>
+            <form id="editReportForm">
+                <input type="hidden" id="editReportId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editReportSiswa">Nama Siswa</label>
+                        <input type="text" id="editReportSiswa" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="editReportTanggal">Tanggal Aktivitas</label>
+                        <input type="date" id="editReportTanggal" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editReportLevel">Level Siswa</label>
+                        <input type="text" id="editReportLevel" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="editReportLesson">Lesson</label>
+                        <select id="editReportLesson" required></select>
+                    </div>
+                    <div class="form-group" id="editActivityCheckboxesContainer">
+                        <label>Aktivitas yang Dilakukan</label>
+                        <div id="editActivityCheckboxes"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editReportHasil">Hasil</label>
+                        <textarea id="editReportHasil" rows="2" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding-top: 20px;">
+                    <button type="submit" class="btn-export" style="border-radius: 4px;">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="pinModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Verifikasi PIN</h3>
+                <span class="close-btn" onclick="document.getElementById('pinModal').style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Masukkan PIN untuk mengedit data ini.</p>
+                <div class="form-group">
+                    <label for="pinInput">PIN</label>
+                    <input type="password" id="pinInput" placeholder="PIN" required>
+                </div>
+                <div class="form-group">
+                    <button type="button" id="verifyPinBtn" class="action-btn-edit" style="border-radius: 4px;">Verifikasi</button>
+                </div>
+                <div id="pinVerificationMessage"></div>
             </div>
         </div>
     </div>
@@ -730,12 +839,13 @@
         let kurikulum = {};
         let myStudents = [];
         let allMyReports = [];
-        let currentlyDisplayedReports = [];
+        let filteredAndSortedReports = [];
         let brandSettings = {};
         let studentCurrentPage = 1;
         let studentRowsPerPage = 10;
         let reportCurrentPage = 1;
         let reportRowsPerPage = 10;
+        let appEditPin = '';
 
         const defaultReportWhatsappTemplate = `Halo Bapak/Ibu, ini adalah laporan aktivitas harian sempoa untuk *{nama_siswa}*.
 Laporan sesi ke *{nomor_sesi}* untuk level *{level_siswa}* sudah tersedia.
@@ -762,6 +872,21 @@ Terima kasih.`;
             return cache.data;
         };
         
+        async function loadAppEditPin() {
+            try {
+                const docSnap = await getDoc(doc(db, "settings", "appEditPin"));
+                sessionReadCount++; updateReadStatus();
+                if (docSnap.exists() && docSnap.data().pin) {
+                    appEditPin = docSnap.data().pin;
+                } else {
+                    appEditPin = '';
+                }
+            } catch (error) {
+                console.error("Gagal memuat PIN:", error);
+                appEditPin = '';
+            }
+        }
+        
         function setupStudentsListener(coachEmail) {
             const studentQuery = query(collection(db, "students"), where("coachEmail", "==", coachEmail), where("status", "==", "active"));
             onSnapshot(studentQuery, (querySnapshot) => {
@@ -774,7 +899,7 @@ Terima kasih.`;
             }, (error) => {
                 console.error("Gagal memuat daftar siswa:", error);
                 const studentsTableBody = document.getElementById('myStudentsTableBody');
-                studentsTableBody.innerHTML = '<tr><td colspan="3">Terjadi kesalahan saat memuat data siswa.</td></tr>';
+                studentsTableBody.innerHTML = '<tr><td colspan="4">Terjadi kesalahan saat memuat data siswa.</td></tr>';
             });
         }
         
@@ -786,7 +911,7 @@ Terima kasih.`;
 
             let filteredStudents = myStudents;
             if (selectedLevel !== 'all') {
-                filteredStudents = myStudents.filter(student => student.studentLevel === selectedLevel);
+                filteredStudents = filteredStudents.filter(student => student.studentLevel === selectedLevel);
             }
 
             totalStudentsCountEl.textContent = `${filteredStudents.length} siswa`;
@@ -798,11 +923,17 @@ Terima kasih.`;
             const paginatedStudents = sortedStudents.slice(startIndex, endIndex);
 
             if (paginatedStudents.length === 0) {
-                studentsTableBody.innerHTML = `<tr><td colspan="3">Tidak ada siswa di level ini.</td></tr>`;
+                studentsTableBody.innerHTML = `<tr><td colspan="4">Tidak ada siswa di level ini.</td></tr>`;
             } else {
                 paginatedStudents.forEach(student => {
                     const lastLessonDisplay = student.lastLesson || 'Belum ada laporan';
-                    studentsTableBody.innerHTML += `<tr><td>${student.name}</td><td>${student.studentLevel || ''}</td><td>${lastLessonDisplay}</td></tr>`;
+                    let lastSentDisplay = 'Belum pernah';
+                    if (student.lastSentReport && student.lastSentReport.sentTimestamp) {
+                        const date = student.lastSentReport.sentTimestamp.toDate().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        const activityNumber = student.lastSentReport.activityNumber || '-';
+                        lastSentDisplay = `Tgl ${date}, Sesi ${activityNumber}`;
+                    }
+                    studentsTableBody.innerHTML += `<tr><td>${student.name}</td><td>${student.studentLevel || ''}</td><td>${lastLessonDisplay}</td><td>${lastSentDisplay}</td></tr>`;
                 });
             }
             updateStudentPagination(filteredStudents.length);
@@ -831,7 +962,7 @@ Terima kasih.`;
 
         function setupReportsListener(coachEmail) {
             const reportsTableBody = document.getElementById('reportsTableBody');
-            reportsTableBody.innerHTML = '<tr><td colspan="7">Memuat laporan...</td></tr>';
+            reportsTableBody.innerHTML = '<tr><td colspan="8">Memuat laporan...</td></tr>';
             
             const reportQuery = query(collection(db, "reports"), where("coachEmail", "==", coachEmail));
             onSnapshot(reportQuery, (querySnapshot) => {
@@ -842,35 +973,67 @@ Terima kasih.`;
                 handleReportFilterChange();
             }, (error) => {
                 console.error("Gagal memuat data laporan:", error);
-                reportsTableBody.innerHTML = '<tr><td colspan="7">Terjadi kesalahan saat memuat data.</td></tr>';
+                reportsTableBody.innerHTML = '<tr><td colspan="8">Terjadi kesalahan saat memuat data.</td></tr>';
             });
+        }
+        
+        async function handleInitialReportLoad() {
+            const latestStudent = myStudents.sort((a, b) => {
+                const dateA = a.lastReportTimestamp && a.lastReportTimestamp.toDate ? a.lastReportTimestamp.toDate().getTime() : 0;
+                const dateB = b.lastReportTimestamp && b.lastReportTimestamp.toDate ? b.lastReportTimestamp.toDate().getTime() : 0;
+                return dateB - dateA;
+            })[0];
+
+            if (latestStudent) {
+                const reportFilterStudent = $('#reportFilterStudent');
+                const studentOption = new Option(latestStudent.name, latestStudent.id, false, true);
+                if (!reportFilterStudent.find(`option[value='${latestStudent.id}']`).length) {
+                    reportFilterStudent.append(studentOption);
+                }
+                reportFilterStudent.val(latestStudent.id).trigger('change');
+            } else {
+                handleReportFilterChange();
+            }
         }
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                window.updateReadStatus();
                 const docRef = doc(db, "users", user.email);
-                const docSnap = await getDoc(docRef);
-                sessionReadCount++; window.updateReadStatus();
-                if (docSnap.exists() && docSnap.data().role === 'user' && docSnap.data().status !== 'disabled') {
-                    document.body.style.display = 'block';
-                    document.getElementById('coachEmailDisplay').textContent = user.email;
-                    currentCoachName = docSnap.data().name || user.email;
-                    document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
-                    
-                    kurikulum = JSON.parse(localStorage.getItem('kurikulum'))?.data || await fetchCurriculum();
-                    brandSettings = JSON.parse(localStorage.getItem('brandSettings'))?.data || await fetchBrandSettings();
 
-                    setupStudentsListener(user.email);
-                    setupReportsListener(user.email);
-                    await loadWhatsappTemplate();
-                    setupEventListeners();
-                    initSelect2Dropdowns(user.email);
-                } else {
-                    alert("Akses ditolak.");
-                    await signOut(auth);
-                    window.location.href = 'login.html';
-                }
+                onSnapshot(docRef, async (docSnap) => {
+                    sessionReadCount++;
+                    window.updateReadStatus();
+                    if (docSnap.exists() && docSnap.data().role === 'user' && docSnap.data().status !== 'disabled') {
+                        document.body.style.display = 'block';
+                        const userData = docSnap.data();
+                        document.getElementById('coachEmailDisplay').textContent = userData.name || user.email;
+                        currentCoachName = userData.name || user.email;
+                        
+                        if (!window.initialLoadDone) {
+                            window.initialLoadDone = true;
+                            
+                            kurikulum = JSON.parse(localStorage.getItem('kurikulum'))?.data || await fetchCurriculum();
+                            brandSettings = JSON.parse(localStorage.getItem('brandSettings'))?.data || await fetchBrandSettings();
+
+                            setupStudentsListener(user.email);
+                            setupReportsListener(user.email);
+                            await loadWhatsappTemplate();
+                            await loadAppEditPin();
+                            setupEventListeners();
+                            initSelect2Dropdowns(user.email);
+                            
+                            setTimeout(() => {
+                                handleInitialReportLoad();
+                            }, 500); 
+                        }
+                    } else {
+                        alert("Akses ditolak.");
+                        await signOut(auth);
+                        window.location.href = 'login.html';
+                    }
+                }, (error) => {
+                    console.error("Gagal mendengarkan perubahan data pengguna:", error);
+                });
             } else {
                 window.location.href = 'login.html';
             }
@@ -917,7 +1080,7 @@ Terima kasih.`;
                 width: 'style',
                 ajax: {
                     delay: 250,
-                    transport: function(params, success, failure) {
+                    transport: function(params, success) {
                         const term = (params.data.q || '').toLowerCase();
                         if (term.length < 2) { 
                             return success({ results: [] }); 
@@ -936,17 +1099,14 @@ Terima kasih.`;
                 width: 'style',
                 ajax: {
                     delay: 250,
-                    transport: function(params, success, failure) {
+                    transport: function(params, success) {
                         const term = (params.data.q || '').toLowerCase();
-                        if (term.length < 2) {
-                            return success({ results: [] });
-                        }
-                        const filteredResults = myStudents
-                            .filter(s => s.name.toLowerCase().includes(term))
-                            .map(s => ({ id: s.id, text: s.name }));
+                        const allStudents = myStudents.map(s => ({ id: s.id, text: s.name }));
+                        const filteredResults = allStudents
+                            .filter(s => s.text.toLowerCase().includes(term));
                         success({ results: filteredResults });
                     },
-                    processResults: function(data, params) {
+                    processResults: function(data) {
                         const initialOption = [{ id: '', text: '-- Semua Siswa --' }];
                         return {
                             results: initialOption.concat(data.results)
@@ -955,15 +1115,98 @@ Terima kasih.`;
                 }
             });
         }
+
+        async function handleAddReport(e) {
+            e.preventDefault();
+            const statusMessageDiv = document.getElementById('reportStatusMessage');
+            const studentSelector = document.getElementById('studentSelectorForReport');
+            const studentId = studentSelector.value;
+            const reportLevelInput = document.getElementById('reportLevel');
+            const reportLessonSelector = document.getElementById('reportLessonSelector');
+            const activityCheckboxesContainer = document.getElementById('activityCheckboxesContainer');
+
+            // Validasi 1: Memastikan siswa telah dipilih
+            if (!studentId) {
+                statusMessageDiv.textContent = 'Harap pilih siswa terlebih dahulu.'; 
+                statusMessageDiv.classList.add('error-message');
+                return;
+            }
+            
+            // Validasi 2: Memastikan level siswa tidak kosong
+            if (!reportLevelInput.value) {
+                statusMessageDiv.textContent = 'Level siswa tidak ditemukan. Harap periksa data siswa atau kurikulum.';
+                statusMessageDiv.classList.add('error-message');
+                return;
+            }
+            
+            // Validasi 3: Memastikan semua isian terisi
+            const lessonName = reportLessonSelector.value;
+            const reportDate = document.getElementById('reportDate').value;
+            const checkedActivities = Array.from(document.querySelectorAll('#activityCheckboxes input:checked')).map(cb => cb.value);
+            const reportHasil = document.getElementById('reportHasil').value;
+
+            if (!lessonName || !reportDate || checkedActivities.length === 0 || !reportHasil) {
+                statusMessageDiv.textContent = 'Harap lengkapi semua isian laporan.';
+                statusMessageDiv.classList.add('error-message');
+                return;
+            }
+
+            statusMessageDiv.classList.remove('error-message');
+            statusMessageDiv.textContent = 'Mengirim...';
+            
+            const reportData = {
+                siswa: $(`#studentSelectorForReport option[value="${studentId}"]`).text(),
+                studentId: studentId,
+                level: reportLevelInput.value,
+                coach: currentCoachName,
+                coachEmail: auth.currentUser.email,
+                lessonName: lessonName,
+                lesson: checkedActivities.join(', '),
+                hasil: reportHasil,
+                timestamp: Timestamp.fromDate(new Date(reportDate)),
+                submissionTimestamp: Timestamp.now(),
+                isSent: false
+            };
+
+            try {
+                await addDoc(collection(db, "reports"), reportData);
+                const studentDocRef = doc(db, "students", studentId);
+                await updateDoc(studentDocRef, {
+                    lastLesson: lessonName,
+                    lastReportTimestamp: reportData.timestamp
+                });
+                
+                statusMessageDiv.textContent = 'Laporan berhasil dikirim!';
+                statusMessageDiv.classList.add('success-message');
+
+                document.getElementById('addReportForm').reset();
+                studentSelector.value = null;
+                $(studentSelector).trigger('change');
+                reportLessonSelector.innerHTML = '';
+                reportLevelInput.value = '';
+                activityCheckboxesContainer.style.display = 'none';
+
+                const reportFilterStudent = $('#reportFilterStudent');
+                const studentOption = new Option(reportData.siswa, reportData.studentId, false, true);
+                if (!reportFilterStudent.find(`option[value='${reportData.studentId}']`).length) {
+                    reportFilterStudent.append(studentOption);
+                }
+                reportFilterStudent.val(reportData.studentId).trigger('change');
+                document.querySelector('.report-controls').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                statusMessageDiv.textContent = `Error: ${error.message}`;
+                statusMessageDiv.classList.add('error-message');
+            }
+        }
         
-        async function handleReportFilterChange() {
+        function handleReportFilterChange() {
             const studentId = document.getElementById('reportFilterStudent').value;
             const level = document.getElementById('reportFilterLevel').value;
-            const sortOption = document.getElementById('reportSort').value;
             const reportsTableBody = document.getElementById('reportsTableBody');
 
             if (allMyReports.length === 0) {
-                reportsTableBody.innerHTML = '<tr><td colspan="7">Tidak ada laporan yang cocok.</td></tr>';
+                reportsTableBody.innerHTML = '<tr><td colspan="8">Tidak ada laporan yang cocok.</td></tr>';
                 window.updateReportPagination(0);
                 return;
             }
@@ -975,7 +1218,7 @@ Terima kasih.`;
             if (level) {
                 filteredReports = filteredReports.filter(r => r.level === level);
             }
-            
+
             const levels = [...new Set(allMyReports.map(r => r.level))].filter(Boolean);
             const levelFilter = document.getElementById('reportFilterLevel');
             const currentLevelValue = levelFilter.value;
@@ -988,11 +1231,12 @@ Terima kasih.`;
             }
 
             const processedReports = processAndSortReports(filteredReports);
-            currentlyDisplayedReports = processedReports;
-            window.renderReports(processedReports, sortOption);
+            filteredAndSortedReports = processedReports;
+            
+            reportCurrentPage = 1;
+            renderTableFromGlobalReports();
         }
 
-        // Fungsi yang diperbaiki untuk pengurutan yang stabil
         function processAndSortReports(reports) {
             if (!reports || reports.length === 0) return [];
             
@@ -1028,21 +1272,21 @@ Terima kasih.`;
             return processedReports;
         }
 
-        window.renderReports = function(reports, sortOption) {
-            currentlyDisplayedReports = reports;
+        function renderTableFromGlobalReports() {
             const tableBody = document.getElementById('reportsTableBody');
             tableBody.innerHTML = '';
-            if (!reports || reports.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7">Tidak ada laporan yang cocok.</td></tr>';
+            
+            if (filteredAndSortedReports.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="8">Tidak ada laporan yang cocok.</td></tr>';
                 window.updateReportPagination(0);
                 return;
             }
             
+            const sortOption = document.getElementById('reportSort').value;
             const [sortBy, sortDirection] = sortOption.split('_');
 
-            const sortedReports = reports.sort((a, b) => {
+            const sortedReports = filteredAndSortedReports.sort((a, b) => {
                 let comparison = 0;
-
                 if (sortBy === 'activityNumber') {
                     comparison = a.activityNumber - b.activityNumber;
                 } else {
@@ -1058,19 +1302,30 @@ Terima kasih.`;
                     }
                     comparison = sortValueA - sortValueB;
                 }
-                
                 return sortDirection === 'asc' ? comparison : -comparison;
             });
-            
+
             const startIndex = (reportCurrentPage - 1) * reportRowsPerPage;
             const endIndex = startIndex + reportRowsPerPage;
             const paginatedReports = sortedReports.slice(startIndex, endIndex);
 
             paginatedReports.forEach(report => {
                 const date = (report.timestamp && typeof report.timestamp.toDate === 'function' ? report.timestamp.toDate() : new Date(report.timestamp)).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                tableBody.innerHTML += `<tr><td style="text-align: center;">${report.activityNumber || ''}</td><td>${report.siswa}</td><td>${report.level}</td><td>${date}</td><td>${report.lessonName || ''}</td><td>${report.lesson || ''}</td><td>${report.hasil}</td></tr>`;
+                const rowClass = report.isSent ? 'sent-report' : '';
+
+                tableBody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td style="text-align: center;">${report.activityNumber || ''}</td>
+                        <td>${report.siswa}</td>
+                        <td>${report.level}</td>
+                        <td>${date}</td>
+                        <td>${report.lessonName || ''}</td>
+                        <td>${report.lesson || ''}</td>
+                        <td>${report.hasil}</td>
+                        <td><button type="button" class="action-btn-edit" onclick="window.openPinModal('report', '${report.id}')">Edit</button></td>
+                    </tr>`;
             });
-            window.updateReportPagination(reports.length);
+            window.updateReportPagination(filteredAndSortedReports.length);
         }
 
         window.updateReportPagination = function(totalItems) {
@@ -1081,46 +1336,121 @@ Terima kasih.`;
             document.getElementById('reportNextBtn').disabled = reportCurrentPage >= totalPages;
         };
 
-        async function handleAddReport(e) {
-            e.preventDefault();
-            const statusMessageDiv = document.getElementById('reportStatusMessage');
-            const studentSelector = document.getElementById('studentSelectorForReport');
-            const studentId = studentSelector.value;
-            if (!studentId) {
-                statusMessageDiv.textContent = 'Harap pilih siswa terlebih dahulu.'; return;
+        window.openPinModal = function(type, id) {
+            document.getElementById('pinModal').style.display = 'flex';
+            document.getElementById('pinInput').value = '';
+            const verifyBtn = document.getElementById('verifyPinBtn');
+            verifyBtn.onclick = () => verifyPinAndOpenEdit(type, id);
+        };
+
+        async function verifyPinAndOpenEdit(type, id) {
+            const enteredPin = document.getElementById('pinInput').value;
+            const pinVerificationMessage = document.getElementById('pinVerificationMessage');
+
+            if (enteredPin === appEditPin) {
+                document.getElementById('pinModal').style.display = 'none';
+                pinVerificationMessage.textContent = '';
+                if (type === 'report') {
+                    await openEditReportModal(id);
+                }
+            } else {
+                pinVerificationMessage.textContent = 'PIN salah!';
+                pinVerificationMessage.style.color = 'red';
             }
-            const studentName = $(`#studentSelectorForReport option[value="${studentId}"]`).text();
-            const lessonName = document.getElementById('reportLessonSelector').value;
-            const reportDate = document.getElementById('reportDate').value;
-            statusMessageDiv.textContent = 'Mengirim...';
-            const checkedActivities = Array.from(document.querySelectorAll('#activityCheckboxes input:checked'))
-                .map(cb => cb.value)
-                .sort();
-            const reportData = {
-                siswa: studentName, studentId: studentId,
-                level: document.getElementById('reportLevel').value,
-                coach: currentCoachName, coachEmail: auth.currentUser.email,
-                lessonName: lessonName,
-                lesson: checkedActivities.join(', '),
-                hasil: document.getElementById('reportHasil').value,
-                timestamp: Timestamp.fromDate(new Date(reportDate)),
-                submissionTimestamp: Timestamp.now()
+        }
+        
+        async function openEditReportModal(reportId) {
+            const report = allMyReports.find(r => r.id === reportId);
+            if (!report) {
+                alert("Laporan tidak ditemukan.");
+                return;
+            }
+            document.getElementById('editReportId').value = report.id;
+            document.getElementById('editReportSiswa').value = report.siswa;
+            document.getElementById('editReportTanggal').value = (report.timestamp && report.timestamp.toDate) ? report.timestamp.toDate().toISOString().split('T')[0] : '';
+            const editLevelInput = document.getElementById('editReportLevel');
+            editLevelInput.value = report.level;
+            
+            const editLessonSelector = document.getElementById('editReportLesson');
+            const editActivityContainer = document.getElementById('editActivityCheckboxesContainer');
+            const editActivityCheckboxes = document.getElementById('editActivityCheckboxes');
+            
+            editLessonSelector.innerHTML = '';
+            editActivityCheckboxes.innerHTML = '';
+            
+            if (report.level && kurikulum[report.level]) {
+                const lessons = kurikulum[report.level];
+                const sortedLessonKeys = Object.keys(lessons).sort((a, b) => (parseInt(a.split(' ')[1]) || 0) - (parseInt(b.split(' ')[1]) || 0));
+                
+                editLessonSelector.innerHTML += '<option value="">-- Pilih Lesson --</option>';
+                sortedLessonKeys.forEach(lessonKey => {
+                    const selected = (lessonKey === report.lessonName) ? 'selected' : '';
+                    editLessonSelector.innerHTML += `<option value="${lessonKey}" ${selected}>${lessonKey}</option>`;
+                });
+                
+                if (report.lessonName && lessons[report.lessonName]) {
+                    const activities = lessons[report.lessonName];
+                    const selectedActivities = report.lesson ? report.lesson.split(', ').sort() : [];
+                    
+                    activities.sort().forEach(activity => {
+                        const checked = selectedActivities.includes(activity) ? 'checked' : '';
+                        editActivityCheckboxes.innerHTML += `<label><input type="checkbox" value="${activity}" ${checked}> ${activity}</label>`;
+                    });
+                    editActivityContainer.style.display = 'block';
+                } else {
+                    editActivityContainer.style.display = 'none';
+                }
+            } else {
+                editActivityContainer.style.display = 'none';
+            }
+
+            editLessonSelector.onchange = function() {
+                const newLessonName = this.value;
+                editActivityCheckboxes.innerHTML = '';
+                if (newLessonName && kurikulum[report.level] && kurikulum[report.level][newLessonName]) {
+                    const newActivities = kurikulum[report.level][newLessonName].sort();
+                    newActivities.forEach(activity => {
+                        editActivityCheckboxes.innerHTML += `<label><input type="checkbox" value="${activity}" checked> ${activity}</label>`;
+                    });
+                    editActivityContainer.style.display = 'block';
+                } else {
+                    editActivityCheckboxes.innerHTML = '';
+                    editActivityContainer.style.display = 'none';
+                }
+            };
+
+            document.getElementById('editReportHasil').value = report.hasil;
+            document.getElementById('editReportModal').style.display = 'flex';
+        }
+        
+        async function handleEditReport(e) {
+            e.preventDefault();
+            const reportId = document.getElementById('editReportId').value;
+            
+            const editLessonSelector = document.getElementById('editReportLesson');
+            const editActivityCheckboxes = document.querySelectorAll('#editActivityCheckboxes input:checked');
+            
+            if (!editLessonSelector.value || editActivityCheckboxes.length === 0 || !document.getElementById('editReportTanggal').value || !document.getElementById('editReportHasil').value) {
+                alert('Harap lengkapi semua isian laporan.');
+                return;
+            }
+
+            const updatedActivities = Array.from(editActivityCheckboxes).map(cb => cb.value).sort().join(', ');
+
+            const updatedData = {
+                timestamp: Timestamp.fromDate(new Date(document.getElementById('editReportTanggal').value)),
+                lessonName: editLessonSelector.value,
+                lesson: updatedActivities,
+                hasil: document.getElementById('editReportHasil').value,
             };
 
             try {
-                await addDoc(collection(db, "reports"), reportData);
-                const studentDocRef = doc(db, "students", studentId);
-                await updateDoc(studentDocRef, {
-                    lastLesson: lessonName,
-                    lastReportTimestamp: reportData.timestamp
-                });
-                statusMessageDiv.textContent = 'Laporan berhasil dikirim!';
-                document.getElementById('addReportForm').reset();
-                document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
-                document.getElementById('activityCheckboxesContainer').style.display = 'none';
-                $('#studentSelectorForReport').val(null).trigger('change');
+                await updateDoc(doc(db, "reports", reportId), updatedData);
+                alert('Laporan berhasil diperbarui!');
+                document.getElementById('editReportModal').style.display = 'none';
             } catch (error) {
-                statusMessageDiv.textContent = `Error: ${error.message}`;
+                alert(`Gagal memperbarui laporan: ${error.message}`);
+                console.error("Error updating report:", error);
             }
         }
 
@@ -1151,6 +1481,10 @@ Terima kasih.`;
                         }
                     });
                 }
+            } else {
+                 levelInput.value = '';
+                 lessonSelector.innerHTML = '';
+                 activityContainer.style.display = 'none';
             }
         }
 
@@ -1215,27 +1549,30 @@ Terima kasih.`;
             document.getElementById('reportRowsPerPage').addEventListener('change', (e) => {
                 reportRowsPerPage = parseInt(e.target.value);
                 reportCurrentPage = 1;
-                window.renderReports(currentlyDisplayedReports, document.getElementById('reportSort').value);
+                renderTableFromGlobalReports();
             });
             document.getElementById('reportPrevBtn').addEventListener('click', () => {
                 if (reportCurrentPage > 1) {
                     reportCurrentPage--;
-                    window.renderReports(currentlyDisplayedReports, document.getElementById('reportSort').value);
+                    renderTableFromGlobalReports();
                 }
             });
             document.getElementById('reportNextBtn').addEventListener('click', () => {
-                const totalPages = Math.ceil(currentlyDisplayedReports.length / reportRowsPerPage) || 1;
+                const totalPages = Math.ceil(filteredAndSortedReports.length / reportRowsPerPage) || 1;
                 if (reportCurrentPage < totalPages) {
                     reportCurrentPage++;
-                    window.renderReports(currentlyDisplayedReports, document.getElementById('reportSort').value);
+                    renderTableFromGlobalReports();
                 }
             });
             
-            // Event listener untuk filter level siswa
             document.getElementById('studentLevelFilter').addEventListener('change', () => {
                 studentCurrentPage = 1;
                 renderStudentTable();
             });
+
+            document.getElementById('editReportForm').addEventListener('submit', handleEditReport);
+            document.querySelector('#editReportModal .close-btn').onclick = () => document.getElementById('editReportModal').style.display = 'none';
+
             isSetupDone = true;
         }
 
@@ -1253,7 +1590,7 @@ Terima kasih.`;
         };
 
         function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            return /Android|webOS|iPhone|iPad|iEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
         window.generatePdfAndWhatsApp = async function() {
@@ -1274,40 +1611,40 @@ Terima kasih.`;
                 alert("Nomor telepon siswa tidak valid. Harap perbarui data siswa di Panel Admin.");
                 return;
             }
-            if (currentlyDisplayedReports.length === 0) {
+            if (filteredAndSortedReports.length === 0) {
                 alert("Tidak ada laporan untuk dibuat PDF.");
                 return;
             }
 
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            const pdfDoc = new jsPDF();
             const studentName = student.name;
             const levelName = student.studentLevel || 'N/A';
-            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageWidth = pdfDoc.internal.pageSize.getWidth();
             const pageCenter = pageWidth / 2;
             let yPos = 15;
 
             const addContentAndSave = () => {
                 if (brandSettings && brandSettings.companyName) {
-                    doc.setFontSize(12);
-                    doc.setFont("helvetica", "normal");
-                    doc.text(brandSettings.companyName, pageCenter, yPos, { align: "center" });
+                    pdfDoc.setFontSize(12);
+                    pdfDoc.setFont("helvetica", "normal");
+                    pdfDoc.text(brandSettings.companyName, pageCenter, yPos, { align: "center" });
                     yPos += 8;
                 }
-                doc.setFontSize(16);
-                doc.setFont("helvetica", "bold");
-                doc.text("Laporan Aktivitas Siswa", pageCenter, yPos, { align: "center" });
+                pdfDoc.setFontSize(16);
+                pdfDoc.setFont("helvetica", "bold");
+                pdfDoc.text("Laporan Aktivitas Siswa", pageCenter, yPos, { align: "center" });
                 yPos += 15;
-                doc.setFontSize(10);
-                doc.setFont("helvetica", "normal");
-                doc.text(`Coach : ${currentCoachName}`, 15, yPos);
-                doc.text(`Siswa / Level : ${studentName} / ${levelName}`, 15, yPos + 7);
+                pdfDoc.setFontSize(10);
+                pdfDoc.setFont("helvetica", "normal");
+                pdfDoc.text(`Coach : ${currentCoachName}`, 15, yPos);
+                pdfDoc.text(`Siswa / Level : ${studentName} / ${levelName}`, 15, yPos + 7);
                 yPos += 15;
 
-                const sortedReportsForPdf = currentlyDisplayedReports.slice().sort((a, b) => {
+                const sortedReportsForPdf = filteredAndSortedReports.slice().sort((a, b) => {
                     const dateA = a.timestamp && typeof a.timestamp.toDate === 'function' ? a.timestamp.toDate() : new Date(a.timestamp);
                     const dateB = b.timestamp && typeof b.timestamp.toDate === 'function' ? b.timestamp.toDate() : new Date(b.timestamp);
-                    return dateA - dateB; // Urutkan dari terlama ke terbaru untuk PDF
+                    return dateA - dateB;
                 });
 
                 const head = [['Sesi', 'Tanggal', 'Lesson', 'Aktivitas', 'Hasil']];
@@ -1315,7 +1652,7 @@ Terima kasih.`;
                     const date = (report.timestamp && typeof report.timestamp.toDate === 'function' ? report.timestamp.toDate() : new Date(report.timestamp)).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
                     return [ report.activityNumber, date, report.lessonName, report.lesson, report.hasil ];
                 });
-                doc.autoTable({
+                pdfDoc.autoTable({
                     startY: yPos,
                     head: head,
                     body: body,
@@ -1328,8 +1665,9 @@ Terima kasih.`;
                     margin: { left: 14, right: 14 }
                 });
 
-                const fileName = `Laporan_Aktivitas_${studentName.replace(/ /g, "_")}_${levelName.replace(/ /g, "_")}.pdf`;
-                const lastReport = currentlyDisplayedReports.find(r => r.activityNumber === currentlyDisplayedReports.length);
+                const fileName = `Laporan_Aktivitas_${studentName.replace(/ /g, "_")}_${levelName.replace(/ /g, "_")}_${Date.now()}.pdf`;
+                
+                const lastReport = filteredAndSortedReports.find(r => r.activityNumber === filteredAndSortedReports.length);
                 const lastSessionNumber = lastReport ? lastReport.activityNumber : 'N/A';
 
                 let message = whatsappTemplateText
@@ -1346,9 +1684,33 @@ Terima kasih.`;
                     whatsappUrl = `https://web.whatsapp.com/send/?phone=${phoneNumber}&text=${encodedMessage}&type=phone_number&app_absent=0`;
                 }
 
-                doc.save(fileName, { returnPromise: true }).then(() => {
+                const reportIds = filteredAndSortedReports.map(r => r.id);
+                const batch = writeBatch(db);
+                reportIds.forEach(id => {
+                    const reportRef = doc(db, "reports", id);
+                    batch.update(reportRef, { isSent: true });
+                });
+                
+                pdfDoc.save(fileName, { returnPromise: true }).then(async () => {
                     alert(`Laporan PDF berhasil dibuat dan diunduh. Chat WhatsApp siap dikirim.`);
                     window.open(whatsappUrl, '_blank');
+                    
+                    try {
+                        await batch.commit();
+                        console.log("Status laporan berhasil diperbarui di Firestore.");
+
+                        const studentDocRef = doc(db, "students", studentId);
+                        await updateDoc(studentDocRef, {
+                            lastSentReport: {
+                                sentTimestamp: Timestamp.now(),
+                                activityNumber: lastSessionNumber
+                            }
+                        });
+                        console.log("Status pengiriman berhasil ditambahkan ke dokumen siswa.");
+
+                    } catch (e) {
+                        console.error("Gagal memperbarui status laporan atau menambahkan log:", e);
+                    }
                 });
             };
 
@@ -1361,7 +1723,7 @@ Terima kasih.`;
                         const desiredLogoHeight = 20;
                         const aspectRatio = img.width / img.height;
                         const calculatedLogoWidth = desiredLogoHeight * aspectRatio;
-                        doc.addImage(fullLogoBase64, 'PNG', pageCenter - (calculatedLogoWidth / 2), yPos, calculatedLogoWidth, desiredLogoHeight, undefined, 'HIGH');
+                        pdfDoc.addImage(fullLogoBase64, 'PNG', pageCenter - (calculatedLogoWidth / 2), yPos, calculatedLogoWidth, desiredLogoHeight, undefined, 'HIGH');
                         yPos += desiredLogoHeight + 10;
                         addContentAndSave();
                     };
