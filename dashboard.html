@@ -370,34 +370,16 @@
         }
 
         /* Report Table */
-        /* Kontainer khusus untuk tabel yang bisa digeser */
-        .table-scroll-wrapper {
+        .table-scroll-wrapper { 
             overflow-x: auto;
         }
-        /* Style untuk tabel di dalam kontainer */
-        .student-list-table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-top: 20px;
-        }
-
-        /* Ini adalah bagian dari file lama yang Anda berikan, saya pastikan tidak berubah */
-        .report-table-container {
-            overflow-x: auto;
-        }
-        .report-table {
+        .student-list-table, .report-table {
             width: 100%;
             border-collapse: collapse;
             white-space: nowrap;
             border-radius: 8px;
             overflow: hidden;
         }
-        /* Batas akhir bagian file lama */
-
-        /* Styles umum untuk kedua tabel */
         .student-list-table th, .student-list-table td, .report-table th, .report-table td {
             border: 1px solid var(--border-color);
             padding: 15px;
@@ -613,6 +595,15 @@
                 table-layout: auto;
                 width: auto;
             }
+            .pagination-nav {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .pagination-controls button {
+                width: auto;
+                padding: 8px 12px;
+            }
         }
     </style>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -662,7 +653,7 @@
                         <option value="20">20</option>
                     </select>
                 </div>
-                <div>
+                <div class="pagination-nav">
                     <button type="button" id="studentPrevBtn" disabled>&laquo; Sebelumnya</button>
                     <span class="page-info">Halaman <b id="studentCurrentPage">1</b> dari <b id="studentTotalPages">1</b></span>
                     <button type="button" id="studentNextBtn" disabled>Berikutnya &raquo;</button>
@@ -756,7 +747,7 @@
                         <option value="20">20</option>
                     </select>
                 </div>
-                <div>
+                <div class="pagination-nav">
                     <button type="button" id="reportPrevBtn" disabled>&laquo; Sebelumnya</button>
                     <span class="page-info">Halaman <b id="reportCurrentPage">1</b> dari <b id="reportTotalPages">1</b></span>
                     <button type="button" id="reportNextBtn" disabled>Berikutnya &raquo;</button>
@@ -1019,6 +1010,7 @@ Terima kasih.`;
                     reportFilterStudent.append(studentOption);
                 }
                 reportFilterStudent.val(latestStudent.id).trigger('change');
+                document.querySelector('.report-controls').scrollIntoView({ behavior: 'smooth' });
             } else {
                 handleReportFilterChange();
             }
