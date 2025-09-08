@@ -2253,6 +2253,10 @@ Terima kasih.`;
             const phoneNumber = formatPhoneNumber(student.phone);
             const paymentsForYear = allStudents.find(s => s.id === studentId)?.spp;
             
+            // Temukan nama coach berdasarkan coachEmail siswa
+            const coachData = allUsers.find(u => u.id === student.coachEmail);
+            const coachName = coachData ? coachData.name : 'N/A';
+            
             let paymentsToPrint = [];
             let fileNameSuffix;
             let title;
@@ -2305,41 +2309,94 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             let yPos = 15;
-            const addContentAndSave = () => {
-                if (brandSettings && brandSettings.companyName) {
-                    doc.setFontSize(12);
-                    doc.setFont("helvetica", "normal");
-                    doc.text(brandSettings.companyName, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
-                    yPos += 8;
-                }
+
+            const addLogoAndCompany = () => {
+                return new Promise((resolve) => {
+                    if (brandSettings && brandSettings.logoBase64) {
+                        const img = new Image();
+                        img.src = brandSettings.logoBase64;
+                        img.onload = () => {
+                            const desiredLogoHeight = 20;
+                            const aspectRatio = img.width / img.height;
+                            const calculatedLogoWidth = desiredLogoHeight * aspectRatio;
+                            doc.addImage(img, 'PNG', (doc.internal.pageSize.getWidth() - calculatedLogoWidth) / 2, yPos, calculatedLogoWidth, desiredLogoHeight);
+                            yPos += desiredLogoHeight + 5; 
+                            if (brandSettings.companyName) {
+                                doc.setFontSize(12);
+                                doc.setFont("helvetica", "bold");
+                                doc.text(brandSettings.companyName, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
+                                yPos += 15; // Jarak cukup antara nama perusahaan dan header
+                            } else {
+                                yPos += 10;
+                            }
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            if (brandSettings.companyName) {
+                                doc.setFontSize(12);
+                                doc.setFont("helvetica", "bold");
+                                doc.text(brandSettings.companyName, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
+                                yPos += 15;
+                            } else {
+                                yPos += 10;
+                            }
+                            resolve();
+                        };
+                    } else {
+                        if (brandSettings.companyName) {
+                            doc.setFontSize(12);
+                            doc.setFont("helvetica", "bold");
+                            doc.text(brandSettings.companyName, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
+                            yPos += 15;
+                        } else {
+                            yPos += 10; // Jarak awal jika tidak ada logo dan nama
+                        }
+                        resolve();
+                    }
+                });
+            };
+
+            const addHeaderFooterAndBody = () => {
+                // Header (Left aligned)
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+                doc.text(`Coach: ${coachName}`, 15, yPos);
+                doc.text(`Siswa: ${studentName} / ${student.studentLevel || 'N/A'}`, 15, yPos + 5);
+                yPos += 15; // Jarak antara header dan judul tabel
+
+                // Body (Judul dan Tabel)
                 doc.setFontSize(16);
                 doc.setFont("helvetica", "bold");
                 doc.text(title, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
-                yPos += 10;
-                doc.setFontSize(10);
-                doc.setFont("helvetica", "normal");
-                doc.text(`Tahun: ${selectedYear}`, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
-                yPos += 15;
-                doc.text(`Nama Siswa: ${studentName}`, 15, yPos);
-                yPos += 10;
                 
                 const tableData = paymentsToPrint.map(p => {
                     const nominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(p.data.nominal);
                     return [monthNames[p.monthIndex], nominalFormatted, p.data.bank];
                 });
+                
                 const totalNominal = paymentsToPrint.reduce((sum, p) => sum + p.data.nominal, 0);
+                
                 doc.autoTable({
-                    startY: yPos,
+                    startY: yPos + 10,
                     head: [['Bulan', 'Nominal', 'Bank']],
                     body: tableData,
                 });
-                yPos = doc.autoTable.previous.finalY + 10;
-                doc.text(`Total Terbayar: ${new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal)}`, 14, yPos);
                 
+                doc.setFontSize(12);
+                doc.setFont("helvetica", "bold");
+                doc.text(`Total Terbayar: ${new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal)}`, 14, doc.autoTable.previous.finalY + 10);
+
+                // Footer (Right aligned)
+                const footerY = doc.internal.pageSize.getHeight() - 25;
+                doc.setFontSize(8);
+                doc.setFont("helvetica", "normal");
+                doc.text(`Bendahara: ${currentBendaharaName}`, doc.internal.pageSize.getWidth() - 15, footerY, { align: "right" });
+                doc.text(`Tanggal Cetak: ${now.toLocaleDateString('id-ID')}`, doc.internal.pageSize.getWidth() - 15, footerY + 5, { align: "right" });
+            };
+
+            const saveAndOpenWhatsapp = () => {
                 const fileName = `Bukti_Bayar_SPP_${studentName.replace(/ /g, '_')}_${fileNameSuffix}_${timestamp}.pdf`;
-                
                 message = message.replace(/{nama_file}/g, fileName);
-                
                 const encodedMessage = encodeURIComponent(message);
                 
                 let whatsappUrl;
@@ -2354,52 +2411,15 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                     window.open(whatsappUrl, '_blank');
                 });
             };
-            if (brandSettings && brandSettings.logoBase64) {
-                const img = new Image();
-                img.src = brandSettings.logoBase64;
-                img.onload = () => {
-                    const desiredLogoHeight = 20;
-                    const aspectRatio = img.width / img.height;
-                    const calculatedLogoWidth = desiredLogoHeight * aspectRatio;
-                    doc.addImage(img, 'PNG', (doc.internal.pageSize.getWidth() - calculatedLogoWidth) / 2, yPos, calculatedLogoWidth, desiredLogoHeight);
-                    yPos += desiredLogoHeight + 10;
-                    addContentAndSave();
-                };
-                img.onerror = () => addContentAndSave();
-            } else {
-                addContentAndSave();
-            }
-        }
-        window.openWhatsappSettings = function() {
-            settingsModal.style.display = 'flex';
-            settingsStatusMessage.textContent = 'Memuat template...';
-            whatsappTemplateTextarea.value = whatsappTemplateText;
-            settingsStatusMessage.textContent = '';
-        }
-        window.saveWhatsappTemplate = async function() {
-            settingsStatusMessage.textContent = 'Menyimpan template...';
-            settingsStatusMessage.style.color = 'blue';
-            const newTemplateText = whatsappTemplateTextarea.value;
-            try {
-                const templateDocRef = doc(db, "settings", "whatsapp_templates");
-                await updateDoc(templateDocRef, {
-                    paymentProof: newTemplateText
+
+            // Urutan eksekusi pembuatan PDF
+            addLogoAndCompany()
+                .then(() => {
+                    addHeaderFooterAndBody();
+                    saveAndOpenWhatsapp();
                 });
-                whatsappTemplateText = newTemplateText;
-                settingsStatusMessage.textContent = 'Template berhasil disimpan!';
-                settingsStatusMessage.style.color = 'green';
-            } catch (error) {
-                console.error("Gagal menyimpan template:", error);
-                settingsStatusMessage.textContent = `Error: ${error.message}`;
-                settingsStatusMessage.style.color = 'red';
-            }
-        }
-        window.resetWhatsappTemplate = async function() {
-            if (confirm("Apakah Anda yakin ingin mengembalikan template ke pengaturan awal? Ini tidak bisa dibatalkan.")) {
-                whatsappTemplateTextarea.value = defaultWhatsappTemplate;
-                await saveWhatsappTemplate();
-            }
-        }
+        };
+        
         function initializeNonSppModule() {
             loadNonSppData();
             setupNonSppEventListeners();
@@ -3262,7 +3282,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                         const reportRef = doc(db, "reports", reportDoc.id);
                         batch.update(reportRef, { 
                             coachEmail: destCoachEmail,
-                            coach: newCoachName // Tambahkan baris ini
+                            coach: newCoachName
                         });
                     });
                 }
