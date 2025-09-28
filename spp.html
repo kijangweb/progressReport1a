@@ -625,6 +625,14 @@
                 justify-content: space-between;
                 align-items: center;
             }
+            /* Style khusus untuk filter ringkasan SPP */
+            #sppSummaryFilters {
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-start;
+                gap: 20px;
+                margin-bottom: 20px;
+            }
         }
         /* Perbaikan untuk tampilan tab di mobile */
         @media (max-width: 767px) {
@@ -643,6 +651,10 @@
             .tab-btn {
                 flex-shrink: 0; /* Mencegah tab mengecil */
             }
+            #sppSummaryFilters {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -655,10 +667,8 @@
     <div id="readStatusIndicator">Reads Sesi Ini: 0</div>
     <div class="container">
         <div class="header-section">
-            <h1>Panel Bendahara</h1>
-            <h4 id="userGreeting">Halo, Bendahara!</h4>
+            <h1 id="userGreeting">Panel Bendahara</h1>
             <div class="header-buttons">
-                <button class="btn-export" onclick="openWhatsappSettings()">Pengaturan WhatsApp Templates</button>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </div>
@@ -669,6 +679,49 @@
         </div>
 
         <div id="spp-tab" class="tab-content active">
+            
+            <div class="content-block">
+                <h3>Ringkasan Status Pembayaran SPP 
+                    <button class="btn-export" onclick="openWhatsappSettings('spp')" style="margin-left: 10px; padding: 5px 15px; font-size: 14px;">Pengaturan Template SPP</button>
+                </h3>
+                
+                <div id="sppSummaryFilters" class="filter-controls">
+                    <div class="form-group">
+                        <label for="summarySppYearFilter">Pilih Tahun:</label>
+                        <select id="summarySppYearFilter"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="summarySppMonthFilter">Pilih Bulan:</label>
+                        <select id="summarySppMonthFilter">
+                            <option value="0">Januari</option>
+                            <option value="1">Februari</option>
+                            <option value="2">Maret</option>
+                            <option value="3">April</option>
+                            <option value="4">Mei</option>
+                            <option value="5">Juni</option>
+                            <option value="6">Juli</option>
+                            <option value="7">Agustus</option>
+                            <option value="8">September</option>
+                            <option value="9">Oktober</option>
+                            <option value="10">November</option>
+                            <option value="11">Desember</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="sppSummaryDashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div style="padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background-color: #fff;">
+                        <h4>Status <span id="summaryMonthName"></span> (<span id="summaryYearDisplay"></span>)</h4>
+                        <p>Status Bulan Terpilih: <b id="currentMonthStatus">Menghitung...</b></p>
+                        <p>Total Siswa Aktif: <b id="totalActiveStudentsSPP">0</b></p>
+                        <p>Siswa Lunas: <b id="studentsPaidFull">0</b></p>
+                        <p>Siswa Belum Lunas: <b id="studentsNotPaid">0</b></p>
+                    </div>
+                    <div style="padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background-color: #fff;">
+                        <h4>Rekap Bank (Bulan Terpilih)</h4>
+                        <ul id="bankMonthlySummary" style="list-style-type: none; padding: 0; margin: 0;"></ul>
+                    </div>
+                </div>
+            </div>
             <div class="content-block">
                 <h3>Input Pembayaran Baru</h3>
                 <form id="sppPaymentForm">
@@ -768,7 +821,9 @@
 
         <div id="nonspp-tab" class="tab-content">
             <div class="content-block">
-                <h3>Ringkasan Transaksi Non-SPP</h3>
+                <h3>Ringkasan Transaksi Non-SPP 
+                    <button class="btn-export" onclick="openWhatsappSettings('nonspp')" style="margin-left: 10px; padding: 5px 15px; font-size: 14px;">Pengaturan Template Non-SPP</button>
+                </h3>
                 <div class="filter-controls" style="margin-bottom: 20px;">
                     <div class="form-group">
                         <label for="summaryYearFilter">Tahun:</label>
@@ -795,6 +850,10 @@
                 </div>
                 <div class="summary-dashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                     <div id="nonSppSummaryContainer" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        </div>
+                    <div id="nonSppTotalNominal" style="padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background-color: #fff; text-align: center;">
+                         <h4>Total Nominal Transaksi</h4>
+                         <p>Total: <b id="totalNominalDisplay">Rp 0</b></p>
                     </div>
                 </div>
             </div>
@@ -1043,7 +1102,7 @@
                 <span class="close-btn" onclick="settingsModal.style.display='none'">&times;</span>
             </div>
             <div class="modal-body">
-                <p>Edit teks template di bawah ini. Gunakan placeholder <code>{nama_siswa}</code>, <code>{tahun_bayar}</code>, <code>{rincian_pembayaran}</code>, <code>{total_nominal_formatted}</code>, dan <code>{nama_file}</code> untuk data dinamis.</p>
+                <input type="hidden" id="currentTemplateType"> <p>Edit teks template di bawah ini. Gunakan placeholder dinamis yang tersedia (dijelaskan dalam judul modal).</p>
                 <textarea id="whatsappTemplateTextarea" rows="10" style="width:100%;"></textarea>
                 <div style="display: flex; justify-content: space-between; margin-top: 10px; align-items: center; flex-direction: column; gap: 10px;">
                     <button class="btn-export" onclick="saveWhatsappTemplate()">Simpan Template</button>
@@ -1229,11 +1288,16 @@
         let bankColors = {};
         let currentBendaharaName = '';
         let brandSettings = {};
-        let whatsappTemplateText = '';
+        let whatsappTemplates = {}; // Objek untuk menyimpan template SPP dan Non-SPP
+        const templateKeys = { spp: "paymentProof", nonspp: "otherPaymentProof" };
         const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
         let allOtherPayments = [];
         let pendingImportStudents = []; 
         let appEditPin = '';
+        
+        // Konstanta Realtime
+        const currentYear = new Date().getFullYear();
+        const currentMonthIndex = new Date().getMonth(); // 0 = Januari, 11 = Desember
 
         window.logout = function() { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
         const singleModal = document.getElementById('singleModal');
@@ -1245,12 +1309,19 @@
         const pinModal = document.getElementById('pinModal');
         const editSppModal = document.getElementById('editSppModal');
         const editNonSppModal = document.getElementById('editNonSppModal');
-        const defaultWhatsappTemplate = `Halo Bapak/Ibu, ini adalah bukti pembayaran SPP untuk *{nama_siswa}* tahun *{tahun_bayar}*.
+        
+        const defaultWhatsappTemplate = {
+            spp: `Halo Bapak/Ibu, ini adalah bukti pembayaran SPP untuk *{nama_siswa}* tahun *{tahun_bayar}*.
 Pembayaran yang tercatat:
 {rincian_pembayaran}
 Total nominal yang tercatat adalah: *{total_nominal_formatted}*
 Laporan PDF sudah kami kirimkan ke folder unduhan Anda dengan nama "{nama_file}". Mohon dilampirkan dan dicek.
-Terima kasih.`;
+Terima kasih.`,
+            nonspp: `Halo, ini rincian laporan non-SPP untuk *{nama_siswa}* berdasarkan transaksi terpilih.
+Total nominal yang tercatat adalah: *{total_nominal_formatted}*.
+Mohon lampirkan file PDF "{nama_file}" yang baru saja Anda unduh.
+Terima kasih.`
+        };
 
         window.onclick = function(event) {
             if (event.target == singleModal) {
@@ -1272,6 +1343,7 @@ Terima kasih.`;
                 editNonSppModal.style.display = 'none';
             }
         }
+        
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 updateReadStatus();
@@ -1282,21 +1354,27 @@ Terima kasih.`;
                     document.body.style.display = 'block';
                     document.getElementById('paymentDate').valueAsDate = new Date();
                     document.getElementById('paymentYear').value = new Date().getFullYear();
+                    
+                    const loggedInUser = allUsers.find(u => u.id === user.email);
                     currentBendaharaName = docSnap.data().name || 'Bendahara';
+                    
+                    // Personalisasi Ucapan
+                    const userName = docSnap.data().name || user.email;
+                    // MENGUBAH H1 menjadi ucapan selamat datang
+                    document.getElementById('userGreeting').textContent = `Halo, ${userName}!`; 
+                    document.getElementById('userGreeting').style.fontSize = '2.2rem'; 
+                    
                     await loadBrandSettings();
                     await loadBanks();
                     await loadAppEditPin();
-                    await loadAllData();
                     await loadWhatsappTemplate();
+                    await loadAllData();
+                    
                     setupEventListeners();
                     populateMonths();
                     initializeNonSppModule();
                     openTab('spp-tab');
-                    const userGreeting = document.getElementById('userGreeting');
-                    if (userGreeting) {
-                        const loggedInUser = allUsers.find(u => u.id === user.email);
-                        userGreeting.textContent = `Halo, ${loggedInUser.name || loggedInUser.id}!`;
-                    }
+                    
                 } else {
                     alert("Akses ditolak. Halaman ini hanya untuk Bendahara.");
                     await signOut(auth);
@@ -1360,10 +1438,17 @@ Terima kasih.`;
                 updateReadStatus();
                 setupStudentSearchBox();
                 populateYearFilter();
+                populateSummarySppFilter(); // Isi filter ringkasan
                 setupStudentFilterSearchBox();
                 setupOtherStudentSearchBox();
                 setupStudentListSearchBox();
                 populateLevelFilterDropdown();
+                
+                // Set default filter summary ke bulan dan tahun saat ini
+                document.getElementById('summarySppYearFilter').value = currentYear;
+                document.getElementById('summarySppMonthFilter').value = currentMonthIndex;
+                populateSppSummaryDashboard(); 
+                
                 renderSppTable();
                 
                 populateCoachDropdowns();
@@ -1377,7 +1462,98 @@ Terima kasih.`;
                 alert("Gagal memuat data utama. Kemungkinan ada masalah dengan koneksi atau Security Rules. Periksa console (F12).");
             }
         }
+        
+        // FUNGSI UNTUK MENGISI FILTER TAHUN UNTUK RINGKASAN SPP
+        function populateSummarySppFilter() {
+            const yearFilter = document.getElementById('summarySppYearFilter');
+            const yearsSet = new Set();
+            
+            // Ambil tahun dari riwayat pembayaran
+            allStudents.forEach(student => {
+                if (student.spp) {
+                    Object.keys(student.spp).forEach(key => {
+                        const year = parseInt(key.split('-')[0]);
+                        if (year) yearsSet.add(year);
+                    });
+                }
+            });
+            
+            // Tambahkan tahun saat ini (real-time)
+            yearsSet.add(currentYear);
+            
+            const sortedYears = Array.from(yearsSet).sort((a, b) => b - a);
+            
+            let yearsOptions = '';
+            sortedYears.forEach(year => {
+                yearsOptions += `<option value="${year}">${year}</option>`;
+            });
 
+            yearFilter.innerHTML = yearsOptions;
+            
+            // Pastikan bulan filter diatur ke bulan saat ini saat inisialisasi
+            document.getElementById('summarySppMonthFilter').value = currentMonthIndex;
+        }
+
+        // FUNGSI UNTUK MENGHITUNG DAN MENAMPILKAN RINGKASAN SPP
+        function populateSppSummaryDashboard() {
+            const selectedYear = parseInt(document.getElementById('summarySppYearFilter').value);
+            const selectedMonthIndex = parseInt(document.getElementById('summarySppMonthFilter').value);
+
+            // Perbarui tampilan Judul
+            document.getElementById('summaryYearDisplay').textContent = selectedYear;
+            document.getElementById('summaryMonthName').textContent = monthNames[selectedMonthIndex];
+
+            // Siswa aktif adalah basis perhitungan (siswa yang seharusnya membayar SPP)
+            const activeStudents = allStudents.filter(s => (s.status || 'active') === 'active' && s.studentLevel);
+            const totalActiveStudents = activeStudents.length;
+            
+            document.getElementById('totalActiveStudentsSPP').textContent = totalActiveStudents;
+
+            const targetMonthKey = `${selectedYear}-${selectedMonthIndex}`;
+            
+            let studentsPaidFull = 0;
+            let studentsNotPaid = 0;
+            const bankTransactions = {};
+            
+            activeStudents.forEach(student => {
+                const paymentData = student.spp && student.spp[targetMonthKey];
+                
+                if (paymentData) {
+                    studentsPaidFull++;
+                    const bankName = paymentData.bank || 'Tidak Diketahui';
+                    bankTransactions[bankName] = (bankTransactions[bankName] || 0) + 1;
+                } else {
+                    studentsNotPaid++;
+                }
+            });
+
+            // Menampilkan status bulan yang dipilih
+            const currentMonthStatusElement = document.getElementById('currentMonthStatus');
+            const statusText = studentsPaidFull > 0 ? 'Sudah Ada Transaksi' : 'Belum Ada Transaksi';
+            currentMonthStatusElement.textContent = statusText;
+            currentMonthStatusElement.style.color = studentsPaidFull > 0 ? 'var(--success-color)' : 'var(--danger-color)';
+
+            document.getElementById('studentsPaidFull').textContent = studentsPaidFull;
+            document.getElementById('studentsNotPaid').textContent = studentsNotPaid;
+
+            // Menampilkan rekap bank
+            const bankMonthlySummary = document.getElementById('bankMonthlySummary');
+            bankMonthlySummary.innerHTML = '';
+            const sortedBanks = Object.keys(bankTransactions).sort();
+
+            if (sortedBanks.length > 0) {
+                sortedBanks.forEach(bank => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${bank}: ${bankTransactions[bank]} transaksi`;
+                    bankMonthlySummary.appendChild(listItem);
+                });
+            } else {
+                 const listItem = document.createElement('li');
+                 listItem.textContent = 'Tidak ada transaksi bulan ini.';
+                 bankMonthlySummary.appendChild(listItem);
+            }
+        }
+        
         function renderSummaryDashboard() {
             const totalStudentsElement = document.getElementById('summaryTotalStudents');
             const totalCoachesElement = document.getElementById('summaryTotalCoaches');
@@ -1461,20 +1637,100 @@ Terima kasih.`;
             singleModal.style.display = 'flex';
         };
 
+        // FUNGSI MODIFIKASI: Memuat template untuk SPP dan NON-SPP
         async function loadWhatsappTemplate() {
             try {
                 const docSnap = await getDoc(doc(db, "settings", "whatsapp_templates"));
                 sessionReadCount++; updateReadStatus();
                 if (docSnap.exists()) {
-                    whatsappTemplateText = docSnap.data().paymentProof || '';
+                    const data = docSnap.data();
+                    whatsappTemplates.spp = data.paymentProof || defaultWhatsappTemplate.spp;
+                    whatsappTemplates.nonspp = data.otherPaymentProof || defaultWhatsappTemplate.nonspp;
                 } else {
-                    whatsappTemplateText = defaultWhatsappTemplate;
+                    whatsappTemplates.spp = defaultWhatsappTemplate.spp;
+                    whatsappTemplates.nonspp = defaultWhatsappTemplate.nonspp;
                 }
             } catch (error) {
                 console.error("Gagal memuat template WhatsApp:", error);
-                whatsappTemplateText = defaultWhatsappTemplate;
+                whatsappTemplates.spp = defaultWhatsappTemplate.spp;
+                whatsappTemplates.nonspp = defaultWhatsappTemplate.nonspp;
             }
         }
+        
+        // FUNGSI BARU: Membuka modal pengaturan WhatsApp berdasarkan jenis template
+        window.openWhatsappSettings = function(type) {
+            const titleElement = document.getElementById('settingsModalTitle');
+            const templateTextarea = document.getElementById('whatsappTemplateTextarea');
+            const currentTemplateTypeInput = document.getElementById('currentTemplateType');
+            
+            if (type === 'spp') {
+                titleElement.textContent = 'Pengaturan Template WhatsApp SPP (Placeholder: {nama_siswa}, {tahun_bayar}, {rincian_pembayaran}, {total_nominal_formatted}, {nama_file})';
+                templateTextarea.value = whatsappTemplates.spp;
+                currentTemplateTypeInput.value = 'spp';
+            } else if (type === 'nonspp') {
+                titleElement.textContent = 'Pengaturan Template WhatsApp Non-SPP (Placeholder: {nama_siswa}, {total_nominal_formatted}, {nama_file})';
+                templateTextarea.value = whatsappTemplates.nonspp;
+                currentTemplateTypeInput.value = 'nonspp';
+            } else {
+                 alert('Jenis template tidak valid.');
+                 return;
+            }
+
+            settingsModal.style.display = 'flex';
+            document.getElementById('settingsStatusMessage').textContent = '';
+        }
+        
+        // FUNGSI MODIFIKASI: Menyimpan template yang sedang diedit
+        window.saveWhatsappTemplate = async function() {
+            const templateType = document.getElementById('currentTemplateType').value;
+            const newTemplateText = document.getElementById('whatsappTemplateTextarea').value;
+            const statusMessageDiv = document.getElementById('settingsStatusMessage');
+            
+            if (!templateType) { statusMessageDiv.textContent = 'Error: Jenis template tidak diketahui.'; return; }
+
+            const fieldToUpdate = templateKeys[templateType];
+            
+            try {
+                const settingsRef = doc(db, "settings", "whatsapp_templates");
+                await setDoc(settingsRef, { [fieldToUpdate]: newTemplateText }, { merge: true });
+                whatsappTemplates[templateType] = newTemplateText;
+                statusMessageDiv.textContent = `Template ${templateType.toUpperCase()} berhasil disimpan!`;
+                statusMessageDiv.style.color = 'green';
+            } catch (error) {
+                statusMessageDiv.textContent = `Gagal menyimpan template: ${error.message}`;
+                statusMessageDiv.style.color = 'red';
+                console.error("Error saving WhatsApp template:", error);
+            }
+        }
+        
+        // FUNGSI MODIFIKASI: Reset template yang sedang diedit
+        window.resetWhatsappTemplate = async function() {
+            const templateType = document.getElementById('currentTemplateType').value;
+            const statusMessageDiv = document.getElementById('settingsStatusMessage');
+            
+            if (!templateType) { statusMessageDiv.textContent = 'Error: Jenis template tidak diketahui.'; return; }
+            
+            if (confirm(`Yakin ingin mereset template ${templateType.toUpperCase()} ke pengaturan awal?`)) {
+                const defaultText = defaultWhatsappTemplate[templateType];
+                const fieldToUpdate = templateKeys[templateType];
+                
+                try {
+                    const settingsRef = doc(db, "settings", "whatsapp_templates");
+                    // Mengatur field ke nilai default
+                    await setDoc(settingsRef, { [fieldToUpdate]: defaultText }, { merge: true });
+                    
+                    whatsappTemplates[templateType] = defaultText;
+                    document.getElementById('whatsappTemplateTextarea').value = defaultText;
+                    statusMessageDiv.textContent = `Template ${templateType.toUpperCase()} berhasil direset!`;
+                    statusMessageDiv.style.color = 'green';
+                } catch (error) {
+                    statusMessageDiv.textContent = `Gagal mereset template: ${error.message}`;
+                    statusMessageDiv.style.color = 'red';
+                    console.error("Error resetting WhatsApp template:", error);
+                }
+            }
+        }
+        
         async function loadBrandSettings() {
             try {
                 const docSnap = await getDoc(doc(db, "settings", "brand"));
@@ -1854,52 +2110,103 @@ Terima kasih.`;
                 document.getElementById('paymentDate').valueAsDate = new Date();
                 document.getElementById('paymentYear').value = new Date().getFullYear();
                 await loadAllData();
+                populateSppSummaryDashboard(); // Update ringkasan setelah simpan
             } catch (error) {
                 statusMessageDiv.textContent = `Error: ${error.message}`;
                 statusMessageDiv.style.color = 'red';
                 console.error("Error storing payment:", error);
             }
         }
+        function filterSppData() {
+            const selectedStudentId = document.getElementById('studentFilter').value;
+            const selectedYear = document.getElementById('yearFilter').value;
+            const selectedMonth = document.getElementById('monthFilter').value;
+
+            return allStudents.filter(student => {
+                let matchesStudent = selectedStudentId === 'all' || student.id === selectedStudentId;
+                
+                if (!matchesStudent) return false;
+                
+                // Jika tidak ada data SPP, jangan tampilkan di riwayat
+                if (!student.spp || Object.keys(student.spp).length === 0) return false;
+
+                if (selectedYear === 'all') {
+                    // Jika Tahun 'all', kita hanya perlu memastikan ada data SPP
+                    return true;
+                } else {
+                    // Filter berdasarkan Tahun yang dipilih
+                    const paymentsInSelectedYear = Object.keys(student.spp).filter(key => key.startsWith(selectedYear));
+                    if (paymentsInSelectedYear.length === 0) return false;
+
+                    if (selectedMonth !== 'all') {
+                        // Filter spesifik: Tahun dan Bulan
+                        const key = `${selectedYear}-${selectedMonth}`;
+                        // Pastikan ada pembayaran untuk bulan dan tahun yang spesifik.
+                        return student.spp[key] !== undefined;
+                    }
+                    
+                    // Filter hanya berdasarkan Tahun
+                    return paymentsInSelectedYear.length > 0;
+                }
+            });
+        }
+
         function renderSppTable() {
             const tableHeader = document.getElementById('tableHeader');
             const tableSubHeader = document.getElementById('tableSubHeader');
             const tableBody = document.getElementById('sppTableBody');
-            const selectedStudentId = document.getElementById('studentFilter').value;
+            
             const selectedYear = document.getElementById('yearFilter').value;
-            let studentsToDisplay = allStudents.filter(student => {
-                let matchesStudent = selectedStudentId === 'all' || student.id === selectedStudentId;
-                if (selectedYear === 'all') {
-                    return matchesStudent && student.spp && Object.keys(student.spp).length > 0;
-                } else {
-                    return matchesStudent && Object.keys(student.spp || {}).some(key => key.startsWith(selectedYear));
-                }
-            });
+            const selectedMonth = document.getElementById('monthFilter').value;
+
+            // Gunakan fungsi filterSppData yang baru
+            let studentsToDisplay = filterSppData();
+            
             const totalPages = Math.ceil(studentsToDisplay.length / rowsPerPage);
             if (currentPage > totalPages) currentPage = totalPages || 1;
             const start = (currentPage - 1) * rowsPerPage;
             const end = start + rowsPerPage;
             const paginatedStudents = studentsToDisplay.slice(start, end);
+            
             tableHeader.innerHTML = '';
             tableSubHeader.innerHTML = '';
-            if (allYearsWithPayments.length === 0 && selectedYear === 'all') {
-                tableBody.innerHTML = `<tr><td colspan="${monthNames.length + 1}" class="no-data">Belum ada data pembayaran SPP sama sekali.</td></tr>`;
-                updatePaginationControls('spp', 0, 1);
-                return;
-            }
+            
+            // Tentukan tahun mana yang akan ditampilkan
             const yearsToDisplay = selectedYear === 'all' ? allYearsWithPayments : [selectedYear];
+            
+            // Tentukan kolom bulan mana yang akan ditampilkan
+            let monthsToDisplay = [];
+            if (selectedMonth !== 'all') {
+                monthsToDisplay = [parseInt(selectedMonth)]; // Hanya bulan yang dipilih
+            } else {
+                monthsToDisplay = monthNames.map((_, index) => index); // Semua bulan (0-11)
+            }
+
+            // Atur Header
             tableHeader.innerHTML = `<th rowspan="2">Nama Siswa</th>`;
+            if (selectedYear === 'all') {
+                // Tampilkan header kolom per tahun
+                yearsToDisplay.forEach(year => {
+                    tableHeader.innerHTML += `<th colspan="${monthsToDisplay.length}">${year}</th>`;
+                });
+            } else {
+                 // Tampilkan satu header tahun besar
+                tableHeader.innerHTML += `<th colspan="${monthsToDisplay.length}">${selectedYear}</th>`;
+            }
+
+            // Atur Sub Header (Bulan)
             yearsToDisplay.forEach(year => {
-                tableHeader.innerHTML += `<th colspan="12">${year}</th>`;
-            });
-            yearsToDisplay.forEach(year => {
-                 monthNames.forEach(month => {
-                     tableSubHeader.innerHTML += `<th>${month.substring(0,3).toUpperCase()}</th>`;
+                 monthsToDisplay.forEach(monthIndex => {
+                     tableSubHeader.innerHTML += `<th>${monthNames[monthIndex].substring(0,3).toUpperCase()}</th>`;
                  });
             });
+
             tableBody.innerHTML = '';
+            
+            const totalCols = 1 + (yearsToDisplay.length * monthsToDisplay.length);
+            
             if (paginatedStudents.length === 0) {
-                const colspan = 1 + (yearsToDisplay.length * 12);
-                tableBody.innerHTML = `<tr><td colspan="${colspan}">Tidak ada data untuk filter ini.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="${totalCols}">Tidak ada data untuk filter ini.</td></tr>`;
                 updatePaginationControls('spp', 0, 1);
             } else {
                  paginatedStudents.forEach(student => {
@@ -1908,11 +2215,13 @@ Terima kasih.`;
                      const studentStatus = student.status || 'inactive';
                      studentNameCell.innerHTML = `${student.name}<span class="student-status">${studentStatus.toUpperCase()}</span>`;
                      const studentSpp = student.spp || {};
+                     
                      yearsToDisplay.forEach(year => {
-                         monthNames.forEach((month, monthIndex) => {
+                         monthsToDisplay.forEach(monthIndex => {
                              const cell = row.insertCell();
                              const key = `${year}-${monthIndex}`;
                              const paymentData = studentSpp[key];
+                             
                              if (paymentData) {
                                  const bankColor = bankColors[paymentData.bank] || '#ccc';
                                  const nominalFormatted = new Intl.NumberFormat('id-ID').format(paymentData.nominal);
@@ -2061,6 +2370,7 @@ Terima kasih.`;
                 alert('Pembayaran SPP berhasil diperbarui!');
                 editSppModal.style.display = 'none';
                 await loadAllData();
+                populateSppSummaryDashboard(); // Update ringkasan setelah edit
             } catch (error) {
                 console.error("Gagal memperbarui pembayaran SPP:", error);
                 alert(`Error: ${error.message}`);
@@ -2082,6 +2392,7 @@ Terima kasih.`;
                 alert('Pembayaran SPP berhasil dihapus!');
                 editSppModal.style.display = 'none';
                 await loadAllData();
+                populateSppSummaryDashboard(); // Update ringkasan setelah hapus
             } catch (error) {
                 console.error("Gagal menghapus pembayaran SPP:", error);
                 alert(`Error: ${error.message}`);
@@ -2131,6 +2442,14 @@ Terima kasih.`;
                 currentPage = 1;
                 renderSppTable();
             });
+            document.getElementById('monthFilter').addEventListener('change', () => {
+                currentPage = 1;
+                renderSppTable();
+            });
+            // EVENT LISTENERS UNTUK FILTER RINGKASAN SPP
+            document.getElementById('summarySppYearFilter').addEventListener('change', populateSppSummaryDashboard);
+            document.getElementById('summarySppMonthFilter').addEventListener('change', populateSppSummaryDashboard);
+            
             document.getElementById('rowsPerPage').addEventListener('change', (e) => {
                 rowsPerPage = parseInt(e.target.value, 10);
                 currentPage = 1;
@@ -2218,17 +2537,20 @@ Terima kasih.`;
                 });
             }
         }
+        
+        // FUNGSI MODIFIKASI: Menangani format nomor 0, +62, dan 62
         function formatPhoneNumber(number) {
-            number = String(number).replace(/\s/g, '');
-            if (number.startsWith('0')) {
-                number = '62' + number.slice(1);
-            } else if (number.startsWith('+')) {
+            number = String(number).replace(/\s/g, '').replace(/[^0-9+]/g, '');
+            
+            if (number.startsWith('+62')) {
                 number = number.slice(1);
-            }
-            if (!number.startsWith('62')) {
+            } else if (number.startsWith('0')) {
+                number = '62' + number.slice(1);
+            } else if (!number.startsWith('62')) {
                 number = '62' + number;
             }
-            return number;
+            // Hapus karakter '+' yang mungkin tersisa
+            return number.replace('+', '');
         }
 
         const isMobile = /Mobi|Android/i.test(navigator.userAgent);
@@ -2265,6 +2587,9 @@ Terima kasih.`;
             const now = new Date();
             const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
 
+            // Menggunakan template SPP yang sudah dimuat
+            const sppTemplate = whatsappTemplates.spp;
+            
             if (selectedMonth === 'all') {
                 paymentsToPrint = Object.keys(paymentsForYear)
                     .filter(key => key.startsWith(selectedYear))
@@ -2280,7 +2605,7 @@ Terima kasih.`;
                 const totalNominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal);
                 const rincianPembayaran = paymentsToPrint.map(p => `• ${monthNames[p.monthIndex]}: ${new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(p.data.nominal)}`).join('\n');
                 
-                message = whatsappTemplateText
+                message = sppTemplate
                     .replace(/{nama_siswa}/g, studentName)
                     .replace(/{tahun_bayar}/g, selectedYear)
                     .replace(/{total_nominal_formatted}/g, totalNominalFormatted)
@@ -2300,6 +2625,7 @@ Terima kasih.`;
                 title = `Bukti Pembayaran SPP Bulan ${monthNames[selectedMonth]} ${selectedYear}`;
                 const totalNominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(paymentData.nominal);
                 
+                // Menggunakan template yang lebih singkat dan hardcoded untuk pembayaran satu bulan agar tidak bergantung pada placeholder rincian yang panjang.
                 message = `Halo Bapak/Ibu, ini adalah bukti pembayaran SPP untuk *${studentName}* untuk bulan *${monthNames[selectedMonth]}* tahun *${selectedYear}*.
 Nominal yang tercatat adalah: *${totalNominalFormatted}*
 Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
@@ -2433,7 +2759,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 setupOtherStudentSearchBox(); 
                 populateNonSppSelectors(); 
                 populateNonSppSummarySelectors(); 
-                populateNonSppSummaryDashboard(); 
+                populateNonSppSummaryDashboard(); // PANGGIL RINGKASAN NON-SPP
                 renderOtherPaymentsTable(filterNonSppData());
             } catch (error) {
                 console.error("Error loading Non-SPP data:", error);
@@ -2484,10 +2810,12 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             });
         }
         
+        // FUNGSI MODIFIKASI UNTUK RINGKASAN NON-SPP
         function populateNonSppSummaryDashboard() {
             const yearFilter = document.getElementById('summaryYearFilter').value;
             const monthFilter = document.getElementById('summaryMonthFilter').value;
             const summaryContainer = document.getElementById('nonSppSummaryContainer');
+            const totalNominalDisplay = document.getElementById('totalNominalDisplay');
 
             const filteredPayments = allOtherPayments.filter(p => {
                 const paymentDate = p.timestamp ? p.timestamp.toDate() : null;
@@ -2499,15 +2827,24 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
 
             const bankTransactionCounts = filteredPayments.reduce((acc, payment) => {
                 const bankName = payment.bank || 'Bank Tidak Diketahui';
-                acc[bankName] = (acc[bankName] || 0) + 1;
+                acc[bankName] = { 
+                    count: (acc[bankName]?.count || 0) + 1,
+                    nominal: (acc[bankName]?.nominal || 0) + (payment.nominal || 0)
+                };
                 return acc;
             }, {});
 
+            let totalNominal = 0;
             summaryContainer.innerHTML = '';
             const sortedBanks = Object.keys(bankTransactionCounts).sort();
+
             if (sortedBanks.length > 0) {
                 sortedBanks.forEach(bank => {
-                    const count = bankTransactionCounts[bank];
+                    const data = bankTransactionCounts[bank];
+                    totalNominal += data.nominal;
+                    // Format nominal dengan style currency, tanpa pecahan
+                    const nominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(data.nominal);
+
                     const divItem = document.createElement('div');
                     divItem.style.padding = '15px';
                     divItem.style.border = '1px solid var(--border-color)';
@@ -2515,13 +2852,18 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                     divItem.style.backgroundColor = '#fff';
                     divItem.innerHTML = `
                         <h4>${bank}</h4>
-                        <p>Total Transaksi: <b>${count}</b></p>
+                        <p>Total Transaksi: <b>${data.count}</b></p>
+                        <p>Total Nominal: <b>${nominalFormatted}</b></p>
                     `;
                     summaryContainer.appendChild(divItem);
                 });
             } else {
                 summaryContainer.innerHTML = '<p class="no-data" style="grid-column: 1 / -1;">Tidak ada data transaksi untuk filter ini.</p>';
             }
+            
+            // Format dan tampilkan Total Nominal Keseluruhan
+            const totalNominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal);
+            totalNominalDisplay.textContent = totalNominalFormatted;
         }
 
         function setupNonSppEventListeners() {
@@ -2614,6 +2956,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 document.getElementById('otherPaymentForm').reset();
                 document.getElementById('otherPaymentDate').valueAsDate = new Date();
                 await loadNonSppData();
+                populateNonSppSummaryDashboard(); // Update ringkasan setelah simpan
             } catch (error) {
                 statusMessageDiv.textContent = `Error: ${error.message}`;
                 statusMessageDiv.style.color = 'red';
@@ -2756,6 +3099,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 alert('Laporan Non-SPP berhasil diperbarui!');
                 editNonSppModal.style.display = 'none';
                 await loadNonSppData();
+                populateNonSppSummaryDashboard(); // Update ringkasan setelah edit
             } catch (error) {
                 console.error("Gagal memperbarui laporan Non-SPP:", error);
                 alert(`Error: ${error.message}`);
@@ -2770,6 +3114,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 alert('Laporan Non-SPP berhasil dihapus!');
                 editNonSppModal.style.display = 'none';
                 await loadNonSppData();
+                populateNonSppSummaryDashboard(); // Update ringkasan setelah hapus
             } catch (error) {
                 console.error("Gagal menghapus laporan Non-SPP:", error);
                 alert(`Error: ${error.message}`);
@@ -2789,6 +3134,22 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             let yPos = 15;
+            
+            // Menggunakan template Non-SPP yang sudah dimuat
+            const nonsppTemplate = whatsappTemplates.nonspp;
+            
+            const totalNominal = selectedReports.reduce((sum, p) => sum + p.nominal, 0);
+            const totalNominalFormatted = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0}).format(totalNominal);
+            
+            const now = new Date();
+            const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+            const fileName = `Laporan_Non-SPP_${student.name.replace(/ /g, '_')}_${timestamp}.pdf`;
+            
+            const message = nonsppTemplate
+                .replace(/{nama_siswa}/g, student.name)
+                .replace(/{total_nominal_formatted}/g, totalNominalFormatted)
+                .replace(/{nama_file}/g, fileName);
+
             const addContentAndSave = () => {
                 if (brandSettings && brandSettings.companyName) {
                     doc.setFontSize(12);
@@ -2811,19 +3172,18 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                     })
                 });
                 
-                const now = new Date();
-                const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
-                const fileName = `Laporan_Non-SPP_${student.name.replace(/ /g, '_')}_${timestamp}.pdf`;
-                
-                const message = `Halo, ini rincian laporan non-SPP untuk *${student.name}*.\n\n*Mohon lampirkan file PDF "${fileName}" yang baru saja Anda unduh.*`;
-                
+                doc.setFontSize(12);
+                doc.setFont("helvetica", "bold");
+                doc.text(`Total Laporan: ${totalNominalFormatted}`, 14, doc.autoTable.previous.finalY + 10);
+
+
                 const encodedMessage = encodeURIComponent(message);
                 
                 let whatsappUrl;
                 if (isMobile) {
-                    whatsappUrl = `whatsapp://send?phone=${formatPhoneNumber(student.phone)}&text=${encodedMessage}`;
+                    whatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`;
                 } else {
-                    whatsappUrl = `https://web.whatsapp.com/send?phone=${formatPhoneNumber(student.phone)}&text=${encodedMessage}`;
+                    whatsappUrl = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                 }
                 
                 doc.save(fileName, { returnPromise: true }).then(() => {
@@ -2860,6 +3220,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
             document.querySelector(`.tab-btn[onclick="openTab('${tabName}')"]`).classList.add('active');
             if(tabName === 'spp-tab') {
                 renderSppTable();
+                populateSppSummaryDashboard(); // PANGGIL RINGKASAN SPP
             } else if (tabName === 'nonspp-tab') {
                 await loadNonSppData();
                 populateNonSppSummaryDashboard();
@@ -3018,6 +3379,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 alert('Detail siswa dan riwayat laporan berhasil diperbarui!');
                 document.getElementById('editStudentModal').style.display = 'none';
                 await loadAllData();
+                populateSppSummaryDashboard(); // Update ringkasan setelah edit student
             } catch(error) { 
                 console.error("Gagal menyimpan dan memindahkan riwayat:", error);
                 alert('Gagal menyimpan dan memindahkan riwayat. Periksa konsol untuk detail.'); 
@@ -3034,6 +3396,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                     await updateCoachStudentCount(studentBefore.coachEmail, countChange);
                 }
                 await loadAllData();
+                populateSppSummaryDashboard(); // Update ringkasan setelah status berubah
             }
         };
 
@@ -3108,6 +3471,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 statusMessageDiv.style.color = 'green';
                 document.getElementById('selectAllBulkCheckbox').checked = false; 
                 await loadAllData();
+                populateSppSummaryDashboard(); // Update ringkasan setelah bulk change
             } catch (error) {
                 statusMessageDiv.textContent = `Gagal mengganti coach: ${error.message}`;
                 statusMessageDiv.style.color = 'red';
@@ -3217,6 +3581,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 assignStatusDiv.textContent = `Berhasil menyimpan ${studentsToSave.length} siswa!`;
                 assignStatusDiv.style.color = 'green';
                 await loadAllData();
+                populateSppSummaryDashboard(); // Update ringkasan setelah assign dan save
             } catch(error) {
                 assignStatusDiv.textContent = `Gagal menyimpan: ${error.message}`;
                 assignStatusDiv.style.color = 'red';
@@ -3291,6 +3656,7 @@ Pembayaran dilakukan melalui Bank: *${paymentData.bank}*
                 transferStatusDiv.textContent = `Sukses! ${studentsToMove.length} siswa dan riwayat laporannya telah dipindahkan.`;
                 transferStatusDiv.style.color = 'green';
                 await loadAllData();
+                populateSppSummaryDashboard(); // Update ringkasan setelah transfer
             }
         }
 
