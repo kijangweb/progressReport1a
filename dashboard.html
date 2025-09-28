@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progress Student Report</title>
+    <title>Dashboard Coach</title> 
     <style>
         /* Palet Warna */
         :root {
@@ -111,7 +111,7 @@
         }
         .student-list-table th, .student-list-table td {
             border: 1px solid var(--border-color);
-            padding: 15px;
+            padding: 10px; /* Sedikit dirapatkan padding tabel */
             text-align: left;
             word-wrap: break-word;
         }
@@ -213,24 +213,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             background-color: #d18d1f;
         }
-        #sendPdfBtn {
-            background-color: var(--secondary-color);
-            color: var(--text-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        #sendPdfBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            background-color: #45c4a7;
-        }
-        #sendPdfBtn svg {
-            width: 18px;
-            height: 18px;
-            fill: currentColor;
-        }
+        /* Hapus styling #sendPdfBtn */
 
         /* Aktivitas Checkbox */
         #activityCheckboxes, #editActivityCheckboxes {
@@ -382,7 +365,7 @@
         }
         .student-list-table th, .student-list-table td, .report-table th, .report-table td {
             border: 1px solid var(--border-color);
-            padding: 15px;
+            padding: 10px; /* Sedikit dirapatkan padding tabel */
             text-align: left;
             word-wrap: break-word;
         }
@@ -405,7 +388,24 @@
         .report-table tr.sent-report:hover {
             background-color: #c8e6c9;
         }
-        .action-btn-delete {
+
+        /* Tombol Aksi dalam Tabel (Edit/Delete) */
+        .report-table td .action-btn-edit {
+            padding: 8px 10px; /* Tombol dirapikan */
+            border-radius: 4px;
+            font-weight: normal;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            box-shadow: none;
+            cursor: pointer;
+            width: auto; /* Penting: agar tidak mengambil 100% lebar sel */
+            display: inline-block; /* Agar tombol tidak merusak tata letak baris */
+            white-space: nowrap; /* Agar tulisan tombol tidak pecah */
+            font-size: 0.9rem; /* Sedikit dikecilkan */
+            transition: transform 0.2s;
+        }
+        .report-table td .action-btn-delete {
             padding: 8px 12px;
             border-radius: 4px;
             font-weight: normal;
@@ -414,6 +414,14 @@
             border: none;
             box-shadow: none;
             cursor: pointer;
+            width: auto;
+            display: inline-block;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+        .action-btn-edit:hover {
+            background-color: #3a75c1; /* Warna hover disamakan dengan btn-export */
+            transform: translateY(-1px);
         }
         .action-btn-delete:hover {
             background-color: #d32f2f;
@@ -421,15 +429,15 @@
 
         /* Pagination */
         .pagination-controls {
-            margin-top: 20px;
+            margin-top: 15px; /* Sedikit dirapatkan */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 15px;
+            gap: 10px; /* Gap dirapatkan */
         }
         .pagination-controls button {
-            padding: 10px 15px;
+            padding: 8px 12px; /* Tombol dirapikan */
             border: 1px solid var(--border-color);
             background-color: var(--container-bg);
             color: var(--text-color);
@@ -449,12 +457,13 @@
         .pagination-controls select {
             width: auto;
             border: 1px solid var(--border-color);
-            padding: 8px;
+            padding: 6px; /* Select dirapikan */
             border-radius: 5px;
         }
         .pagination-controls .page-info {
             text-align: center;
             color: var(--text-color);
+            font-size: 0.95rem; /* Ukuran teks dirapikan */
         }
 
         /* Select2 Specific Styling */
@@ -556,14 +565,19 @@
             .report-filters { 
                 flex-direction: row; 
                 align-items: flex-end; 
-                gap: 20px;
+                gap: 15px; /* Gap filter dirapatkan */
             }
             .report-filters > div {
                 flex-grow: 1;
                 min-width: 150px;
             }
             #clearReportFilterBtn, #sendPdfBtn { width: auto; }
-            #activityCheckboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+            /* Memastikan checkbox tetap rapi di desktop */
+            #activityCheckboxes, #editActivityCheckboxes { 
+                display: grid; 
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Lebar kolom dirapikan */
+                gap: 10px; 
+            }
 
             .table-scroll-wrapper, .report-table-container {
                 overflow-x: unset;
@@ -573,16 +587,16 @@
                 white-space: normal;
                 width: 100%;
             }
-            .report-table th, .report-table td { min-width: unset; }
+            .report-table th, .report-table td { min-width: unset; padding: 10px; } /* Padding dirapikan */
 
             .report-table .col-sesi { width: 5%; text-align: center; }
-            .report-table .col-siswa { width: 15%; }
-            .report-table .col-level { width: 10%; }
+            .report-table .col-siswa { width: 12%; } /* Diperkecil agar ada ruang */
+            .report-table .col-level { width: 8%; }  /* Diperkecil agar ada ruang */
             .report-table .col-tanggal { width: 10%; }
             .report-table .col-lesson { width: 15%; }
-            .report-table .col-aktivitas { width: 25%; }
+            .report-table .col-aktivitas { width: 30%; } /* Diperbesar agar ada ruang */
             .report-table .col-hasil { width: 20%; }
-            .report-table .col-aksi { width: 10%; text-align: center; }
+            .report-table .col-aksi { width: 10%; text-align: center; } /* Diperbesar agar tombol 'Edit' muat */
         }
         
         /* New CSS for Mobile Optimization */
@@ -595,36 +609,99 @@
                 table-layout: auto;
                 width: auto;
             }
+            .student-list-table th, .student-list-table td, .report-table th, .report-table td {
+                padding: 10px; /* Padding dirapikan untuk mobile */
+            }
             .pagination-nav {
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 5px; /* Gap dirapatkan untuk mobile */
             }
             .pagination-controls button {
                 width: auto;
-                padding: 8px 12px;
+                padding: 6px 10px; /* Tombol dirapikan untuk mobile */
+                font-size: 0.8rem;
             }
+            .pagination-controls select {
+                padding: 4px;
+                font-size: 0.8rem;
+            }
+            /* Pastikan kolom aksi tidak pecah di mobile */
+            .report-table .col-aksi { min-width: 60px; } 
         }
+        
+        /* =================================================== */
+        /* CSS UNTUK FITUR DETAIL KLIK (Mata/Elipsis) */
+        /* =================================================== */
+        
+        /* Style untuk Konten Teks yang Diperpendek */
+        .content-cell {
+            display: flex;
+            align-items: flex-start;
+            gap: 5px;
+        }
+
+        .truncated-text {
+            /* Hapus batasan line-clamp karena sekarang menggunakan pemotongan karakter di JS */
+            display: block; /* Agar dapat diatur lebar selnya */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+            line-height: 1.3;
+        }
+        
+        /* Tombol Detail/Mata */
+        .detail-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 1.1em;
+            cursor: pointer;
+            padding: 0;
+            margin-top: -2px; /* Penyesuaian vertikal */
+            line-height: 1.3;
+            flex-shrink: 0;
+            transition: color 0.2s;
+            /* Pastikan tombol tidak terlalu besar di seluler */
+            padding: 0 5px; 
+        }
+        .detail-btn:hover {
+            color: #3a75c1;
+        }
+        
+        /* Detail Modal Khusus */
+        #detailModal .modal-content {
+            max-width: 700px; 
+        }
+        #detailModal .modal-body-content {
+            white-space: pre-wrap; /* Mempertahankan spasi dan baris baru dalam teksarea */
+            font-family: Arial, sans-serif;
+            font-size: 1.05rem;
+            padding: 10px;
+            background-color: var(--background-color);
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* =================================================== */
+        /* Akhir CSS Tambahan */
+        /* =================================================== */
     </style>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
     <div id="readStatusIndicator">Reads Sesi Ini: 0</div>
     <div class="container">
         <div class="header-info">
-            <h1>Progress Student Report</h1>
+            <h1 id="mainHeader">Selamat datang, user</h1> 
             <div class="header-buttons">
-                <button class="btn-export" onclick="window.openWhatsappSettings()">Pengaturan WhatsApp Templates</button>
                 <button type="button" class="logout-btn" onclick="window.logout()">Logout</button>
             </div>
         </div>
-        <p>Selamat datang, <strong id="coachEmailDisplay">...</strong>.</p>
-        
         <div class="section-container">
             <h3>Daftar Siswa Anda</h3>
             <div class="report-filters" style="margin-bottom: 10px;">
@@ -714,11 +791,6 @@
                     </select>
                 </div>
                 <div><button type="button" id="clearReportFilterBtn">Reset Filter</button></div>
-                <div>
-                    <button type="button" id="sendPdfBtn">
-                        Kirim Laporan PDF via WhatsApp
-                    </button>
-                </div>
             </div>
             <div class="report-table-container">
                 <table class="report-table" id="reportTableForPdf">
@@ -755,25 +827,21 @@
             </div>
         </div>
     </div>
-
-    <div id="settingsModal" class="modal">
+    
+    <div id="detailModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Pengaturan Template WhatsApp</h3>
-                <span class="close-btn" onclick="settingsModal.style.display='none'">&times;</span>
+                <h3 id="detailModalTitle">Detail Laporan</h3>
+                <span class="close-btn" onclick="document.getElementById('detailModal').style.display='none'">&times;</span>
             </div>
             <div class="modal-body">
-                <p>Edit teks template di bawah ini. Gunakan placeholder <code>{nama_siswa}</code>, <code>{level_siswa}</code>, dan <code>{nomor_sesi}</code> untuk data dinamis.</p>
-                <textarea id="whatsappTemplateTextarea" rows="10" style="width:100%;"></textarea>
-                <div style="display: flex; justify-content: space-between; margin-top: 10px; align-items: center; flex-direction: column; gap: 10px;">
-                    <button class="btn-export" onclick="window.saveWhatsappTemplate()">Simpan Template</button>
-                    <button class="btn-reset" onclick="window.resetWhatsappTemplate()">Reset ke Awal</button>
+                <div class="form-group">
+                    <label id="detailContentLabel">Konten Lengkap</label>
+                    <div id="detailContent" class="modal-body-content"></div>
                 </div>
-                <div id="settingsStatusMessage"></div>
             </div>
         </div>
     </div>
-    
     <div id="editReportModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -838,7 +906,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, addDoc, query, where, Timestamp, orderBy, onSnapshot, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, addDoc, query, where, Timestamp, orderBy, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBm3SkLLtl9LvczDDht-OQ6-R4OYLPYAJQ", authDomain: "progres-report-5d199.firebaseapp.com", projectId: "progres-report-5d199", storageBucket: "progres-report-5d199.firebasestorage.app", messagingSenderId: "363573365137", appId: "1:363573365137:web:98f32d5ff8fae05617b230", measurementId: "G-CPX04R69F5" };
         const app = initializeApp(firebaseConfig);
@@ -866,11 +934,14 @@
         let reportRowsPerPage = 5;
         let appEditPin = '';
 
-        const defaultReportWhatsappTemplate = `Halo Bapak/Ibu, ini adalah laporan aktivitas harian sempoa untuk *{nama_siswa}*.
-Laporan sesi ke *{nomor_sesi}* untuk level *{level_siswa}* sudah tersedia.
-Mohon cek folder unduhan Anda untuk melihat laporan lengkap dalam format PDF.
-Terima kasih.`;
-        let whatsappTemplateText = defaultReportWhatsappTemplate;
+        // VARIABEL TEMPLATE WHATSAPP DIHAPUS
+        // FUNGSI UTILITY BARU
+        function truncateText(text, maxLength = 30) {
+            if (!text || text.length <= maxLength) {
+                return text;
+            }
+            return text.substring(0, maxLength) + '...';
+        }
 
         window.logout = function() {
             sessionStorage.clear();
@@ -1026,7 +1097,9 @@ Terima kasih.`;
                     if (docSnap.exists() && docSnap.data().role === 'user' && docSnap.data().status !== 'disabled') {
                         document.body.style.display = 'block';
                         const userData = docSnap.data();
-                        document.getElementById('coachEmailDisplay').textContent = userData.name || user.email;
+                        
+                        // Atur teks header utama
+                        document.getElementById('mainHeader').textContent = `Selamat datang, ${userData.name || user.email}`;
                         currentCoachName = userData.name || user.email;
                         
                         if (!window.initialLoadDone) {
@@ -1037,7 +1110,7 @@ Terima kasih.`;
 
                             setupStudentsListener(user.email);
                             setupReportsListener(user.email);
-                            await loadWhatsappTemplate();
+                            // loadWhatsappTemplate() DIHAPUS
                             await loadAppEditPin();
                             setupEventListeners();
                             initSelect2Dropdowns(user.email);
@@ -1080,19 +1153,8 @@ Terima kasih.`;
             } catch (error) { console.error("Gagal ambil brand settings:", error); return {}; }
         }
 
-        async function loadWhatsappTemplate() {
-            try {
-                const docSnap = await getDoc(doc(db, "settings", "whatsapp_templates"));
-                sessionReadCount++; window.updateReadStatus();
-                if (docSnap.exists() && docSnap.data().reportProof) {
-                    whatsappTemplateText = docSnap.data().reportProof;
-                }
-            } catch (error) {
-                console.error("Gagal memuat template WhatsApp:", error);
-                whatsappTemplateText = defaultReportWhatsappTemplate;
-            }
-        }
-        
+        // FUNGSI loadWhatsappTemplate DIHAPUS
+
         function initSelect2Dropdowns(coachEmail) {
             $('#studentSelectorForReport').select2({
                 placeholder: "-- Pilih Siswa --",
@@ -1289,6 +1351,7 @@ Terima kasih.`;
             return processedReports;
         }
 
+        // FUNGSI renderTableFromGlobalReports yang telah direvisi
         function renderTableFromGlobalReports() {
             const tableBody = document.getElementById('reportsTableBody');
             tableBody.innerHTML = '';
@@ -1330,6 +1393,35 @@ Terima kasih.`;
                 const date = (report.timestamp && typeof report.timestamp.toDate === 'function' ? report.timestamp.toDate() : new Date(report.timestamp)).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 const rowClass = report.isSent ? 'sent-report' : '';
 
+                const activityText = report.lesson || '';
+                const resultText = report.hasil || '';
+                
+                // Pemotongan teks untuk tampilan tabel (maks 30 karakter)
+                const truncatedActivity = truncateText(activityText, 30);
+                const truncatedResult = truncateText(resultText, 30);
+
+                // Escape characters for use in JS function parameters
+                const escapedActivityText = activityText.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const escapedResultText = resultText.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                // HTML untuk Kolom Aktivitas
+                const activityCellHtml = `
+                    <div class="content-cell">
+                        <span class="truncated-text">${truncatedActivity}</span>
+                        ${activityText.length > 30 ? 
+                            `<button type="button" class="detail-btn" onclick="window.openDetailModal('Aktivitas', '${escapedActivityText}')">👁️</button>` : ''
+                        }
+                    </div>`;
+
+                // HTML untuk Kolom Hasil
+                const resultCellHtml = `
+                    <div class="content-cell">
+                        <span class="truncated-text">${truncatedResult}</span>
+                        ${resultText.length > 30 ? 
+                            `<button type="button" class="detail-btn" onclick="window.openDetailModal('Hasil', '${escapedResultText}')">👁️</button>` : ''
+                        }
+                    </div>`;
+
                 tableBody.innerHTML += `
                     <tr class="${rowClass}">
                         <td style="text-align: center;">${report.activityNumber || ''}</td>
@@ -1337,8 +1429,8 @@ Terima kasih.`;
                         <td>${report.level}</td>
                         <td>${date}</td>
                         <td>${report.lessonName || ''}</td>
-                        <td>${report.lesson || ''}</td>
-                        <td>${report.hasil}</td>
+                        <td>${activityCellHtml}</td>
+                        <td>${resultCellHtml}</td>
                         <td><button type="button" class="action-btn-edit" onclick="window.openPinModal('report', '${report.id}')">Edit</button></td>
                     </tr>`;
             });
@@ -1352,6 +1444,17 @@ Terima kasih.`;
             document.getElementById('reportPrevBtn').disabled = reportCurrentPage === 1;
             document.getElementById('reportNextBtn').disabled = reportCurrentPage >= totalPages;
         };
+        
+        // FUNGSI Buka Modal Detail
+        window.openDetailModal = function(type, content) {
+            document.getElementById('detailModalTitle').textContent = `Detail ${type}`;
+            document.getElementById('detailContentLabel').textContent = `${type} Lengkap:`;
+            // Menggunakan textContent agar data ditampilkan sebagai teks murni (aman dari XSS)
+            // Menggunakan pre-wrap di CSS agar baris baru dipertahankan
+            document.getElementById('detailContent').textContent = content; 
+            document.getElementById('detailModal').style.display = 'flex';
+        };
+        // Akhir FUNGSI Buka Modal Detail
 
         window.openPinModal = function(type, id) {
             document.getElementById('pinModal').style.display = 'flex';
@@ -1539,13 +1642,8 @@ Terima kasih.`;
                 document.getElementById('reportSort').value = 'activityNumber_desc';
                 handleReportFilterChange();
             });
-            document.getElementById('sendPdfBtn').addEventListener('click', window.generatePdfAndWhatsApp);
-            const settingsBtn = document.querySelector('.header-buttons .btn-export');
-            if (settingsBtn) {
-                settingsBtn.addEventListener('click', window.openWhatsappSettings);
-            }
-            document.querySelector('#settingsModal .close-btn').onclick = () => document.getElementById('settingsModal').style.display = 'none';
-
+            // EVENT LISTENER UNTUK TOMBOL PENGATURAN DIHAPUS
+            
             document.getElementById('studentRowsPerPage').addEventListener('change', (e) => {
                 studentRowsPerPage = parseInt(e.target.value);
                 studentCurrentPage = 1;
@@ -1608,205 +1706,11 @@ Terima kasih.`;
             return number;
         };
 
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
+        // FUNGSI generatePdfAndWhatsApp DIHAPUS
 
-        window.generatePdfAndWhatsApp = async function() {
-            const studentFilter = document.getElementById('reportFilterStudent');
-            const studentId = studentFilter.value;
-            if (!studentId) {
-                alert("Harap pilih filter Siswa spesifik terlebih dahulu sebelum membuat laporan.");
-                return;
-            }
-            const student = myStudents.find(s => s.id === studentId);
-            if (!student || !student.phone) {
-                alert("Nomor telepon siswa tidak ditemukan. Harap perbarui data siswa di Panel Admin.");
-                return;
-            }
-            const phoneNumber = window.formatPhoneNumber(student.phone);
-            const isValidPhoneNumber = /^[0-9]{9,15}$/.test(phoneNumber);
-            if (!isValidPhoneNumber) {
-                alert("Nomor telepon siswa tidak valid. Harap perbarui data siswa di Panel Admin.");
-                return;
-            }
-            if (filteredAndSortedReports.length === 0) {
-                alert("Tidak ada laporan untuk dibuat PDF.");
-                return;
-            }
-
-            const { jsPDF } = window.jspdf;
-            const pdfDoc = new jsPDF();
-            const studentName = student.name;
-            const levelName = student.studentLevel || 'N/A';
-            const pageWidth = pdfDoc.internal.pageSize.getWidth();
-            const pageCenter = pageWidth / 2;
-            let yPos = 15;
-
-            const addContentAndSave = () => {
-                if (brandSettings && brandSettings.companyName) {
-                    pdfDoc.setFontSize(12);
-                    pdfDoc.setFont("helvetica", "normal");
-                    pdfDoc.text(brandSettings.companyName, pageCenter, yPos, { align: "center" });
-                    yPos += 8;
-                }
-                pdfDoc.setFontSize(16);
-                pdfDoc.setFont("helvetica", "bold");
-                pdfDoc.text("Laporan Aktivitas Siswa", pageCenter, yPos, { align: "center" });
-                yPos += 15;
-                pdfDoc.setFontSize(10);
-                pdfDoc.setFont("helvetica", "normal");
-                pdfDoc.text(`Coach : ${currentCoachName}`, 15, yPos);
-                pdfDoc.text(`Siswa / Level : ${studentName} / ${levelName}`, 15, yPos + 7);
-                yPos += 15;
-
-                const sortedReportsForPdf = filteredAndSortedReports.slice().sort((a, b) => {
-                    const dateA = a.timestamp && typeof a.timestamp.toDate === 'function' ? a.timestamp.toDate() : new Date(a.timestamp);
-                    const dateB = b.timestamp && typeof b.timestamp.toDate === 'function' ? b.timestamp.toDate() : new Date(b.timestamp);
-                    return dateA - dateB;
-                });
-
-                const head = [['Sesi', 'Tanggal', 'Lesson', 'Aktivitas', 'Hasil']];
-                const body = sortedReportsForPdf.map(report => {
-                    const date = (report.timestamp && typeof report.timestamp.toDate === 'function' ? report.timestamp.toDate() : new Date(report.timestamp)).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                    return [ report.activityNumber, date, report.lessonName, report.lesson, report.hasil ];
-                });
-                pdfDoc.autoTable({
-                    startY: yPos,
-                    head: head,
-                    body: body,
-                    styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
-                    headStyles: { fillColor: [220, 220, 220], textColor: [0,0,0], fontStyle: 'bold' },
-                    columnStyles: {
-                        0: { cellWidth: 10 }, 1: { cellWidth: 20 }, 2: { cellWidth: 20 },
-                        3: { cellWidth: 'auto' }, 4: { cellWidth: 'auto' }
-                    },
-                    margin: { left: 14, right: 14 }
-                });
-
-                const fileName = `Laporan_Aktivitas_${studentName.replace(/ /g, "_")}_${levelName.replace(/ /g, "_")}_${Date.now()}.pdf`;
-                
-                const lastReport = filteredAndSortedReports.find(r => r.activityNumber === filteredAndSortedReports.length);
-                const lastSessionNumber = lastReport ? lastReport.activityNumber : 'N/A';
-
-                let message = whatsappTemplateText
-                    .replace(/{nama_siswa}/g, studentName)
-                    .replace(/{level_siswa}/g, levelName)
-                    .replace(/{nomor_sesi}/g, lastSessionNumber);
-
-                const encodedMessage = encodeURIComponent(message);
-
-                let whatsappUrl;
-                if (isMobileDevice()) {
-                    whatsappUrl = `https://api.whatsapp.com/send/?phone=${phoneNumber}&text=${encodedMessage}&type=phone_number&app_absent=0`;
-                } else {
-                    whatsappUrl = `https://web.whatsapp.com/send/?phone=${phoneNumber}&text=${encodedMessage}&type=phone_number&app_absent=0`;
-                }
-
-                const reportIds = filteredAndSortedReports.map(r => r.id);
-                const batch = writeBatch(db);
-                reportIds.forEach(id => {
-                    const reportRef = doc(db, "reports", id);
-                    batch.update(reportRef, { isSent: true });
-                });
-                
-                pdfDoc.save(fileName, { returnPromise: true }).then(async () => {
-                    alert(`Laporan PDF berhasil dibuat dan diunduh. Chat WhatsApp siap dikirim.`);
-                    window.open(whatsappUrl, '_blank');
-                    
-                    try {
-                        await batch.commit();
-                        console.log("Status laporan berhasil diperbarui di Firestore.");
-
-                        const studentDocRef = doc(db, "students", studentId);
-                        await updateDoc(studentDocRef, {
-                            lastSentReport: {
-                                sentTimestamp: Timestamp.now(),
-                                activityNumber: lastSessionNumber
-                            }
-                        });
-                        console.log("Status pengiriman berhasil ditambahkan ke dokumen siswa.");
-
-                    } catch (e) {
-                        console.error("Gagal memperbarui status laporan atau menambahkan log:", e);
-                    }
-                });
-            };
-
-            if (brandSettings && brandSettings.logoBase64) {
-                try {
-                    const fullLogoBase64 = brandSettings.logoBase64.startsWith('data:') ? brandSettings.logoBase64 : `data:image/png;base64,${brandSettings.logoBase64}`;
-                    const img = new Image();
-                    img.src = fullLogoBase64;
-                    img.onload = function() {
-                        const desiredLogoHeight = 20;
-                        const aspectRatio = img.width / img.height;
-                        const calculatedLogoWidth = desiredLogoHeight * aspectRatio;
-                        pdfDoc.addImage(fullLogoBase64, 'PNG', pageCenter - (calculatedLogoWidth / 2), yPos, calculatedLogoWidth, desiredLogoHeight, undefined, 'HIGH');
-                        yPos += desiredLogoHeight + 10;
-                        addContentAndSave();
-                    };
-                    img.onerror = function() {
-                        console.error("Gagal memuat logo, lanjutkan tanpa logo.");
-                        addContentAndSave();
-                    };
-                } catch (e) {
-                    console.error("Gagal menambahkan logo ke PDF. Pastikan format Base64 benar.", e);
-                    addContentAndSave();
-                }
-            } else {
-                addContentAndSave();
-            }
-        };
-        window.openWhatsappSettings = async function() {
-            settingsModal.style.display = 'flex';
-            const settingsStatusMessage = document.getElementById('settingsStatusMessage');
-            const whatsappTemplateTextarea = document.getElementById('whatsappTemplateTextarea');
-            settingsStatusMessage.textContent = 'Memuat template...';
-            try {
-                const docSnap = await getDoc(doc(db, "settings", "whatsapp_templates"));
-                sessionReadCount++; window.updateReadStatus();
-                if (docSnap.exists() && docSnap.data().reportProof) {
-                    whatsappTemplateTextarea.value = docSnap.data().reportProof;
-                } else {
-                    whatsappTemplateTextarea.value = defaultReportWhatsappTemplate;
-                }
-                settingsStatusMessage.textContent = '';
-            } catch (error) {
-                console.error("Gagal memuat template WhatsApp:", error);
-                whatsappTemplateTextarea.value = defaultReportWhatsappTemplate;
-                settingsStatusMessage.textContent = 'Gagal memuat template. Menggunakan default.';
-                settingsStatusMessage.style.color = 'red';
-            }
-        };
-        window.saveWhatsappTemplate = async function() {
-            const settingsStatusMessage = document.getElementById('settingsStatusMessage');
-            const whatsappTemplateTextarea = document.getElementById('whatsappTemplateTextarea');
-            settingsStatusMessage.textContent = 'Menyimpan template...';
-            settingsStatusMessage.style.color = 'blue';
-            const newTemplateText = whatsappTemplateTextarea.value;
-            try {
-                const templateDocRef = doc(db, "settings", "whatsapp_templates");
-                await updateDoc(templateDocRef, {
-                    reportProof: newTemplateText,
-                    lastUpdated: Timestamp.now()
-                });
-                whatsappTemplateText = newTemplateText;
-                settingsStatusMessage.textContent = 'Template berhasil disimpan!';
-                settingsStatusMessage.style.color = 'green';
-            } catch (error) {
-                console.error("Gagal menyimpan template:", error);
-                settingsStatusMessage.textContent = `Error: ${error.message}`;
-                settingsStatusMessage.style.color = 'red';
-            }
-        };
-        window.resetWhatsappTemplate = function() {
-            if (confirm("Apakah Anda yakin ingin mengembalikan template ke pengaturan awal?")) {
-                const whatsappTemplateTextarea = document.getElementById('whatsappTemplateTextarea');
-                whatsappTemplateTextarea.value = defaultReportWhatsappTemplate;
-                window.saveWhatsappTemplate();
-            }
-        };
+        // FUNGSI openWhatsappSettings DIHAPUS
+        // FUNGSI saveWhatsappTemplate DIHAPUS
+        // FUNGSI resetWhatsappTemplate DIHAPUS
     </script>
 </body>
 </html>
