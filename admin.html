@@ -285,6 +285,13 @@
         align-self: flex-end;
         margin-bottom: 0;
       }
+      /* Penyesuaian untuk Pengaturan PIN agar rapi di desktop */
+      #pinForm .form-row {
+        align-items: flex-end;
+      }
+      #pinForm .form-row > div {
+        flex: 1;
+      }
     }
   </style>
 </head>
@@ -360,26 +367,7 @@
           <div id="resetPasswordStatusMessage"></div>
         </form>
       </div>
-      <div class="content-block">
-        <h4>Ganti Password Pengguna</h4>
-        <p>Pilih pengguna, lalu masukkan password baru untuk mengganti password mereka.</p>
-        <form id="changePasswordForm">
-          <div class="form-row">
-            <div>
-              <label for="changePasswordEmailSelector">Pilih Pengguna:</label>
-              <select id="changePasswordEmailSelector" required></select>
-            </div>
-            <div>
-              <label for="newPasswordInput">Password Baru:</label>
-              <input type="password" id="newPasswordInput" placeholder="Password minimal 6 karakter" required minlength="6">
-            </div>
-            <div>
-              <button type="submit" class="btn" style="background-color: #f9c74f;">Ganti Password</button>
-            </div>
-          </div>
-          <div id="changePasswordStatusMessage" style="margin-top: 10px;"></div>
-        </form>
-      </div>
+      
     </div>
 
     <div id="kurikulum-tab" class="tab-content">
@@ -483,22 +471,46 @@
           <p id="companyNamePreview" style="font-size: 1.2em; font-weight: bold; margin-top: 5px;"></p>
         </div>
       </div>
+      
       <div class="content-block">
-          <h3>Pengaturan PIN Edit Pembayaran</h3>
+          <h3>Pengaturan PIN Edit Pembayaran (One-Time PIN)</h3>
           <form id="pinForm">
               <div class="form-row">
                   <div>
-                      <label for="pinInput">PIN (4 Digit)</label>
-                      <input type="password" id="pinInput" placeholder="Masukkan PIN 4 digit" maxlength="4" required>
+                      <label for="pinDigitLength">Jumlah Digit PIN (4-6)</label>
+                      <select id="pinDigitLength" required>
+                          <option value="4">4 Digit</option>
+                          <option value="5">5 Digit</option>
+                          <option value="6">6 Digit</option>
+                      </select>
                   </div>
                   <div>
-                      <button type="submit" class="btn">Simpan PIN</button>
+                      <label for="pinDuration">Durasi PIN Aktif (Jam)</label>
+                      <select id="pinDuration" required>
+                          <option value="3">3 Jam</option>
+                          <option value="6">6 Jam</option>
+                          <option value="9">9 Jam</option>
+                      </select>
+                  </div>
+              </div>
+              <div class="form-row">
+                  <div>
+                      <label for="pinInput">PIN Saat Ini</label>
+                      <input type="text" id="pinInput" placeholder="PIN yang Aktif" maxlength="6" readonly style="font-weight: bold;">
+                  </div>
+              </div>
+              <div class="form-row" style="margin-top: 15px; align-items: center;">
+                  <div style="flex: 1;">
+                      <label>Waktu Tersisa: <span id="pinTimer" style="font-weight: bold; color: #dc3545;">--</span></label>
+                  </div>
+                  <div style="flex: 1;">
+                      <button type="button" id="generatePinBtn" class="btn" style="background-color: #007bff;">Generate PIN Baru</button>
                   </div>
               </div>
               <div id="pinStatusMessage" style="margin-top: 10px;"></div>
           </form>
       </div>
-    </div>
+      </div>
     
     <div id="spp-export-tab" class="tab-content">
         <div class="content-block">
@@ -634,6 +646,8 @@
     
     const pinStatusMessageDiv = document.getElementById('pinStatusMessage');
     let appEditPin = '';
+    let pinExpiryTimer; // Variabel global untuk timer PIN
+    
     let allYearsWithPayments = [];
     let allActiveBankNames = [];
 
@@ -808,17 +822,139 @@
       }
     }
 
+    // --- LOGIC PIN BARU START ---
+
+    function generateNumericPin(length) {
+        let result = '';
+        const characters = '0123456789';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
+    
+    function startPinTimer(expiryTimestamp) {
+        if (pinExpiryTimer) {
+            clearInterval(pinExpiryTimer);
+        }
+
+        const timerSpan = document.getElementById('pinTimer');
+        const pinInput = document.getElementById('pinInput');
+
+        const updateTimer = async () => {
+            const now = Date.now();
+            const distance = expiryTimestamp - now;
+
+            if (distance < 0) {
+                timerSpan.textContent = "KEDALUWARSA";
+                pinInput.value = '********'; 
+                appEditPin = ''; // Hapus PIN lokal
+
+                // Menandai PIN di Firestore sebagai 'expired' dan mengisi PIN dengan string mustahil
+                try {
+                    await updateDoc(doc(db, "settings", "appEditPin"), { 
+                        status: 'expired',
+                        // TRICK: Mengganti PIN dengan string mustahil agar di Dashboard (atau modul lain)
+                        // variabel appEditPin tidak menjadi '' (string kosong) saat PIN expired.
+                        // Ini akan menutup celah keamanan "PIN kosong sama dengan PIN kosong".
+                        pin: 'PIN_EXPIRED_#_NON_NUMERIC_!@#$'
+                    });
+                } catch (e) {
+                    // Hanya log error, tidak perlu mengganggu UI
+                    console.error("Gagal memperbarui status PIN expired:", e);
+                }
+
+                clearInterval(pinExpiryTimer);
+                return;
+            }
+
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            timerSpan.textContent = `${hours}j ${minutes}m ${seconds}s`;
+        };
+
+        pinExpiryTimer = setInterval(updateTimer, 1000);
+        updateTimer();
+    }
+    
+    async function handleGeneratePin(e) {
+        e.preventDefault();
+        const length = parseInt(document.getElementById('pinDigitLength').value, 10);
+        const durationHours = parseInt(document.getElementById('pinDuration').value, 10);
+        const durationMs = durationHours * 60 * 60 * 1000;
+        
+        const newPin = generateNumericPin(length);
+        const expiryDate = new Date(Date.now() + durationMs); 
+
+        pinStatusMessageDiv.textContent = 'Menyimpan PIN baru...';
+        pinStatusMessageDiv.style.color = 'blue';
+        
+        try {
+            await setDoc(doc(db, "settings", "appEditPin"), { 
+                pin: newPin,
+                expiry: expiryDate,
+                length: length,
+                durationHours: durationHours,
+                status: 'active'
+            });
+            
+            // Perbarui tampilan di UI
+            appEditPin = newPin;
+            document.getElementById('pinInput').value = newPin;
+            startPinTimer(expiryDate.getTime());
+            
+            pinStatusMessageDiv.textContent = `PIN Baru: ${newPin} berhasil di-generate! Berlaku selama ${durationHours} jam.`;
+            pinStatusMessageDiv.style.color = 'green';
+            
+        } catch (error) {
+            pinStatusMessageDiv.textContent = `Error: ${error.message}`;
+            pinStatusMessageDiv.style.color = 'red';
+            console.error("Gagal menyimpan PIN baru:", error);
+        }
+    }
+
     async function loadPin() {
         try {
             const docRef = doc(db, "settings", "appEditPin");
             const docSnap = await getDoc(docRef);
             sessionReadCount++; updateReadStatus();
+            const pinInput = document.getElementById('pinInput');
+            const pinTimer = document.getElementById('pinTimer');
+            const digitSelector = document.getElementById('pinDigitLength');
+            const durationSelector = document.getElementById('pinDuration');
+
             if (docSnap.exists()) {
-                appEditPin = docSnap.data().pin || '';
-                const pinInput = document.getElementById('pinInput');
-                if (pinInput) {
-                    pinInput.placeholder = 'PIN sudah diatur. Masukkan PIN baru untuk mengubah.';
+                const data = docSnap.data();
+                
+                // Jika PIN Aktif dan belum kedaluwarsa
+                // Note: Ketika expired, data.pin akan berisi string mustahil. 
+                // Karena data.status bukan 'active', blok ini tidak akan tereksekusi.
+                if (data.status === 'active' && data.expiry && data.expiry.toDate) {
+                    appEditPin = data.pin || '';
+                    pinInput.value = appEditPin;
+                    startPinTimer(data.expiry.toDate().getTime()); // Mulai timer
+                } else {
+                    // Blok ini tereksekusi saat expired/nonaktif.
+                    // PIN lokal admin di-set kosong agar tombol generate baru bisa digunakan.
+                    appEditPin = '';
+                    pinInput.value = '********';
+                    pinTimer.textContent = 'NONAKTIF';
+                    if (pinExpiryTimer) clearInterval(pinExpiryTimer);
                 }
+                
+                // Mengatur pilihan digit jika tersimpan
+                if (data.length) {
+                    digitSelector.value = data.length;
+                }
+                // Mengatur pilihan durasi jika tersimpan
+                if (data.durationHours) {
+                    durationSelector.value = data.durationHours;
+                }
+            } else {
+                pinInput.value = '********';
+                pinTimer.textContent = 'NONAKTIF';
             }
         } catch (error) {
             console.error("Gagal memuat PIN:", error);
@@ -826,29 +962,7 @@
         }
     }
     
-    async function handlePinForm(e) {
-        e.preventDefault();
-        const pin = document.getElementById('pinInput').value.trim();
-        if (pin.length !== 4 || isNaN(pin)) {
-            pinStatusMessageDiv.textContent = 'PIN harus 4 digit angka.';
-            pinStatusMessageDiv.style.color = 'red';
-            return;
-        }
-        pinStatusMessageDiv.textContent = 'Menyimpan PIN...';
-        pinStatusMessageDiv.style.color = 'blue';
-        try {
-            await setDoc(doc(db, "settings", "appEditPin"), { pin });
-            appEditPin = pin;
-            pinStatusMessageDiv.textContent = 'PIN berhasil disimpan!';
-            pinStatusMessageDiv.style.color = 'green';
-            document.getElementById('pinInput').value = '';
-            document.getElementById('pinInput').placeholder = 'PIN sudah diatur. Masukkan PIN baru untuk mengubah.';
-        } catch (error) {
-            pinStatusMessageDiv.textContent = `Error: ${error.message}`;
-            pinStatusMessageDiv.style.color = 'red';
-            console.error("Gagal menyimpan PIN:", error);
-        }
-    }
+    // --- LOGIC PIN BARU END ---
 
     async function syncStudentCount() {
       if (!confirm('Yakin ingin menyinkronkan jumlah siswa? Ini akan memperbaiki jumlah yang salah.')) {
@@ -1118,8 +1232,10 @@
       });
       const syncCountBtn = document.getElementById('syncCountBtn');
       if(syncCountBtn) syncCountBtn.addEventListener('click', syncStudentCount);
-      const pinForm = document.getElementById('pinForm');
-      if (pinForm) pinForm.addEventListener('submit', handlePinForm);
+      
+      // PERUBAHAN: Ganti listener form PIN lama dengan tombol Generate baru
+      const generatePinBtn = document.getElementById('generatePinBtn');
+      if (generatePinBtn) generatePinBtn.addEventListener('click', handleGeneratePin);
       
       const changePasswordForm = document.getElementById('changePasswordForm');
       if(changePasswordForm) changePasswordForm.addEventListener('submit', handleChangePassword);
@@ -1680,8 +1796,6 @@
         statusDiv.textContent = `Data berhasil diexport ke ${fileName}!`;
         statusDiv.style.color = 'green';
     };
-
-    // --- Tambahkan kode di bawah ini ---
 
     // Fungsi untuk membuka modal edit siswa
     window.openStudentEditModal = function(studentId) {
