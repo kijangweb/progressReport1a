@@ -158,7 +158,7 @@
       .user-table th:nth-child(4), .user-table td:nth-child(4) { width: 10%; }
       .user-table th:nth-child(5), .user-table td:nth-child(5) { width: 10%; }
       .user-table th:nth-child(6), .user-table td:nth-child(6) { width: 10%; }
-      .user-table th:last-child, .user-table td:last-child { width: 15%; }
+      .user-table th:last-child, .user-table td:last-child { width: 25%; }
       .user-table td:last-child { text-align: left; }
 
       .filter-controls { flex-direction: row; gap: 20px; align-items: center; }
@@ -415,36 +415,46 @@
 
     <div id="maintenance-tab" class="tab-content">
       <div class="content-block">
-        <h3>Manajemen SPP</h3>
+        <h3>Manajemen Lampiran Database</h3>
         <div id="sppGlobalStats" class="global-spp-stats">
-          <p><strong>Total Ukuran Base64 (Semua Tahun):</strong> <span id="sppGlobalTotalSize">--</span></p>
+          <p><strong>Total Ukuran Lampiran (SPP & Non-SPP):</strong> <span id="sppGlobalTotalSize">--</span></p>
           <p><strong>Persentase Terpakai dari 1GB:</strong> <span id="sppGlobalSizePercentage">--</span></p>
         </div>
-        <p style="margin-top:20px;">Kelola data lampiran pembayaran SPP untuk mengontrol ukuran database Anda.</p>
+        <p style="margin-top:20px;">Kelola data lampiran (bukti bayar SPP & Non-SPP) untuk mengontrol ukuran database Anda.</p>
+        
         <div class="filter-spp-options">
           <div>
-            <label for="sppYearToDelete">Pilih Tahun:</label>
-            <select id="sppYearToDelete">
+            <label for="attachmentTypeToDelete">Pilih Jenis Lampiran:</label>
+            <select id="attachmentTypeToDelete">
+              <option value="spp">Lampiran Pembayaran SPP</option>
+              <option value="nonspp">Lampiran Pembayaran Non-SPP</option>
+            </select>
+          </div>
+          <div id="attachmentYearGroup">
+            <label for="attachmentYearToDelete">Pilih Tahun:</label>
+            <select id="attachmentYearToDelete">
               <option value="">-- Pilih Tahun --</option>
             </select>
           </div>
-          <div>
-            <label for="sppMonthToDelete">Pilih Bulan:</label>
-            <select id="sppMonthToDelete">
+          <div id="attachmentMonthGroup">
+            <label for="attachmentMonthToDelete">Pilih Bulan:</label>
+            <select id="attachmentMonthToDelete">
               <option value="">-- Pilih Bulan --</option>
             </select>
           </div>
-          <button class="action-button" onclick="calculateSppAttachmentSize()" style="background-color: #007bff; margin-left: 10px;">Hitung Ukuran Lampiran</button>
+          <button class="action-button" onclick="calculateAttachmentSize()" style="background-color: #007bff; margin-left: 10px;">Hitung Ukuran Lampiran</button>
         </div>
+        
         <div id="sppSizeInfo" class="spp-stats-info" style="display: none;">
           <p><strong>Jumlah Lampiran:</strong> <span id="sppFileCount">0</span></p>
           <p><strong>Total Ukuran:</strong> <span id="sppTotalSize">0 KB</span></p>
           <p><strong>Persentase dari 1GB:</strong> <span id="sppSizePercentage">0.00%</span></p>
           <p><em>Diperbarui: <span id="sppTimestamp">--</span></em></p>
         </div>
+        
         <hr style="margin: 20px 0;">
-        <p>Hapus lampiran bukti bayar untuk mengurangi ukuran database. Tindakan ini permanen.</p>
-        <button class="action-button btn-delete-attachments" onclick="deleteSppAttachmentsByYearAndMonth()">Hapus Lampiran</button>
+        <p>Hapus lampiran bukti bayar/laporan untuk mengurangi ukuran database. Tindakan ini permanen.</p>
+        <button class="action-button btn-delete-attachments" onclick="deleteAttachmentsByFilter()">Hapus Lampiran</button>
         <div id="sppDeleteStatusMessage" class="status-message"></div>
       </div>
       <div class="content-block">
@@ -607,8 +617,9 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, query, where, updateDoc, writeBatch, increment, deleteDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, query, where, updateDoc, writeBatch, increment, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
     
+    // ====================== FIREBASE CONFIG (SINGLE DECLARATION) ======================
     const firebaseConfig = { apiKey: "AIzaSyBm3SkLLtl9LvczDDht-OQ6-R4OYLPYAJQ", authDomain: "progres-report-5d199.firebaseapp.com", projectId: "progres-report-5d199", storageBucket: "progres-report-5d199.firebasestorage.app", messagingSenderId: "363573365137", appId: "1:363573365137:web:98f32d5ff8fae05617b230", measurementId: "G-CPX04R69F5" };
     
     const mainApp = initializeApp(firebaseConfig);
@@ -617,6 +628,7 @@
     const secondaryAuth = getAuth(secondaryApp);
     const db = getFirestore(mainApp);
 
+    // ====================== GLOBAL VARIABLES & CONSTANTS ======================
     let sessionReadCount = 0;
     const readStatusElement = document.getElementById('readStatusIndicator');
     function updateReadStatus() {
@@ -629,28 +641,29 @@
 
     let allUsers = [], allStudents = [], allBanks = {}, allLevels = [];
     let userCurrentPage = 1;
-    const sppYearToDeleteSelect = document.getElementById('sppYearToDelete');
-    const sppMonthToDeleteSelect = document.getElementById('sppMonthToDelete');
+    
+    // --- Elemen Maintenance ---
+    const attachmentTypeSelect = document.getElementById('attachmentTypeToDelete');
+    const attachmentYearToDeleteSelect = document.getElementById('attachmentYearToDelete');
+    const attachmentMonthToDeleteSelect = document.getElementById('attachmentMonthToDelete');
     const sppDeleteStatusMessageDiv = document.getElementById('sppDeleteStatusMessage');
-    const statusMessageDiv = document.getElementById('statusMessage');
-    const resetPasswordStatusMessageDiv = document.getElementById('resetPasswordStatusMessage');
-    const bankStatusMessageDiv = document.getElementById('bankStatusMessage');
-    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const sppSizeInfoDiv = document.getElementById('sppSizeInfo');
     const sppFileCountSpan = document.getElementById('sppFileCount');
     const sppTotalSizeSpan = document.getElementById('sppTotalSize');
-    const sppTimestampSpan = document.getElementById('sppTimestamp');
     const sppSizePercentageSpan = document.getElementById('sppSizePercentage');
+    const sppTimestampSpan = document.getElementById('sppTimestamp'); 
     const sppGlobalTotalSizeSpan = document.getElementById('sppGlobalTotalSize');
     const sppGlobalSizePercentageSpan = document.getElementById('sppGlobalSizePercentage');
     
+    // --- Lain-lain ---
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const pinStatusMessageDiv = document.getElementById('pinStatusMessage');
     let appEditPin = '';
-    let pinExpiryTimer; // Variabel global untuk timer PIN
-    
+    let pinExpiryTimer;
     let allYearsWithPayments = [];
     let allActiveBankNames = [];
 
+    // ====================== CORE AUTH FLOW ======================
     window.logout = function() { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
 
     const generateCoachId = () => {
@@ -677,7 +690,7 @@
             document.body.style.display = 'block';
             await loadAllData();
           } else {
-            alert("Akses ditolak. Anda bukan admin atau data Anda tidak ditemukan.");
+            alert("Akses ditolak. Halaman ini hanya untuk Direktur.");
             await signOut(auth);
             window.location.href = 'login.html';
           }
@@ -692,29 +705,142 @@
       }
     });
 
+    // ====================== UTILITY FUNCTIONS ======================
+    function setStatusMessage(element, message, color) {
+        if (element) {
+            element.textContent = message;
+            element.style.color = color;
+        }
+    }
+
+    function updateUserPagination(totalItems) {
+      const rowsPerPage = parseInt(document.getElementById('userRowsPerPage').value, 10);
+      const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
+      
+      if (userCurrentPage > totalPages) {
+          userCurrentPage = totalPages;
+      }
+      
+      document.getElementById('userCurrentPage').textContent = userCurrentPage;
+      document.getElementById('userTotalPages').textContent = totalPages;
+      document.getElementById('userPrevBtn').disabled = userCurrentPage === 1;
+      document.getElementById('userNextBtn').disabled = userCurrentPage >= totalPages;
+    }
+
+    function formatFileSize(bytes, decimalPoint) {
+      if (bytes == 0) return '0 Bytes';
+      const k = 1024,
+        dm = decimalPoint || 2,
+        sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+        i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+    
+    function normalizePhone(nomor) {
+        nomor = nomor ? nomor.toString().trim().replace(/\D/g, "") : "";
+        if (nomor.startsWith("0")) return "62" + nomor.substring(1);
+        if (!nomor.startsWith("62") && nomor.length > 5) return "62" + nomor;
+        return nomor;
+    }
+
+    function isMobile() {
+        return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
+
+    function populateCoachDropdowns() {
+      const resetEmailSelector = document.getElementById('resetEmailSelector');
+      const activeUsers = allUsers.filter(u => (u.status || 'active') === 'active');
+      
+      const roleMap = {
+          admin: 'DIREKTUR',
+          bendahara: 'ADMIN',
+          user: 'Coach'
+      };
+      
+      let userOptions = '<option value="">-- Pilih Pengguna --</option>';
+      activeUsers.forEach(user => {
+        let roleName = roleMap[user.role] || 'N/A';
+        if(user.role === 'user') roleName += ` (${user.coachId || 'N/A'})`;
+        userOptions += `<option value="${user.id}">${user.name} (${roleName})</option>`;
+      });
+      if (resetEmailSelector) {
+        const currentVal = resetEmailSelector.value;
+        resetEmailSelector.innerHTML = userOptions;
+        resetEmailSelector.value = currentVal;
+      }
+    }
+    
+    function populateLevelDropdowns() {
+      const levelEditorSelector = document.getElementById('levelEditorSelector');
+      const editStudentLevelSelector = document.getElementById('editStudentLevel');
+      
+      [levelEditorSelector, editStudentLevelSelector].forEach(selector => {
+        if (!selector) return;
+        const currentVal = selector.value;
+        let options = (selector.id === 'levelEditorSelector') ? '<option value="">-- Pilih Level --</option>' : '';
+        allLevels.forEach(level => {
+          options += `<option value="${level}">${level}</option>`;
+        });
+        selector.innerHTML = options;
+        selector.value = currentVal;
+      });
+    }
+
+    function populateSppMonthsForDeletion() {
+      const monthSelector = document.getElementById('attachmentMonthToDelete');
+      if (!monthSelector) return;
+      monthSelector.innerHTML = '<option value="">-- Semua Bulan --</option>';
+      monthNames.forEach((month, index) => {
+        monthSelector.innerHTML += `<option value="${index}">${month}</option>`;
+      });
+    }
+
+    function populateExportSelectors() {
+        const coachSelector = document.getElementById('exportCoachSelector');
+        const studentSelector = document.getElementById('exportStudentSelector');
+        const bankSelector = document.getElementById('exportBankSelector');
+        const yearSelector = document.getElementById('exportYearSelector');
+
+        const activeCoaches = allUsers.filter(u => (u.status || 'active') === 'active' && u.role === 'user');
+        if (coachSelector) coachSelector.innerHTML = '<option value="all">Semua Coach</option>' + activeCoaches.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        
+        const activeStudents = allStudents.filter(s => (s.status || 'active') === 'active');
+        if (studentSelector) studentSelector.innerHTML = '<option value="all">Semua Siswa</option>' + activeStudents.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+        if (bankSelector) bankSelector.innerHTML = '<option value="all">Semua Bank</option>' + allActiveBankNames.map(b => `<option value="${b}">${b}</option>`).join('');
+        
+        const years = new Set();
+        allStudents.forEach(student => {
+            if (student.spp) {
+                Object.keys(student.spp).forEach(key => years.add(parseInt(key.split('-')[0])));
+            }
+        });
+        allYearsWithPayments = Array.from(years).sort((a, b) => b - a);
+        if (yearSelector) yearSelector.innerHTML = '<option value="all">Semua Tahun</option>' + allYearsWithPayments.map(y => `<option value="${y}">${y}</option>`).join('');
+    }
+
+
+    // ====================== LOAD ALL DATA ======================
     async function loadAllData() {
       try {
         const currentTab = sessionStorage.getItem('adminCurrentTab') || 'pengguna-tab';
 
-        const userSnapshot = await getDocs(collection(db, "users"));
-        sessionReadCount += userSnapshot.size;
-
-        const studentSnapshot = await getDocs(collection(db, "students"));
-        sessionReadCount += studentSnapshot.size;
-        allStudents = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const [userSnapshot, studentSnapshot, bankSnapshot, curriculumSnapshot, otherPaymentsSnapshot] = await Promise.all([
+            getDocs(collection(db, "users")),
+            getDocs(collection(db, "students")),
+            getDocs(collection(db, "banks")),
+            getDocs(collection(db, "kurikulum")),
+            getDocs(collection(db, "other_payments"))
+        ]);
         
-        const bankSnapshot = await getDocs(collection(db, "banks"));
-        sessionReadCount += bankSnapshot.size;
-        
-        const curriculumSnapshot = await getDocs(collection(db, "kurikulum"));
-        sessionReadCount += curriculumSnapshot.size;
+        sessionReadCount += userSnapshot.size + studentSnapshot.size + bankSnapshot.size + curriculumSnapshot.size + otherPaymentsSnapshot.size;
         updateReadStatus();
 
         allUsers = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allStudents = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
         allBanks = {};
-        bankSnapshot.forEach(doc => { 
-            allBanks[doc.id] = {id: doc.id, ...doc.data()}; 
-        });
+        bankSnapshot.forEach(doc => { allBanks[doc.id] = {id: doc.id, ...doc.data()}; });
         allLevels = curriculumSnapshot.docs.map(doc => doc.id).sort();
         allActiveBankNames = Object.values(allBanks).filter(b => (b.status || 'active') === 'active').map(b => b.bankName);
         
@@ -722,11 +848,13 @@
         renderBankTable();
         populateCoachDropdowns();
         populateLevelDropdowns();
-        loadSppYearsForDeletion();
-        calculateGlobalSppAttachmentSize();
-        setupEventListeners();
-        loadBranding();
-        loadPin(); 
+        
+        loadAttachmentYears(otherPaymentsSnapshot.docs); 
+        
+        await calculateGlobalAttachmentSize(otherPaymentsSnapshot.docs); 
+        
+        await loadBranding();
+        await loadPin(); 
         populateExportSelectors();
         openTab(currentTab);
       } catch (error) {
@@ -734,13 +862,14 @@
         alert("Gagal memuat data utama. Kemungkinan ada masalah dengan Security Rules. Periksa console (F12).");
       }
     }
+
+
+    // ====================== BRANDING & PIN LOGIC ======================
     
     async function loadBranding() {
-      const brandingForm = document.getElementById('brandingForm');
       const companyNameInput = document.getElementById('companyNameInput');
       const logoPreview = document.getElementById('logoPreview');
       const companyNamePreview = document.getElementById('companyNamePreview');
-      const brandingStatusMessage = document.getElementById('brandingStatusMessage');
       const companyNameHeader = document.getElementById('companyNameHeader');
     
       try {
@@ -753,9 +882,7 @@
           if (data.companyName) {
             companyNameInput.value = data.companyName;
             companyNamePreview.textContent = data.companyName.toUpperCase();
-            if (companyNameHeader) {
-              companyNameHeader.textContent = data.companyName;
-            }
+            companyNameHeader.textContent = data.companyName;
           }
           if (data.logoBase64) {
             logoPreview.src = data.logoBase64;
@@ -766,77 +893,33 @@
         }
       } catch (error) {
         console.error("Gagal memuat pengaturan branding:", error);
-        brandingStatusMessage.textContent = 'Gagal memuat data branding.';
-        brandingStatusMessage.style.color = 'red';
-      }
-    
-      if (brandingForm) {
-        brandingForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          brandingStatusMessage.textContent = 'Menyimpan...';
-          brandingStatusMessage.style.color = 'blue';
-          const companyName = companyNameInput.value;
-          const logoFile = document.getElementById('logoFileInput').files[0];
-          let logoBase64 = logoPreview.src;
-      
-          if (logoFile) {
-            const reader = new FileReader();
-            reader.onload = async function() {
-              logoBase64 = reader.result;
-              await saveBranding(companyName, logoBase64);
-            };
-            reader.readAsDataURL(logoFile);
-          } else {
-            await saveBranding(companyName, logoBase64);
-          }
-        });
-      }
-      const logoFileInput = document.getElementById('logoFileInput');
-      if (logoFileInput) {
-        logoFileInput.addEventListener('change', function(e) {
-          const file = e.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-              logoPreview.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-          }
-        });
       }
     }
-    async function saveBranding(companyName, logoBase64) {
+    async function saveBranding(companyName, logoBase64, button) {
       const brandingStatusMessage = document.getElementById('brandingStatusMessage');
+      setStatusMessage(brandingStatusMessage, 'Menyimpan...', 'blue');
+      button.disabled = true;
       try {
         await setDoc(doc(db, "settings", "brand"), {
           companyName: companyName,
           logoBase64: logoBase64
         });
-        brandingStatusMessage.textContent = 'Branding berhasil disimpan!';
-        brandingStatusMessage.style.color = 'green';
+        setStatusMessage(brandingStatusMessage, 'Branding berhasil disimpan!', 'green');
         await loadBranding();
       } catch (error) {
         console.error("Gagal menyimpan branding:", error);
-        brandingStatusMessage.textContent = `Gagal menyimpan: ${error.message}`;
-        brandingStatusMessage.style.color = 'red';
+        setStatusMessage(brandingStatusMessage, `Gagal menyimpan: ${error.message}`, 'red');
+      } finally {
+        button.disabled = false;
       }
     }
 
-    // --- LOGIC PIN BARU START ---
-
     function generateNumericPin(length) {
-        let result = '';
-        const characters = '0123456789';
-        for (let i = 0; i < length; i++) {
-            result += characters.charAt(Math.floor(Math.random() * characters.length));
-        }
-        return result;
+        return Array.from({length}, () => Math.floor(Math.random() * 10)).join('');
     }
     
     function startPinTimer(expiryTimestamp) {
-        if (pinExpiryTimer) {
-            clearInterval(pinExpiryTimer);
-        }
+        if (pinExpiryTimer) clearInterval(pinExpiryTimer);
 
         const timerSpan = document.getElementById('pinTimer');
         const pinInput = document.getElementById('pinInput');
@@ -848,19 +931,14 @@
             if (distance < 0) {
                 timerSpan.textContent = "KEDALUWARSA";
                 pinInput.value = '********'; 
-                appEditPin = ''; // Hapus PIN lokal
+                appEditPin = ''; 
 
-                // Menandai PIN di Firestore sebagai 'expired' dan mengisi PIN dengan string mustahil
                 try {
                     await updateDoc(doc(db, "settings", "appEditPin"), { 
                         status: 'expired',
-                        // TRICK: Mengganti PIN dengan string mustahil agar di Dashboard (atau modul lain)
-                        // variabel appEditPin tidak menjadi '' (string kosong) saat PIN expired.
-                        // Ini akan menutup celah keamanan "PIN kosong sama dengan PIN kosong".
                         pin: 'PIN_EXPIRED_#_NON_NUMERIC_!@#$'
                     });
                 } catch (e) {
-                    // Hanya log error, tidak perlu mengganggu UI
                     console.error("Gagal memperbarui status PIN expired:", e);
                 }
 
@@ -868,10 +946,9 @@
                 return;
             }
 
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const hours = Math.floor(distance / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
             timerSpan.textContent = `${hours}j ${minutes}m ${seconds}s`;
         };
 
@@ -880,16 +957,15 @@
     }
     
     async function handleGeneratePin(e) {
-        e.preventDefault();
+        e.target.disabled = true;
         const length = parseInt(document.getElementById('pinDigitLength').value, 10);
         const durationHours = parseInt(document.getElementById('pinDuration').value, 10);
         const durationMs = durationHours * 60 * 60 * 1000;
         
         const newPin = generateNumericPin(length);
         const expiryDate = new Date(Date.now() + durationMs); 
-
-        pinStatusMessageDiv.textContent = 'Menyimpan PIN baru...';
-        pinStatusMessageDiv.style.color = 'blue';
+        
+        setStatusMessage(pinStatusMessageDiv, 'Menyimpan PIN baru...', 'blue');
         
         try {
             await setDoc(doc(db, "settings", "appEditPin"), { 
@@ -900,18 +976,16 @@
                 status: 'active'
             });
             
-            // Perbarui tampilan di UI
             appEditPin = newPin;
             document.getElementById('pinInput').value = newPin;
             startPinTimer(expiryDate.getTime());
-            
-            pinStatusMessageDiv.textContent = `PIN Baru: ${newPin} berhasil di-generate! Berlaku selama ${durationHours} jam.`;
-            pinStatusMessageDiv.style.color = 'green';
+            setStatusMessage(pinStatusMessageDiv, `PIN Baru: ${newPin} berhasil di-generate! Berlaku selama ${durationHours} jam.`, 'green');
             
         } catch (error) {
-            pinStatusMessageDiv.textContent = `Error: ${error.message}`;
-            pinStatusMessageDiv.style.color = 'red';
+            setStatusMessage(pinStatusMessageDiv, `Error: ${error.message}`, 'red');
             console.error("Gagal menyimpan PIN baru:", error);
+        } finally {
+            e.target.disabled = false;
         }
     }
 
@@ -927,31 +1001,18 @@
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                
-                // Jika PIN Aktif dan belum kedaluwarsa
-                // Note: Ketika expired, data.pin akan berisi string mustahil. 
-                // Karena data.status bukan 'active', blok ini tidak akan tereksekusi.
-                if (data.status === 'active' && data.expiry && data.expiry.toDate) {
+                if (data.status === 'active' && data.expiry && data.expiry.toDate && data.expiry.toDate().getTime() > Date.now()) {
                     appEditPin = data.pin || '';
                     pinInput.value = appEditPin;
-                    startPinTimer(data.expiry.toDate().getTime()); // Mulai timer
+                    startPinTimer(data.expiry.toDate().getTime());
                 } else {
-                    // Blok ini tereksekusi saat expired/nonaktif.
-                    // PIN lokal admin di-set kosong agar tombol generate baru bisa digunakan.
                     appEditPin = '';
                     pinInput.value = '********';
                     pinTimer.textContent = 'NONAKTIF';
                     if (pinExpiryTimer) clearInterval(pinExpiryTimer);
                 }
-                
-                // Mengatur pilihan digit jika tersimpan
-                if (data.length) {
-                    digitSelector.value = data.length;
-                }
-                // Mengatur pilihan durasi jika tersimpan
-                if (data.durationHours) {
-                    durationSelector.value = data.durationHours;
-                }
+                if (data.length) digitSelector.value = data.length;
+                if (data.durationHours) durationSelector.value = data.durationHours;
             } else {
                 pinInput.value = '********';
                 pinTimer.textContent = 'NONAKTIF';
@@ -962,13 +1023,102 @@
         }
     }
     
-    // --- LOGIC PIN BARU END ---
+    // ====================== USER, BANK, CURRICULUM MANAGEMENT ======================
+    
+    function renderUserTable() {
+        const tableBody = document.getElementById('usersTableBody');
+        if (!tableBody) return;
+        
+        const showDisabled = document.getElementById('showDisabledUsers').checked;
+        const showCoachesOnly = document.getElementById('showCoachesOnly').checked;
+
+        let filteredUsers = allUsers.filter(user => {
+            const isCoach = user.role === 'user';
+            const isActive = (user.status || 'active') === 'active';
+            
+            if (showCoachesOnly && !isCoach) return false;
+            if (!showDisabled && !isActive) return false;
+            return true;
+        });
+        
+        updateUserPagination(filteredUsers.length);
+        
+        const rowsPerPage = parseInt(document.getElementById('userRowsPerPage').value, 10);
+        const startIndex = (userCurrentPage - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+        const roleMap = { admin: 'DIREKTUR', bendahara: 'ADMIN', user: 'Coach' };
+        
+        if (paginatedUsers.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tidak ada data pengguna yang cocok.</td></tr>';
+            return;
+        }
+        
+        tableBody.innerHTML = paginatedUsers.map(user => {
+            const isActive = (user.status || 'active') === 'active';
+            let actionsCellHtml = '<span>-</span>'; 
+
+            if (user.role !== 'admin') {
+                const actionButton = isActive 
+                    ? `<button class="action-btn-disable" data-user-id="${user.id}">Nonaktifkan</button>` 
+                    : `<button class="action-btn-enable" data-user-id="${user.id}">Aktifkan</button>`;
+                actionsCellHtml = `
+                    <button class="action-btn-edit" data-user-id="${user.id}">Edit</button>
+                    ${actionButton}
+                `;
+            }
+
+            return `
+                <tr class="${!isActive ? 'disabled-row' : ''}">
+                    <td>${user.coachId || 'N/A'}</td>
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.role === 'user' ? (user.studentCount || 0) : 'N/A'}</td>
+                    <td>${roleMap[user.role] || user.role}</td>
+                    <td><span style="color: ${isActive ? 'green' : 'red'}; font-weight: bold;">${isActive ? 'Aktif' : 'Nonaktif'}</span></td>
+                    <td>${actionsCellHtml}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderBankTable() {
+        const tableBody = document.getElementById('bankTableBody');
+        if (!tableBody) return;
+
+        const banks = Object.values(allBanks);
+        if (banks.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Belum ada bank yang ditambahkan.</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = banks.map(bank => {
+            const isActive = (bank.status || 'active') === 'active';
+            const actionButton = isActive 
+                ? `<button class="action-btn-disable" data-bank-id="${bank.id}">Nonaktifkan</button>`
+                : `<button class="action-btn-enable" data-bank-id="${bank.id}">Aktifkan</button>`;
+            
+            return `
+                <tr class="${!isActive ? 'disabled-row' : ''}">
+                    <td>${bank.bankName}</td>
+                    <td><div style="width: 20px; height: 20px; background-color: ${bank.color}; border: 1px solid #ccc;"></div></td>
+                    <td>
+                        <button class="action-btn-edit" data-bank-id="${bank.id}">Edit</button>
+                        ${actionButton}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
 
     async function syncStudentCount() {
-      if (!confirm('Yakin ingin menyinkronkan jumlah siswa? Ini akan memperbaiki jumlah yang salah.')) {
-        return;
-      }
-      alert('Proses sinkronisasi dimulai...');
+      if (!confirm('Yakin ingin menyinkronkan jumlah siswa? Ini akan memperbaiki jumlah yang salah.')) return;
+      
+      const syncBtn = document.getElementById('syncCountBtn');
+      syncBtn.disabled = true;
+      syncBtn.textContent = 'Menyinkronkan...';
+      
       try {
         const studentSnapshot = await getDocs(query(collection(db, "students"), where("status", "==", "active")));
         sessionReadCount += studentSnapshot.size; updateReadStatus();
@@ -982,10 +1132,13 @@
         });
         
         const batch = writeBatch(db);
+        const allCoaches = allUsers.filter(u => u.role === 'user');
         
-        const allCoaches = allUsers.filter(u => u.role === 'user').map(u => u.id);
-        allCoaches.forEach(coachEmail => {
-            batch.update(doc(db, "users", coachEmail), { studentCount: studentCounts[coachEmail] || 0 });
+        allCoaches.forEach(coach => {
+            const newCount = studentCounts[coach.id] || 0;
+            if (coach.studentCount !== newCount) {
+                batch.update(doc(db, "users", coach.id), { studentCount: newCount });
+            }
         });
         
         await batch.commit();
@@ -994,6 +1147,9 @@
       } catch (error) {
         console.error("Gagal menyinkronkan jumlah siswa:", error);
         alert('Gagal menyinkronkan jumlah siswa. Periksa console untuk detail.');
+      } finally {
+        syncBtn.disabled = false;
+        syncBtn.textContent = 'Sinkronkan Jumlah Siswa';
       }
     }
     
@@ -1008,10 +1164,10 @@
         sessionReadCount++; updateReadStatus();
         if (docSnap.exists()) {
           const lessons = docSnap.data().lessons || {};
-          const sortedKeys = Object.keys(lessons).sort((a,b) => parseInt(a.split(' ')[1]) - parseInt(b.split(' ')[1]));
+          const sortedKeys = Object.keys(lessons).sort((a,b) => parseInt(a.replace('Lesson ', '')) - parseInt(b.replace('Lesson ', '')));
           sortedKeys.forEach(key => {
             const activities = lessons[key].join(',');
-            form.innerHTML += `<div class="lesson-input-group"><label>${key}:</label><input type="text" value="${activities}" data-lesson-name="${key}">`;
+            form.innerHTML += `<div class="lesson-input-group"><label for="${key}">${key}:</label><input type="text" id="${key}" value="${activities}" data-lesson-name="${key}"></div>`;
           });
         }
         editor.style.display = 'block';
@@ -1019,621 +1175,535 @@
         console.error("Error fetching curriculum:", error);
       }
     }
-    window.deleteSppAttachmentsByYearAndMonth = async function() {
-      const yearToDelete = sppYearToDeleteSelect.value;
-      const monthToDelete = sppMonthToDeleteSelect.value;
-      if (!yearToDelete) {
-        sppDeleteStatusMessageDiv.textContent = 'Harap pilih tahun untuk menghapus lampiran.';
-        sppDeleteStatusMessageDiv.style.color = 'red';
-        return;
-      }
-      let confirmMessage = `Apakah Anda yakin ingin menghapus semua lampiran (bukti bayar Base64) untuk tahun ${yearToDelete}`;
-      if (monthToDelete) {
-        confirmMessage += ` bulan ${monthNames[monthToDelete]}`;
-      }
-      confirmMessage += `? Tindakan ini tidak bisa dibatalkan.`;
-      if (!confirm(confirmMessage)) {
-        return;
-      }
-      sppDeleteStatusMessageDiv.textContent = `Menghapus lampiran untuk tahun ${yearToDelete}...`;
-      sppDeleteStatusMessageDiv.style.color = 'blue';
-      try {
-        const studentsRef = collection(db, "students");
-        const querySnapshot = await getDocs(studentsRef);
-        sessionReadCount += querySnapshot.size; updateReadStatus();
-
-        const updates = [];
-        querySnapshot.forEach(docSnapshot => {
-          const studentRef = doc(db, "students", docSnapshot.id);
-          const studentData = docSnapshot.data();
-          const updatedSpp = { ...studentData.spp };
-          let hasAttachmentsToDelete = false;
-          Object.keys(updatedSpp).forEach(key => {
-            const [paymentYear, paymentMonth] = key.split('-');
-            if (paymentYear == yearToDelete && (monthToDelete === '' || paymentMonth == monthToDelete)) {
-              if (updatedSpp[key].attachmentBase64) {
-                delete updatedSpp[key].attachmentBase64;
-                hasAttachmentsToDelete = true;
-              }
-            }
-          });
-          if (hasAttachmentsToDelete) {
-            updates.push(updateDoc(studentRef, { spp: updatedSpp }));
-          }
-        });
-        if (updates.length > 0) {
-          await Promise.all(updates);
-          await loadAllData();
-          sppDeleteStatusMessageDiv.textContent = `Semua lampiran untuk tahun ${yearToDelete} berhasil dihapus. Total dokumen diperbarui: ${updates.length}.`;
-          sppDeleteStatusMessageDiv.style.color = 'green';
-        } else {
-          sppDeleteStatusMessageDiv.textContent = `Tidak ada lampiran yang ditemukan untuk tahun ${yearToDelete}.`;
-          sppDeleteStatusMessageDiv.style.color = 'orange';
-        }
-      } catch (error) {
-        sppDeleteStatusMessageDiv.textContent = `Error saat menghapus lampiran: ${error.message}`;
-        sppDeleteStatusMessageDiv.style.color = 'red';
-        console.error("Error deleting old attachments:", error);
-      }
-    }
     
-    function loadSppYearsForDeletion() {
+    // ====================== MAINTENANCE LOGIC (OPTIMIZED) ======================
+
+    function loadAttachmentYears(otherPaymentsDocs) {
+      const attachmentYearSelect = document.getElementById('attachmentYearToDelete');
       const years = new Set();
+
       allStudents.forEach(student => {
         if (student.spp) {
           Object.keys(student.spp).forEach(key => {
             const year = key.split('-')[0];
-            if (year) {
-              years.add(parseInt(year));
-            }
+            if (year) years.add(parseInt(year));
           });
         }
       });
-      const sortedYears = Array.from(years).sort((a, b) => b - a);
-      sppYearToDeleteSelect.innerHTML = '<option value="">-- Pilih Tahun --</option>';
-      sortedYears.forEach(year => {
-        sppYearToDeleteSelect.innerHTML += `<option value="${year}">${year}</option>`;
-      });
-    }
-    async function updateCoachStudentCount(coachEmail, value) {
-      if (!coachEmail) return;
-      const coachRef = doc(db, "users", coachEmail);
-      try {
-        await updateDoc(coachRef, { studentCount: increment(value) });
-      } catch (error) {
-        if (error.code && (error.code.includes('not-found') || error.code.includes('no-document-to-update'))) {
-          await setDoc(coachRef, { studentCount: value > 0 ? value : 0 }, { merge: true });
-        } else {
-          console.error(`Gagal update studentCount untuk ${coachEmail}:`, error);
-        }
-      }
-    }
-    function renderUserTable() {
-      const tableBody = document.getElementById('usersTableBody');
-      const showDisabled = document.getElementById('showDisabledUsers').checked;
-      const showCoachesOnly = document.getElementById('showCoachesOnly').checked;
-      let filteredUsers = allUsers;
-      if (!showDisabled) { filteredUsers = filteredUsers.filter(u => (u.status || 'active') === 'active'); }
-      if (showCoachesOnly) { filteredUsers = filteredUsers.filter(u => u.role === 'user'); }
-      const rowsPerPage = parseInt(document.getElementById('userRowsPerPage').value, 10);
-      const totalItems = filteredUsers.length;
-      const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
-      if (userCurrentPage > totalPages) userCurrentPage = totalPages;
-      const start = (userCurrentPage - 1) * rowsPerPage;
-      const paginatedUsers = filteredUsers.slice(start, start + rowsPerPage);
-      tableBody.innerHTML = '';
-      paginatedUsers.forEach(userData => {
-        const row = tableBody.insertRow();
-        let studentCountCell = '<td>-</td>';
-        if (userData.role === 'user') {
-          const studentCount = userData.studentCount || 0;
-          studentCountCell = `<td style="text-align: center;">${studentCount}</td>`;
-        }
-        
-        let displayedRole;
-        switch (userData.role) {
-          case 'admin':
-            displayedRole = 'DIREKTUR';
-            break;
-          case 'bendahara':
-            displayedRole = 'ADMIN';
-            break;
-          case 'user':
-            displayedRole = 'Coach';
-            break;
-          default:
-            displayedRole = 'N/A';
-        }
-        
-        const status = (userData.status === 'active' || userData.status === undefined) ? 'active' : 'disabled';
-        row.className = status === 'disabled' ? 'disabled-row' : '';
-        
-        let actionButtons = '';
-        let coachId = userData.coachId || 'N/A';
-        
-        if (userData.role === 'admin') {
-          actionButtons = '<span>Aksi tidak tersedia</span>';
-        } else {
-          const buttonText = status === 'active' ? 'Disable' : 'Enable';
-          const buttonClass = status === 'active' ? 'action-btn-disable' : 'action-btn-enable';
-          
-          let regenerateIdButton = '';
-          if (userData.role === 'user' && !userData.coachId) {
-            regenerateIdButton = `<button type="button" class="action-btn-edit" onclick="regenerateCoachId('${userData.id}')">Regenerate ID</button>`;
+      
+      otherPaymentsDocs.forEach(doc => {
+          const data = doc.data();
+          if (data.date && typeof data.date.toDate === 'function') {
+              years.add(data.date.toDate().getFullYear());
           }
-          
-          actionButtons = `
-            <button type="button" class="${buttonClass}" onclick="toggleUserStatus('${userData.id}','${userData.status || 'active'}')">${buttonText}</button>
-            <button type="button" class="action-btn-edit" onclick="openEditModal('${userData.id}')">Detail</button>
-            ${regenerateIdButton}
-          `;
-        }
-        
-        row.innerHTML = `
-          <td>${coachId}</td>
-          <td>${userData.id}</td>
-          <td>${userData.name || ''}</td>
-          ${studentCountCell}
-          <td>${displayedRole}</td>
-          <td>${status}</td>
-          <td style="white-space: nowrap;">${actionButtons}</td>
-        `;
       });
-      updateUserPagination(totalItems);
-    }
-    function renderBankTable() {
-      const tableBody = document.getElementById('bankTableBody');
-      tableBody.innerHTML = '';
-      Object.values(allBanks).forEach(bank => {
-        const status = bank.status || 'active';
-        const row = tableBody.insertRow();
-        row.className = status === 'disabled' ? 'disabled-row' : '';
-        const buttonText = status === 'active' ? 'Disable' : 'Enable';
-        const buttonClass = status === 'active' ? 'action-btn-disable' : 'action-btn-enable';
-        row.innerHTML = `<td>${bank.bankName}</td><td><div style="width:20px; height:20px; background-color:${bank.color}; border:1px solid #ccc;"></div></td><td style="white-space:nowrap;"><button class="${buttonClass}" onclick="toggleBankStatus('${bank.id}', '${status}')">${buttonText}</button> <button class="action-btn-edit" onclick="openEditBankModal('${bank.id}')">Edit</button></td>`;
-      });
-    }
-    function setupEventListeners() {
-      document.getElementById('userRowsPerPage').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
-      document.getElementById('userPrevBtn').addEventListener('click', () => { if (userCurrentPage > 1) { userCurrentPage--; renderUserTable(); } });
-      document.getElementById('userNextBtn').addEventListener('click', () => { const totalPages = parseInt(document.getElementById('userTotalPages').textContent); if (userCurrentPage < totalPages) { userCurrentPage++; renderUserTable(); } });
-      document.getElementById('showDisabledUsers').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
-      document.getElementById('showCoachesOnly').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
-      document.getElementById('addUserForm').addEventListener('submit', handleAddUser);
-      document.getElementById('resetPasswordForm').addEventListener('submit', handleResetPassword);
-      document.querySelector('#editUserModal .close-btn').onclick = () => document.getElementById('editUserModal').style.display = 'none';
-      document.querySelector('#editBankModal .close-btn').onclick = () => document.getElementById('editBankModal').style.display = 'none';
-      window.onclick = (event) => {
-        const modals = document.getElementsByClassName('modal');
-        for (let i = 0; i < modals.length; i++) {
-          if (event.target == modals[i]) modals[i].style.display = "none";
-        }
-      };
-      document.getElementById('editUserForm').addEventListener('submit', handleEditUser);
-      document.getElementById('addLevelForm').addEventListener('submit', handleAddLevel);
-      document.getElementById('levelEditorSelector').addEventListener('change', handleLevelSelect);
-      document.getElementById('saveCurriculumBtn').addEventListener('click', handleSaveCurriculum);
-      document.getElementById('addBankForm').addEventListener('submit', handleAddBank);
-      document.getElementById('editBankForm').addEventListener('submit', handleEditBank);
-      document.getElementById('addLessonBtn').addEventListener('click', addNewLessonInput);
-      const sppYearToDeleteSelect = document.getElementById('sppYearToDelete');
-      if(sppYearToDeleteSelect) {
-        sppYearToDeleteSelect.addEventListener('change', () => {
-          sppSizeInfoDiv.style.display = 'none';
-          sppDeleteStatusMessageDiv.textContent = '';
+
+      const sortedYears = Array.from(years).sort((a, b) => b - a);
+      if(attachmentYearSelect) {
+        attachmentYearSelect.innerHTML = '<option value="">-- Pilih Tahun --</option>';
+        sortedYears.forEach(year => {
+          attachmentYearSelect.innerHTML += `<option value="${year}">${year}</option>`;
         });
-        sppYearToDeleteSelect.addEventListener('change', populateSppMonthsForDeletion);
       }
-      document.querySelectorAll('.tab-btn').forEach(button => {
-        button.addEventListener('click', () => {
-          const tabId = button.getAttribute('onclick').match(/'(.*?)'/)[1];
-          openTab(tabId);
-        });
-      });
-      const syncCountBtn = document.getElementById('syncCountBtn');
-      if(syncCountBtn) syncCountBtn.addEventListener('click', syncStudentCount);
-      
-      // PERUBAHAN: Ganti listener form PIN lama dengan tombol Generate baru
-      const generatePinBtn = document.getElementById('generatePinBtn');
-      if (generatePinBtn) generatePinBtn.addEventListener('click', handleGeneratePin);
-      
-      const changePasswordForm = document.getElementById('changePasswordForm');
-      if(changePasswordForm) changePasswordForm.addEventListener('submit', handleChangePassword);
-
-      document.getElementById('exportCoachSelector').addEventListener('change', populateExportStudentSelector);
-      document.getElementById('exportStudentSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
-      document.getElementById('exportBankSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
-      document.getElementById('exportYearSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
-      document.getElementById('exportMonthSelector').addEventListener('change', () => { document.getElementById('exportStatusMessage').textContent = ''; });
-      
-      // Event listener untuk modal edit siswa
-      document.getElementById('editStudentFormInAdmin').addEventListener('submit', handleEditStudent);
-      document.querySelector('#editStudentModal .close-btn').onclick = () => document.getElementById('editStudentModal').style.display = 'none';
     }
-    function updateUserPagination(totalItems) {
-      const rowsPerPage = parseInt(document.getElementById('userRowsPerPage').value, 10);
-      const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
-      document.getElementById('userCurrentPage').textContent = userCurrentPage;
-      document.getElementById('userTotalPages').textContent = totalPages;
-      document.getElementById('userPrevBtn').disabled = userCurrentPage === 1;
-      document.getElementById('userNextBtn').disabled = userCurrentPage >= totalPages;
-    }
-
-    window.regenerateCoachId = async function(userEmail) {
-      if (!confirm(`Yakin ingin meregenerasi ID unik untuk coach: ${userEmail}?`)) {
-        return;
-      }
-      try {
-        const userRef = doc(db, "users", userEmail);
-        const newCoachId = generateCoachId();
-        await updateDoc(userRef, { coachId: newCoachId });
-        alert(`ID unik baru '${newCoachId}' berhasil dibuat untuk ${userEmail}.`);
-        await loadAllData();
-      } catch (error) {
-        console.error("Gagal meregenerasi coach ID:", error);
-        alert(`Gagal meregenerasi ID. Error: ${error.message}`);
-      }
-    };
-
-    async function handleAddUser(e) {
-      e.preventDefault();
-      const email = document.getElementById('newUserEmail').value;
-      const name = document.getElementById('newUserName').value;
-      const password = document.getElementById('newUserPassword').value;
-      const role = document.getElementById('newUserRole').value;
-      const statusMessageDiv = document.getElementById('statusMessage');
-      statusMessageDiv.textContent = 'Memproses...';
-      try {
-        let newCoachId = null;
-        if (role === 'user') {
-          newCoachId = generateCoachId();
-        }
-        await createUserWithEmailAndPassword(secondaryAuth, email, password);
-        const userData = { email, name, role, status: 'active', coachId: newCoachId };
-        if (role === 'user') { userData.studentCount = 0; }
-        await setDoc(doc(db, "users", email), userData);
-        statusMessageDiv.textContent = `User ${name} (${email}) berhasil ditambahkan dengan ID unik: ${newCoachId || 'N/A'}!`;
-        await loadAllData();
-      } catch (error) { statusMessageDiv.textContent = `Error: ${error.message}`; }
-    }
-    window.toggleUserStatus = async function(email, currentStatus) {
-      const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
-      const user = allUsers.find(u => u.id === email);
-      if (user.role === 'admin') {
-        alert('Tidak dapat mengubah status pengguna dengan peran direktur.');
-        return;
-      }
-      if (confirm(`Yakin ingin ${newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan'} pengguna: ${email}?`)) {
-        await updateDoc(doc(db, "users", email), { status: newStatus });
-        await loadAllData();
-      }
-    };
-    window.toggleBankStatus = async function(bankId, currentStatus) {
-      const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
-      if (confirm(`Yakin ingin ${newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan'} bank ini?`)) {
-        await updateDoc(doc(db, "banks", bankId), { status: newStatus });
-        await loadAllData();
-      }
-    };
-    async function handleAddLevel(e) { e.preventDefault(); const name = document.getElementById('newLevelName').value.trim(); if (!name) return; await setDoc(doc(db, "kurikulum", name), {lessons: {}}); alert('Level berhasil dibuat'); await loadAllData(); }
-    async function handleAddBank(e) { e.preventDefault(); const name = document.getElementById('newBankName').value.trim(); const color = document.getElementById('newBankColor').value; if (!name) return; await addDoc(collection(db, "banks"), {bankName: name, color: color, status: 'active'}); alert('Bank berhasil ditambah'); await loadAllData(); }
-    async function handleEditBank(e) { e.preventDefault(); const id = document.getElementById('editBankId').value; const name = document.getElementById('editBankName').value; const color = document.getElementById('editBankColor').value; await updateDoc(doc(db, "banks", id), {bankName: name, color: color}); alert('Bank berhasil diupdate'); document.getElementById('editBankModal').style.display = 'none'; await loadAllData(); }
-    function addNewLessonInput() { const form = document.getElementById('editCurriculumForm'); const nextNum = form.children.length + 1; const newDiv = document.createElement('div'); newDiv.className = 'lesson-input-group'; newDiv.innerHTML = `<label>Lesson ${nextNum}:</label><input type="text" data-lesson-name="Lesson ${nextNum}">`; form.appendChild(newDiv); }
-    async function handleSaveCurriculum() { const level = document.getElementById('levelEditorSelector').value; if (!level) return; const lessons = {}; document.querySelectorAll('#editCurriculumForm input').forEach(input => { lessons[input.dataset.lessonName] = input.value.split(',').map(s => s.trim()).filter(Boolean); }); await updateDoc(doc(db, "kurikulum", level), { lessons }); alert('Kurikulum berhasil disimpan'); }
-    window.calculateGlobalSppAttachmentSize = function() {
+    
+    window.calculateGlobalAttachmentSize = async function(otherPaymentsDocs) {
       let totalSize = 0;
       const oneGigabyte = 1073741824;
+      
+      const calculateBase64Size = (base64) => (base64.length / 4) * 3;
+      
       allStudents.forEach(student => {
         if (student.spp) {
-          for (const key in student.spp) {
-            if (student.spp[key].attachmentBase64) {
-              const base64String = student.spp[key].attachmentBase64;
-              totalSize += (base64String.length / 4) * 3; 
-            }
-          }
+          Object.values(student.spp).forEach(payment => {
+            if (payment.attachmentBase64) totalSize += calculateBase64Size(payment.attachmentBase64);
+          });
         }
       });
-      const sppGlobalTotalSizeSpan = document.getElementById('sppGlobalTotalSize');
-      if (sppGlobalTotalSizeSpan) sppGlobalTotalSizeSpan.textContent = formatFileSize(totalSize);
-      const percentage = (totalSize / oneGigabyte) * 100;
-      const sppGlobalSizePercentageSpan = document.getElementById('sppGlobalSizePercentage');
-      if (sppGlobalSizePercentageSpan) sppGlobalSizePercentageSpan.textContent = percentage.toFixed(2) + '%';
+      
+      otherPaymentsDocs.forEach(docSnap => {
+        if (docSnap.data().attachmentBase64) totalSize += calculateBase64Size(docSnap.data().attachmentBase64);
+      });
+      
+      sppGlobalTotalSizeSpan.textContent = formatFileSize(totalSize);
+      sppGlobalSizePercentageSpan.textContent = ((totalSize / oneGigabyte) * 100).toFixed(2) + '%';
     }
-    window.calculateSppAttachmentSize = function() {
-      const year = sppYearToDeleteSelect.value;
-      const month = sppMonthToDeleteSelect.value;
-      if (!year) {
-        sppDeleteStatusMessageDiv.textContent = 'Harap pilih tahun untuk menghapus lampiran.';
-        sppDeleteStatusMessageDiv.style.color = 'red';
-        return;
-      }
+
+    window.calculateAttachmentSize = async function() {
+      const type = document.getElementById('attachmentTypeToDelete').value;
+      const year = document.getElementById('attachmentYearToDelete').value;
+      const month = document.getElementById('attachmentMonthToDelete').value;
+      
       let totalSize = 0;
       let fileCount = 0;
       const oneGigabyte = 1073741824;
-      allStudents.forEach(student => {
-        if (student.spp) {
-          for (const key in student.spp) {
-            const [paymentYear, paymentMonth] = key.split('-');
-            if (paymentYear == year && (month === '' || paymentMonth == month)) {
-              if (student.spp[key].attachmentBase64) {
+      
+      setStatusMessage(sppDeleteStatusMessageDiv, 'Menghitung ukuran...', 'blue');
+
+      if (!year) {
+          setStatusMessage(sppDeleteStatusMessageDiv, 'Harap pilih tahun terlebih dahulu.', 'red');
+          return;
+      }
+
+      if (type === 'spp') {
+        allStudents.forEach(student => {
+          if (student.spp) {
+            for (const key in student.spp) {
+              const [paymentYear, paymentMonth] = key.split('-');
+              if (paymentYear == year && (month === '' || paymentMonth == month) && student.spp[key].attachmentBase64) {
                 fileCount++;
-                const base64String = student.spp[key].attachmentBase64;
-                totalSize += (base64String.length / 4) * 3;
+                totalSize += (student.spp[key].attachmentBase64.length / 4) * 3;
               }
             }
           }
-        }
-      });
+        });
+      } else if (type === 'nonspp') {
+        const otherPaymentsSnapshot = await getDocs(collection(db, "other_payments"));
+        sessionReadCount += otherPaymentsSnapshot.size; updateReadStatus();
+        otherPaymentsSnapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data.attachmentBase64 && data.date && typeof data.date.toDate === 'function') {
+                const paymentDate = data.date.toDate();
+                if (paymentDate.getFullYear() == year && (month === '' || paymentDate.getMonth() == month)) {
+                    fileCount++;
+                    totalSize += (data.attachmentBase64.length / 4) * 3;
+                }
+            }
+        });
+      }
+      
       sppFileCountSpan.textContent = fileCount;
       sppTotalSizeSpan.textContent = formatFileSize(totalSize);
-      const percentage = (totalSize / oneGigabyte) * 100;
-      sppSizePercentageSpan.textContent = percentage.toFixed(2) + '%';
+      sppSizePercentageSpan.textContent = ((totalSize / oneGigabyte) * 100).toFixed(3) + '%';
       sppTimestampSpan.textContent = new Date().toLocaleString('id-ID');
       sppSizeInfoDiv.style.display = 'block';
-      sppDeleteStatusMessageDiv.textContent = '';
-    }
-    function formatFileSize(bytes, decimalPoint) {
-      if (bytes == 0) return '0 Bytes';
-      const k = 1024,
-        dm = decimalPoint || 2,
-        sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
-        i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+      setStatusMessage(sppDeleteStatusMessageDiv, '', 'black');
     }
 
-    function populateSppMonthsForDeletion() {
-      const monthSelector = document.getElementById('sppMonthToDelete');
-      if (!monthSelector) return;
-      monthSelector.innerHTML = '<option value="">-- Semua Bulan --</option>';
-      monthNames.forEach((month, index) => {
-        monthSelector.innerHTML += `<option value="${index}">${month}</option>`;
-      });
-    }
-    
-    window.openTab = function(tabName) {
-      const tabContents = document.querySelectorAll('.tab-content');
-      tabContents.forEach(tab => {
-        tab.classList.remove('active');
-      });
-      const tabButtons = document.querySelectorAll('.tab-btn');
-      tabButtons.forEach(btn => {
-        btn.classList.remove('active');
-      });
-      const selectedTab = document.getElementById(tabName);
-      const selectedTabButton = document.querySelector(`.tab-btn[onclick="openTab('${tabName}')"]`);
-      if (selectedTab) selectedTab.classList.add('active');
-      if (selectedTabButton) selectedTabButton.classList.add('active');
-      sessionStorage.setItem('adminCurrentTab', tabName);
-      if(tabName === 'pengguna-tab') {
-        renderUserTable();
-      } else if (tabName === 'kurikulum-tab') {
-      } else if (tabName === 'bank-tab') {
-        renderBankTable();
-      } else if (tabName === 'maintenance-tab') {
-        loadSppYearsForDeletion();
-      } else if (tabName === 'spp-export-tab') {
-        populateExportSelectors();
-      }
-    }
-    
-    function populateCoachDropdowns() {
-      const resetEmailSelector = document.getElementById('resetEmailSelector');
-      const changePasswordEmailSelector = document.getElementById('changePasswordEmailSelector');
-      const activeUsers = allUsers.filter(u => (u.status || 'active') === 'active');
+    window.deleteAttachmentsByFilter = async function() {
+      const type = document.getElementById('attachmentTypeToDelete').value;
+      const yearToDelete = document.getElementById('attachmentYearToDelete').value;
+      const monthToDelete = document.getElementById('attachmentMonthToDelete').value;
       
-      let userOptions = '<option value="">-- Pilih Pengguna --</option>';
-      let passwordChangeOptions = '<option value="">-- Pilih Pengguna --</option>';
-      activeUsers.forEach(user => {
-        let roleName = '';
-        switch (user.role) {
-          case 'admin':
-            roleName = 'DIREKTUR';
-            break;
-          case 'bendahara':
-            roleName = 'ADMIN';
-            passwordChangeOptions += `<option value="${user.id}">${user.name} (ADMIN)</option>`;
-            break;
-          case 'user':
-            roleName = `Coach (${user.coachId || 'N/A'})`;
-            passwordChangeOptions += `<option value="${user.id}">${user.name} (${roleName})</option>`;
-            break;
-        }
-        userOptions += `<option value="${user.id}">${user.name} (${roleName})</option>`;
-      });
-      if (resetEmailSelector) {
-        const currentVal = resetEmailSelector.value;
-        resetEmailSelector.innerHTML = userOptions;
-        resetEmailSelector.value = currentVal;
-      }
-      if (changePasswordEmailSelector) {
-        const currentVal = changePasswordEmailSelector.value;
-        changePasswordEmailSelector.innerHTML = passwordChangeOptions;
-        changePasswordEmailSelector.value = currentVal;
-      }
-    }
-    
-    function populateLevelDropdowns() {
-      const levelEditorSelector = document.getElementById('levelEditorSelector');
-      if (!levelEditorSelector) return;
-      const currentVal = levelEditorSelector.value;
-      let options = '<option value="">-- Pilih Level --</option>';
-      allLevels.forEach(level => {
-        options += `<option value="${level}">${level}</option>`;
-      });
-      levelEditorSelector.innerHTML = options;
-      levelEditorSelector.value = currentVal;
-    }
-
-    async function handleResetPassword(e) {
-      e.preventDefault();
-      const email = document.getElementById('resetEmailSelector').value;
-      const statusMessageDiv = document.getElementById('resetPasswordStatusMessage');
-      if (!email) { statusMessageDiv.textContent = 'Pilih pengguna.'; return; }
-      const user = allUsers.find(u => u.id === email);
-      if (user && user.role === 'admin') {
-        alert('Tidak dapat mereset kata sandi pengguna dengan peran direktur.');
+      if (!yearToDelete) {
+        setStatusMessage(sppDeleteStatusMessageDiv, 'Harap pilih tahun untuk melanjutkan penghapusan.', 'red');
         return;
       }
+      
+      let subject = (type === 'spp') ? `SPP` : `NON-SPP`;
+      let period = `tahun ${yearToDelete}${monthToDelete !== '' ? ` bulan ${monthNames[monthToDelete]}` : ' (semua bulan)'}`;
+      let confirmMessage = `Apakah Anda yakin ingin menghapus SEMUA lampiran ${subject} untuk ${period}? Tindakan ini tidak bisa dibatalkan.`;
+      
+      if (!confirm(confirmMessage)) return;
+      
+      setStatusMessage(sppDeleteStatusMessageDiv, `Menghapus lampiran ${subject}... Ini mungkin memakan waktu.`, 'blue');
+
       try {
-        await sendPasswordResetEmail(auth, email);
-        statusMessageDiv.textContent = `Email reset password telah dikirim ke ${email}.`;
-      } catch (error) { statusMessageDiv.textContent = `Error: ${error.message}`; }
+          let updatedCount = 0;
+          
+          if (type === 'spp') {
+              const studentsToUpdate = allStudents.filter(student => {
+                  if (!student.spp) return false;
+                  return Object.keys(student.spp).some(key => {
+                      const [py, pm] = key.split('-');
+                      return py == yearToDelete && (monthToDelete === '' || pm == monthToDelete) && student.spp[key].attachmentBase64;
+                  });
+              });
+              
+              if (studentsToUpdate.length === 0) {
+                  setStatusMessage(sppDeleteStatusMessageDiv, 'Tidak ada lampiran SPP yang cocok untuk dihapus.', 'orange');
+                  return;
+              }
+
+              const batch = writeBatch(db);
+              studentsToUpdate.forEach(student => {
+                  const updates = {};
+                  Object.keys(student.spp).forEach(key => {
+                      const [py, pm] = key.split('-');
+                      if (py == yearToDelete && (monthToDelete === '' || pm == monthToDelete) && student.spp[key].attachmentBase64) {
+                          updates[`spp.${key}.attachmentBase64`] = deleteField();
+                      }
+                  });
+                  if (Object.keys(updates).length > 0) {
+                      batch.update(doc(db, "students", student.id), updates);
+                      updatedCount++;
+                  }
+              });
+              await batch.commit();
+              setStatusMessage(sppDeleteStatusMessageDiv, `Lampiran SPP berhasil dihapus. Total dokumen siswa diperbarui: ${updatedCount}.`, 'green');
+
+          } else if (type === 'nonspp') {
+              const year = parseInt(yearToDelete);
+              const month = monthToDelete !== '' ? parseInt(monthToDelete) : -1;
+              
+              const startDate = new Date(year, month === -1 ? 0 : month, 1);
+              const endDate = new Date(year, month === -1 ? 12 : month + 1, 1);
+
+              const paymentsRef = collection(db, "other_payments");
+              const q = query(paymentsRef, where("date", ">=", startDate), where("date", "<", endDate));
+              
+              const querySnapshot = await getDocs(q);
+              sessionReadCount += querySnapshot.size; updateReadStatus();
+              
+              const docsToDelete = querySnapshot.docs.filter(doc => doc.data().attachmentBase64);
+
+              if (docsToDelete.length === 0) {
+                  setStatusMessage(sppDeleteStatusMessageDiv, 'Tidak ada lampiran Non-SPP yang cocok untuk dihapus.', 'orange');
+                  return;
+              }
+              
+              const batch = writeBatch(db);
+              docsToDelete.forEach(docSnap => {
+                  batch.update(doc(db, "other_payments", docSnap.id), { attachmentBase64: deleteField() });
+                  updatedCount++;
+              });
+              await batch.commit();
+              setStatusMessage(sppDeleteStatusMessageDiv, `Lampiran Non-SPP berhasil dihapus. Total dokumen diperbarui: ${updatedCount}.`, 'green');
+          }
+          
+          await loadAllData();
+          
+      } catch (error) {
+        setStatusMessage(sppDeleteStatusMessageDiv, `Error saat menghapus lampiran: ${error.message}`, 'red');
+        console.error("Error deleting attachments:", error);
+      }
     }
     
-    async function handleChangePassword(e) {
-        e.preventDefault();
-        const email = document.getElementById('changePasswordEmailSelector').value;
-        const newPassword = document.getElementById('newPasswordInput').value;
-        const statusMessageDiv = document.getElementById('changePasswordStatusMessage');
+    // ====================== EVENT LISTENERS SETUP ======================
+    function setupEventListeners() {
+        // --- Tab Pengguna ---
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const button = e.target.querySelector('button');
+            button.disabled = true;
+            const statusDiv = document.getElementById('statusMessage');
+            setStatusMessage(statusDiv, 'Menambahkan pengguna...', 'blue');
 
-        if (!email || !newPassword) {
-            statusMessageDiv.textContent = 'Pilih pengguna dan masukkan password baru.';
-            statusMessageDiv.style.color = 'red';
-            return;
-        }
+            const email = document.getElementById('newUserEmail').value;
+            const name = document.getElementById('newUserName').value;
+            const password = document.getElementById('newUserPassword').value;
+            const role = document.getElementById('newUserRole').value;
 
-        const userToChange = allUsers.find(u => u.id === email);
-        if (!userToChange) {
-            statusMessageDiv.textContent = 'Pengguna tidak ditemukan.';
-            statusMessageDiv.style.color = 'red';
-            return;
-        }
+            try {
+                const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+                const userData = {
+                    name: name,
+                    role: role,
+                    status: 'active',
+                    phone: '',
+                    level: ''
+                };
+                if (role === 'user') {
+                    userData.coachId = generateCoachId();
+                    userData.studentCount = 0;
+                }
+                await setDoc(doc(db, "users", email), userData);
+                setStatusMessage(statusDiv, 'Pengguna berhasil ditambahkan!', 'green');
+                e.target.reset();
+                await loadAllData();
+            } catch (error) {
+                setStatusMessage(statusDiv, `Error: ${error.message}`, 'red');
+                console.error("Gagal menambah pengguna:", error);
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const button = e.target.querySelector('button');
+            button.disabled = true;
+            const statusDiv = document.getElementById('resetPasswordStatusMessage');
+            const email = document.getElementById('resetEmailSelector').value;
+            if (!email) {
+                setStatusMessage(statusDiv, 'Harap pilih pengguna.', 'red');
+                button.disabled = false;
+                return;
+            }
+            setStatusMessage(statusDiv, 'Mengirim email reset...', 'blue');
+            try {
+                await sendPasswordResetEmail(auth, email);
+                setStatusMessage(statusDiv, `Email reset password telah dikirim ke ${email}.`, 'green');
+            } catch (error) {
+                setStatusMessage(statusDiv, `Error: ${error.message}`, 'red');
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.getElementById('showDisabledUsers').addEventListener('change', renderUserTable);
+        document.getElementById('showCoachesOnly').addEventListener('change', renderUserTable);
+        document.getElementById('syncCountBtn').addEventListener('click', syncStudentCount);
+        document.getElementById('userRowsPerPage').addEventListener('change', () => { userCurrentPage = 1; renderUserTable(); });
+        document.getElementById('userPrevBtn').addEventListener('click', () => { if (userCurrentPage > 1) { userCurrentPage--; renderUserTable(); } });
+        document.getElementById('userNextBtn').addEventListener('click', () => { userCurrentPage++; renderUserTable(); });
+
+        // --- Tab Kurikulum ---
+        document.getElementById('addLevelForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const levelName = document.getElementById('newLevelName').value;
+            if (!levelName) return;
+            try {
+                await setDoc(doc(db, "kurikulum", levelName), { lessons: {} });
+                alert(`Level "${levelName}" berhasil ditambahkan.`);
+                e.target.reset();
+                await loadAllData();
+            } catch (error) {
+                alert(`Gagal menambah level: ${error.message}`);
+            }
+        });
         
-        if (userToChange.role === 'admin') {
-            statusMessageDiv.textContent = 'Tidak dapat mengganti password direktur melalui menu ini.';
-            statusMessageDiv.style.color = 'orange';
-            return;
-        }
+        document.getElementById('levelEditorSelector').addEventListener('change', handleLevelSelect);
+        
+        document.getElementById('addLessonBtn').addEventListener('click', () => {
+            const form = document.getElementById('editCurriculumForm');
+            const newLessonNum = form.querySelectorAll('.lesson-input-group').length + 1;
+            const newLessonName = `Lesson ${newLessonNum}`;
+            form.insertAdjacentHTML('beforeend', `<div class="lesson-input-group"><label for="${newLessonName}">${newLessonName}:</label><input type="text" id="${newLessonName}" value="" data-lesson-name="${newLessonName}"></div>`);
+        });
 
-        statusMessageDiv.textContent = 'Mengganti password...';
-        statusMessageDiv.style.color = 'blue';
+        document.getElementById('saveCurriculumBtn').addEventListener('click', async (e) => {
+            const button = e.target;
+            button.disabled = true;
+            const level = document.getElementById('levelEditorSelector').value;
+            if (!level) { button.disabled = false; return; }
 
-        try {
-            await sendPasswordResetEmail(auth, email);
+            const newLessons = {};
+            document.querySelectorAll('#editCurriculumForm input').forEach(input => {
+                const lessonName = input.dataset.lessonName;
+                const activities = input.value.split(',').map(item => item.trim()).filter(Boolean);
+                newLessons[lessonName] = activities;
+            });
 
-            statusMessageDiv.textContent = `Email reset password telah dikirim ke ${email}. Beritahu pengguna untuk memeriksa emailnya dan mengikuti petunjuk.`;
-            statusMessageDiv.style.color = 'green';
-            document.getElementById('changePasswordForm').reset();
+            try {
+                await updateDoc(doc(db, "kurikulum", level), { lessons: newLessons });
+                alert(`Kurikulum untuk level "${level}" berhasil disimpan.`);
+            } catch (error) {
+                alert(`Gagal menyimpan kurikulum: ${error.message}`);
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        // --- Tab Bank ---
+        document.getElementById('addBankForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const button = e.target.querySelector('button');
+            button.disabled = true;
+            const bankName = document.getElementById('newBankName').value;
+            const color = document.getElementById('newBankColor').value;
+            const statusDiv = document.getElementById('bankStatusMessage');
+            setStatusMessage(statusDiv, 'Menambahkan bank...', 'blue');
+            try {
+                await addDoc(collection(db, "banks"), { bankName, color, status: 'active' });
+                setStatusMessage(statusDiv, `Bank "${bankName}" berhasil ditambahkan.`, 'green');
+                e.target.reset();
+                document.getElementById('newBankColor').value = '#007bff';
+                await loadAllData();
+            } catch (error) {
+                setStatusMessage(statusDiv, `Gagal: ${error.message}`, 'red');
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        // --- Tab Maintenance ---
+        document.getElementById('brandingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const companyName = document.getElementById('companyNameInput').value;
+            const logoFile = document.getElementById('logoFileInput').files[0];
+            let logoBase64 = document.getElementById('logoPreview').src;
+        
+            if (logoFile) {
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    await saveBranding(companyName, reader.result, e.target.querySelector('button'));
+                };
+                reader.readAsDataURL(logoFile);
+            } else {
+                await saveBranding(companyName, logoBase64, e.target.querySelector('button'));
+            }
+        });
+        document.getElementById('logoFileInput').addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (event) => { document.getElementById('logoPreview').src = event.target.result; };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+        document.getElementById('generatePinBtn').addEventListener('click', handleGeneratePin);
+
+        // --- Modal Event Listeners ---
+        document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const button = e.target.querySelector('button');
+            button.disabled = true;
+            const userId = document.getElementById('editUserId').value;
+            const updatedData = {
+                name: document.getElementById('editFullName').value,
+                phone: document.getElementById('editPhoneNumber').value,
+                level: document.getElementById('editUserLevel').value
+            };
+            try {
+                await updateDoc(doc(db, "users", userId), updatedData);
+                alert('Data pengguna berhasil diperbarui.');
+                document.getElementById('editUserModal').style.display = 'none';
+                await loadAllData();
+            } catch (error) {
+                alert(`Gagal memperbarui: ${error.message}`);
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.getElementById('editBankForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const button = e.target.querySelector('button');
+            button.disabled = true;
+            const bankId = document.getElementById('editBankId').value;
+            const updatedData = {
+                bankName: document.getElementById('editBankName').value,
+                color: document.getElementById('editBankColor').value
+            };
+            try {
+                await updateDoc(doc(db, "banks", bankId), updatedData);
+                alert('Data bank berhasil diperbarui.');
+                document.getElementById('editBankModal').style.display = 'none';
+                await loadAllData();
+            } catch (error) {
+                alert(`Gagal memperbarui: ${error.message}`);
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.addEventListener('click', async (e) => {
+            // Aksi pada Tabel Pengguna
+            if (e.target.matches('.action-btn-edit[data-user-id]')) {
+                const userId = e.target.dataset.userId;
+                const user = allUsers.find(u => u.id === userId);
+                if (user) {
+                    document.getElementById('editUserId').value = user.id;
+                    document.getElementById('editUserEmail').textContent = user.id;
+                    document.getElementById('editFullName').value = user.name || '';
+                    document.getElementById('editPhoneNumber').value = user.phone || '';
+                    document.getElementById('editUserLevel').value = user.level || '';
+                    document.getElementById('editUserLevelGroup').style.display = user.role === 'user' ? 'block' : 'none';
+                    document.getElementById('editUserModal').style.display = 'block';
+                }
+            }
+            if (e.target.matches('.action-btn-disable[data-user-id]') || e.target.matches('.action-btn-enable[data-user-id]')) {
+                const userId = e.target.dataset.userId;
+                const newStatus = e.target.matches('.action-btn-disable') ? 'disabled' : 'active';
+                if (confirm(`Yakin ingin mengubah status pengguna ini menjadi "${newStatus}"?`)) {
+                    try {
+                        await updateDoc(doc(db, "users", userId), { status: newStatus });
+                        await loadAllData();
+                    } catch (error) { alert(`Gagal: ${error.message}`); }
+                }
+            }
+
+            // Aksi pada Tabel Bank
+            if (e.target.matches('.action-btn-edit[data-bank-id]')) {
+                const bankId = e.target.dataset.bankId;
+                const bank = allBanks[bankId];
+                if (bank) {
+                    document.getElementById('editBankId').value = bank.id;
+                    document.getElementById('editBankName').value = bank.bankName;
+                    document.getElementById('editBankColor').value = bank.color;
+                    document.getElementById('editBankModal').style.display = 'block';
+                }
+            }
+            if (e.target.matches('.action-btn-disable[data-bank-id]') || e.target.matches('.action-btn-enable[data-bank-id]')) {
+                const bankId = e.target.dataset.bankId;
+                const newStatus = e.target.matches('.action-btn-disable') ? 'disabled' : 'active';
+                if (confirm(`Yakin ingin mengubah status bank ini menjadi "${newStatus}"?`)) {
+                    try {
+                        await updateDoc(doc(db, "banks", bankId), { status: newStatus });
+                        await loadAllData();
+                    } catch (error) { alert(`Gagal: ${error.message}`); }
+                }
+            }
             
-        } catch (error) {
-            statusMessageDiv.textContent = `Error: ${error.message}`;
-            statusMessageDiv.style.color = 'red';
-            console.error("Error changing password:", error);
+            // Tombol Close Modal
+            if (e.target.matches('.close-btn')) {
+                e.target.closest('.modal').style.display = 'none';
+            }
+        });
+        
+        window.onclick = (e) => {
+            if (e.target.matches('.modal')) {
+                e.target.style.display = 'none';
+            }
+        };
+
+        populateSppMonthsForDeletion();
+    }
+    
+    // ====================== FINAL SETUP ======================
+
+    window.openTab = function(tabName) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabName).classList.add('active');
+      document.querySelector(`.tab-btn[onclick="openTab('${tabName}')"]`).classList.add('active');
+      sessionStorage.setItem('adminCurrentTab', tabName);
+    }
+    
+    window.openStudentEditModal = function(studentId) {
+        const student = allStudents.find(s => s.id === studentId);
+        if (!student) return;
+        
+        document.getElementById('editStudentId').value = studentId;
+        document.getElementById('editStudentName').value = student.name;
+        
+        const levelSelector = document.getElementById('editStudentLevel');
+        levelSelector.innerHTML = allLevels.map(l => `<option value="${l}" ${student.studentLevel === l ? 'selected' : ''}>${l}</option>`).join('');
+        
+        const coachSelector = document.getElementById('editStudentCoach');
+        const activeCoaches = allUsers.filter(u => u.role === 'user' && (u.status || 'active') === 'active');
+        coachSelector.innerHTML = activeCoaches.map(u => `<option value="${u.id}" ${student.coachEmail === u.id ? 'selected' : ''}>${u.name}</option>`).join('');
+        
+        document.getElementById('editStudentPhone').value = student.phone || '';
+        document.getElementById('editStudentModal').style.display = 'block';
+    };
+
+    async function handleEditStudent(e) {
+        e.preventDefault();
+        const studentId = document.getElementById('editStudentId').value;
+        const studentBefore = allStudents.find(s => s.id === studentId);
+        const oldCoachEmail = studentBefore.coachEmail;
+        const newCoachEmail = document.getElementById('editStudentCoach').value;
+        
+        const updatedData = {
+            name: document.getElementById('editStudentName').value,
+            studentLevel: document.getElementById('editStudentLevel').value,
+            coachEmail: newCoachEmail,
+            phone: document.getElementById('editStudentPhone').value
+        };
+        
+        try {
+            const batch = writeBatch(db);
+            batch.update(doc(db, "students", studentId), updatedData);
+            
+            if (oldCoachEmail !== newCoachEmail) {
+                if (oldCoachEmail) batch.update(doc(db, "users", oldCoachEmail), { studentCount: increment(-1) });
+                if (newCoachEmail) batch.update(doc(db, "users", newCoachEmail), { studentCount: increment(1) });
+                
+                const reportsSnapshot = await getDocs(query(collection(db, "reports"), where("studentId", "==", studentId)));
+                reportsSnapshot.forEach(reportDoc => batch.update(doc(db, "reports", reportDoc.id), { coachEmail: newCoachEmail }));
+            }
+            
+            await batch.commit();
+            alert('Detail siswa dan riwayat laporan berhasil diperbarui!');
+            document.getElementById('editStudentModal').style.display = 'none';
+            await loadAllData();
+        } catch(error) {
+            console.error("Gagal menyimpan dan memindahkan riwayat:", error);
+            alert('Gagal menyimpan dan memindahkan riwayat. Periksa konsol untuk detail.');
         }
     }
-
-    async function handleEditUser(e) {
-      e.preventDefault();
-      const userId = document.getElementById('editUserId').value;
-      const user = allUsers.find(u => u.id === userId);
-      if (user && user.role === 'admin') {
-        alert('Tidak dapat mengedit detail pengguna dengan peran direktur.');
-        return;
-      }
-      const updatedData = {
-        name: document.getElementById('editFullName').value,
-        phone: document.getElementById('editPhoneNumber').value,
-        level: document.getElementById('editUserLevel').value,
-      };
-      try {
-        await updateDoc(doc(db, "users", userId), updatedData);
-        alert('Detail pengguna diperbarui!');
-        document.getElementById('editUserModal').style.display = 'none';
-        await loadAllData();
-      } catch(error) { alert('Gagal menyimpan.'); }
-    }
-    window.openEditModal = function(userId) {
-      const user = allUsers.find(u => u.id === userId);
-      if (!user) return;
-      if (user.role === 'admin') {
-        alert('Tidak dapat mengedit detail pengguna dengan peran direktur.');
-        return;
-      }
-      document.getElementById('editUserEmail').textContent = user.id;
-      document.getElementById('editUserId').value = user.id;
-      document.getElementById('editFullName').value = user.name || '';
-      const editPhoneNumberInput = document.getElementById('editPhoneNumber');
-      if (editPhoneNumberInput) editPhoneNumberInput.value = user.phone || '';
-      const editUserLevelGroup = document.getElementById('editUserLevelGroup');
-      if (editUserLevelGroup) editUserLevelGroup.style.display = user.role === 'user' ? 'block' : 'none';
-      const editUserLevelInput = document.getElementById('editUserLevel');
-      if (editUserLevelInput) editUserLevelInput.value = user.level || '';
-      document.getElementById('editUserModal').style.display = 'block';
-    };
-
-    window.openEditBankModal = function(bankId) {
-      const bank = allBanks[bankId];
-      if (!bank) return;
-      document.getElementById('editBankId').value = bankId;
-      document.getElementById('editBankName').value = bank.bankName;
-      document.getElementById('editBankColor').value = bank.color;
-      document.getElementById('editBankModal').style.display = 'block';
-    };
     
-    function populateExportSelectors() {
-        const coachSelector = document.getElementById('exportCoachSelector');
-        const studentSelector = document.getElementById('exportStudentSelector');
-        const bankSelector = document.getElementById('exportBankSelector');
-        const yearSelector = document.getElementById('exportYearSelector');
-
-        const activeCoaches = allUsers.filter(u => (u.status || 'active') === 'active');
-        coachSelector.innerHTML = '<option value="all">Semua Coach</option>';
-        activeCoaches.forEach(coach => {
-            if (coach.role === 'user') {
-                coachSelector.innerHTML += `<option value="${coach.id}">${coach.name}</option>`;
-            }
-        });
-
-        studentSelector.innerHTML = '<option value="all">Semua Siswa</option>';
-        allStudents.forEach(student => {
-            studentSelector.innerHTML += `<option value="${student.id}">${student.name}</option>`;
-        });
-
-        bankSelector.innerHTML = '<option value="all">Semua Bank</option>';
-        allActiveBankNames.forEach(bankName => {
-             bankSelector.innerHTML += `<option value="${bankName}">${bankName}</option>`;
-        });
-        
-        const years = new Set();
-        allStudents.forEach(student => {
-            if (student.spp) {
-                Object.keys(student.spp).forEach(key => {
-                    const year = key.split('-')[0];
-                    if (year) {
-                        years.add(parseInt(year));
-                    }
-                });
-            }
-        });
-        allYearsWithPayments = Array.from(years).sort((a, b) => b - a);
-        yearSelector.innerHTML = '<option value="all">Semua Tahun</option>';
-        allYearsWithPayments.forEach(year => {
-            yearSelector.innerHTML += `<option value="${year}">${year}</option>`;
-        });
-    }
-
-    function populateExportStudentSelector() {
-        const coachFilter = document.getElementById('exportCoachSelector').value;
-        const studentSelector = document.getElementById('exportStudentSelector');
-        studentSelector.innerHTML = '<option value="all">Semua Siswa</option>';
-        
-        const filteredStudents = allStudents.filter(s => coachFilter === 'all' || s.coachEmail === coachFilter);
-        filteredStudents.forEach(student => {
-            studentSelector.innerHTML += `<option value="${student.id}">${student.name}</option>`;
-        });
-    }
-    
-    function normalizePhone(nomor) {
-        nomor = nomor ? nomor.toString().trim().replace(/\D/g, "") : "";
-        if (nomor.startsWith("0")) return "62" + nomor.substring(1);
-        if (!nomor.startsWith("62") && nomor.length > 5) return "62" + nomor;
-        return nomor;
-    }
-
-    function isMobile() {
-        return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    }
-
     window.exportSppData = async function() {
         const coachFilter = document.getElementById('exportCoachSelector').value;
         const studentFilter = document.getElementById('exportStudentSelector').value;
@@ -1643,19 +1713,17 @@
         const includePhone = document.getElementById('includePhone').checked;
         const statusDiv = document.getElementById('exportStatusMessage');
 
-        statusDiv.textContent = 'Memproses data...';
-        statusDiv.style.color = 'blue';
+        setStatusMessage(statusDiv, 'Memproses data...', 'blue');
 
-        let filteredStudents = allStudents.filter(student => {
-            let matchesCoach = coachFilter === 'all' || student.coachEmail === coachFilter;
-            let matchesStudent = studentFilter === 'all' || student.id === studentFilter;
-            const studentStatus = student.status || 'active';
-            return matchesCoach && matchesStudent && student.spp && studentStatus === 'active';
-        });
+        const filteredStudents = allStudents.filter(student => 
+            (coachFilter === 'all' || student.coachEmail === coachFilter) &&
+            (studentFilter === 'all' || student.id === studentFilter) &&
+            (student.status || 'active') === 'active' &&
+            student.spp
+        );
 
         if (filteredStudents.length === 0) {
-            statusDiv.textContent = 'Tidak ada data yang cocok dengan filter.';
-            statusDiv.style.color = 'red';
+            setStatusMessage(statusDiv, 'Tidak ada data siswa yang cocok dengan filter.', 'orange');
             return;
         }
 
@@ -1671,38 +1739,24 @@
         }
         
         const headerRow = sheet.addRow(header);
-        
         headerRow.eachCell((cell) => {
             cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-            cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FF4472C4' }
-            };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
             cell.alignment = { vertical: 'middle', horizontal: 'center' };
-            cell.border = {
-                top: {style:'thin'},
-                left: {style:'thin'},
-                bottom: {style:'thin'},
-                right: {style:'thin'}
-            };
+            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
         });
 
         let rowNum = 1;
         let foundPayments = false;
-        
-        const rows = [];
+        const rows = []; 
 
         filteredStudents.forEach(student => {
             const coachName = allUsers.find(u => u.id === student.coachEmail)?.name || 'N/A';
             const studentSpp = student.spp || {};
-            const paymentKeys = Object.keys(studentSpp);
             const studentPhone = student.phone || '';
 
-            paymentKeys.forEach(key => {
-                const payment = studentSpp[key];
+            Object.entries(studentSpp).forEach(([key, payment]) => {
                 const [paymentYear, paymentMonth] = key.split('-');
-
                 const matchesYear = yearFilter === 'all' || paymentYear === yearFilter;
                 const matchesMonth = monthFilter === 'all' || paymentMonth == monthFilter;
                 const matchesBank = bankFilter === 'all' || payment.bank === bankFilter;
@@ -1740,29 +1794,16 @@
         });
 
         if (!foundPayments) {
-            statusDiv.textContent = 'Tidak ada pembayaran yang cocok dengan kombinasi filter yang dipilih.';
-            statusDiv.style.color = 'orange';
+            setStatusMessage(statusDiv, 'Tidak ada pembayaran yang cocok dengan kombinasi filter.', 'orange');
             return;
         }
         
         rows.forEach(rowData => {
             const row = sheet.addRow(rowData);
             row.eachCell((cell, colNumber) => {
-                cell.border = {
-                    top: {style:'thin'},
-                    left: {style:'thin'},
-                    bottom: {style:'thin'},
-                    right: {style:'thin'}
-                };
-                
-                if (colNumber === 4 && cell.value) {
-                    cell.numFmt = 'dd/mm/yyyy';
-                }
-                
-                if (colNumber === 7 && cell.value) {
-                    cell.numFmt = '#,##0';
-                }
-
+                cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+                if (colNumber === 4 && cell.value) { cell.numFmt = 'dd/mm/yyyy'; }
+                if (colNumber === 7 && cell.value) { cell.numFmt = '#,##0'; }
                 const phoneColIndex = columnKeys.indexOf('phone');
                 if (includePhone && colNumber === phoneColIndex + 1 && cell.value && cell.value.hyperlink) {
                     cell.font = { color: { argb: "FF1D8F14" }, underline: true };
@@ -1783,7 +1824,7 @@
 
         const now = new Date();
         const dateString = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
-        const timeString = `${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}-${now.getSeconds().toString().padStart(2, '0')}`;
+        const timeString = `${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
         const fileName = `Laporan_SPP_${dateString}_${timeString}.xlsx`;
 
         const buffer = await workbook.xlsx.writeBuffer();
@@ -1793,82 +1834,11 @@
         link.download = fileName;
         link.click();
         
-        statusDiv.textContent = `Data berhasil diexport ke ${fileName}!`;
-        statusDiv.style.color = 'green';
+        setStatusMessage(statusDiv, `Data berhasil diexport ke ${fileName}!`, 'green');
     };
 
-    // Fungsi untuk membuka modal edit siswa
-    window.openStudentEditModal = function(studentId) {
-        const student = allStudents.find(s => s.id === studentId);
-        if (!student) return;
-        
-        document.getElementById('editStudentId').value = studentId;
-        document.getElementById('editStudentName').value = student.name;
-        
-        // Mengisi dropdown level
-        const levelSelector = document.getElementById('editStudentLevel');
-        levelSelector.innerHTML = allLevels.map(l => `<option value="${l}">${l}</option>`).join('');
-        levelSelector.value = student.studentLevel || "";
-        
-        // Mengisi dropdown coach
-        const coachSelector = document.getElementById('editStudentCoach');
-        const activeCoaches = allUsers.filter(u => u.role === 'user');
-        coachSelector.innerHTML = activeCoaches.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
-        coachSelector.value = student.coachEmail;
-        
-        document.getElementById('editStudentPhone').value = student.phone || '';
-        document.getElementById('editStudentModal').style.display = 'block';
-    };
+    setupEventListeners();
 
-    // Fungsi untuk menangani pengiriman form edit siswa
-    async function handleEditStudent(e) {
-        e.preventDefault();
-        const studentId = document.getElementById('editStudentId').value;
-        const studentBefore = allStudents.find(s => s.id === studentId);
-        const oldCoachEmail = studentBefore.coachEmail;
-        const newCoachEmail = document.getElementById('editStudentCoach').value;
-        
-        const updatedData = {
-            name: document.getElementById('editStudentName').value,
-            studentLevel: document.getElementById('editStudentLevel').value,
-            coachEmail: newCoachEmail,
-            phone: document.getElementById('editStudentPhone').value
-        };
-        
-        try {
-            const batch = writeBatch(db);
-            const studentDocRef = doc(db, "students", studentId);
-            batch.update(studentDocRef, updatedData);
-            
-            // Perbarui jumlah siswa hanya jika coach berubah
-            if (oldCoachEmail !== newCoachEmail) {
-                if (oldCoachEmail) {
-                    const oldCoachRef = doc(db, "users", oldCoachEmail);
-                    batch.update(oldCoachRef, { studentCount: increment(-1) });
-                }
-                if (newCoachEmail) {
-                    const newCoachRef = doc(db, "users", newCoachEmail);
-                    batch.update(newCoachRef, { studentCount: increment(1) });
-                }
-                
-                // Perbarui semua laporan siswa dengan coachEmail yang baru
-                const reportsQuery = query(collection(db, "reports"), where("studentId", "==", studentId));
-                const reportsSnapshot = await getDocs(reportsQuery);
-                reportsSnapshot.forEach(reportDoc => {
-                    const reportRef = doc(db, "reports", reportDoc.id);
-                    batch.update(reportRef, { coachEmail: newCoachEmail });
-                });
-            }
-            
-            await batch.commit();
-            alert('Detail siswa dan riwayat laporan berhasil diperbarui!');
-            document.getElementById('editStudentModal').style.display = 'none';
-            await loadAllData();
-        } catch(error) {
-            console.error("Gagal menyimpan dan memindahkan riwayat:", error);
-            alert('Gagal menyimpan dan memindahkan riwayat. Periksa konsol untuk detail.');
-        }
-    }
   </script>
 </body>
 </html>
