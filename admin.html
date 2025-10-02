@@ -38,7 +38,8 @@
     .reset-password-section select, .transfer-section select, 
     .bank-management-section input, .bank-management-section select,
     .filter-spp-options select, .filter-spp-options button,
-    .branding-management-section input {
+    .branding-management-section input,
+    #adminOverrideForm select, #adminOverrideForm input { /* <-- Styling Override Form */
       padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; 
     }
     .add-user-section button, .reset-password-section button, 
@@ -46,14 +47,15 @@
     .spp-management-section button, .add-user-section .btn,
     .bulk-action-container button, .pagination-controls button,
     .filter-controls button, .branding-management-section button,
-    .content-block #pinForm button {
+    .content-block #pinForm button,
+    #adminOverrideForm button { /* <-- Styling Override Button */
       padding: 8px 15px; background-color: #28a745; color: white; 
       border: none; border-radius: 4px; cursor: pointer; 
       width: 100%; text-align: center;
     }
     
     h3, h4 { text-align: left; }
-    #statusMessage, #resetPasswordStatusMessage, #studentStatusMessage, #transferStatusMessage, #bankStatusMessage, #sppDeleteStatusMessage, #sppSizeInfo, #sppGlobalStats, #brandingStatusMessage, #pinStatusMessage, #changePasswordStatusMessage { margin-top: 15px; font-weight: bold; }
+    #statusMessage, #resetPasswordStatusMessage, #studentStatusMessage, #transferStatusMessage, #bankStatusMessage, #sppDeleteStatusMessage, #sppSizeInfo, #sppGlobalStats, #brandingStatusMessage, #pinStatusMessage, #changePasswordStatusMessage, #overrideStatusMessage { margin-top: 15px; font-weight: bold; }
     
     .bulk-action-container { margin-top: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9; display: flex; flex-direction: column; align-items: stretch; gap: 15px; }
     .bulk-action-container label { text-align: left; }
@@ -248,6 +250,19 @@
         margin-top: 0;
         align-self: flex-end;
       }
+      /* Penyesuaian untuk Override Form di Desktop */
+      #adminOverrideForm .form-row {
+        flex-direction: row;
+        align-items: flex-end;
+        gap: 10px;
+      }
+      #adminOverrideForm .form-row > div {
+        flex: 1;
+      }
+      #adminOverrideForm .form-row button {
+        width: auto;
+        margin-top: 0;
+      }
     }
 
     .export-filters {
@@ -355,6 +370,31 @@
           </div>
           <div id="statusMessage"></div>
         </form>
+      </div>
+      
+      <div class="content-block">
+          <h4>Admin Override: Ganti Kata Sandi Langsung</h4>
+          <p>Gunakan fitur ini untuk mengubah kata sandi pengguna secara langsung. Anda akan **sejenak mengambil alih sesi pengguna target** di latar belakang. Fitur ini aman karena menggunakan sesi otentikasi sekunder.</p>
+          <form id="adminOverrideForm">
+              <div class="form-row">
+                  <div>
+                      <label for="overrideEmailSelector">Pilih Pengguna:</label>
+                      <select id="overrideEmailSelector" required></select>
+                  </div>
+                  <div>
+                      <label for="overrideCurrentPassword">Kata Sandi Target Saat Ini (Lama)</label>
+                      <input type="password" id="overrideCurrentPassword" required placeholder="Password Lama Target">
+                  </div>
+                  <div>
+                      <label for="overrideNewPassword">Kata Sandi Baru</label>
+                      <input type="password" id="overrideNewPassword" required placeholder="Password Baru (Min. 6 karakter)">
+                  </div>
+                  <div>
+                      <button type="submit" class="btn" style="background-color: #00a0a0;">Ganti Password (Override)</button>
+                  </div>
+              </div>
+              <div id="overrideStatusMessage" style="margin-top: 10px; font-weight: bold;"></div>
+          </form>
       </div>
       <div class="content-block">
         <h4>Reset Password</h4>
@@ -615,9 +655,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
   <script type="module">
+    // START: Import diperbarui untuk menyertakan signInWithEmailAndPassword
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
     import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, query, where, updateDoc, writeBatch, increment, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+    // END: Import diperbarui
     
     // ====================== FIREBASE CONFIG (SINGLE DECLARATION) ======================
     const firebaseConfig = { apiKey: "AIzaSyBm3SkLLtl9LvczDDht-OQ6-R4OYLPYAJQ", authDomain: "progres-report-5d199.firebaseapp.com", projectId: "progres-report-5d199", storageBucket: "progres-report-5d199.firebasestorage.app", messagingSenderId: "363573365137", appId: "1:363573365137:web:98f32d5ff8fae05617b230", measurementId: "G-CPX04R69F5" };
@@ -749,6 +791,10 @@
 
     function populateCoachDropdowns() {
       const resetEmailSelector = document.getElementById('resetEmailSelector');
+      // START: Tambahkan Override Selector
+      const overrideEmailSelector = document.getElementById('overrideEmailSelector');
+      // END: Tambahkan Override Selector
+
       const activeUsers = allUsers.filter(u => (u.status || 'active') === 'active');
       
       const roleMap = {
@@ -768,6 +814,13 @@
         resetEmailSelector.innerHTML = userOptions;
         resetEmailSelector.value = currentVal;
       }
+      // START: Sinkronisasi ke dropdown override
+      if (overrideEmailSelector) { 
+        const currentVal = overrideEmailSelector.value;
+        overrideEmailSelector.innerHTML = userOptions;
+        overrideEmailSelector.value = currentVal;
+      }
+      // END: Sinkronisasi ke dropdown override
     }
     
     function populateLevelDropdowns() {
@@ -1371,7 +1424,7 @@
     
     // ====================== EVENT LISTENERS SETUP ======================
     function setupEventListeners() {
-        // --- Tab Pengguna ---
+        // --- Tab Pengguna: Tambah Pengguna ---
         document.getElementById('addUserForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const button = e.target.querySelector('button');
@@ -1409,6 +1462,7 @@
             }
         });
 
+        // --- Tab Pengguna: Reset Password (via Email) ---
         document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const button = e.target.querySelector('button');
@@ -1431,6 +1485,64 @@
             }
         });
 
+        // --- START: Tab Pengguna: Admin Override (Fitur Baru) ---
+        document.getElementById('adminOverrideForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const button = e.target.querySelector('button');
+            button.disabled = true;
+            const statusDiv = document.getElementById('overrideStatusMessage');
+            
+            const targetEmail = document.getElementById('overrideEmailSelector').value;
+            const currentPass = document.getElementById('overrideCurrentPassword').value;
+            const newPass = document.getElementById('overrideNewPassword').value;
+
+            if (newPass.length < 6) {
+                setStatusMessage(statusDiv, 'Kata sandi baru minimal harus 6 karakter.', 'red');
+                button.disabled = false;
+                return;
+            }
+            if (!targetEmail) {
+                setStatusMessage(statusDiv, 'Harap pilih pengguna.', 'red');
+                button.disabled = false;
+                return;
+            }
+
+            setStatusMessage(statusDiv, `Mencoba login sementara sebagai ${targetEmail} untuk update...`, 'blue');
+
+            try {
+                // 1. Login Sementara Menggunakan SECONDARY AUTH (User Target)
+                const userCredential = await signInWithEmailAndPassword(secondaryAuth, targetEmail, currentPass);
+                const targetUser = userCredential.user;
+
+                // 2. Update Password Pengguna Target
+                await updatePassword(targetUser, newPass);
+
+                // 3. Logout Sesi Sementara (Pengguna Target)
+                await signOut(secondaryAuth);
+                
+                setStatusMessage(statusDiv, `✅ Kata sandi untuk ${targetEmail} berhasil diperbarui!`, 'green');
+                e.target.reset();
+
+            } catch (error) {
+                let errorMessage = `Gagal mengubah kata sandi: ${error.message}`;
+                if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'Gagal: Kata Sandi Lama (saat ini) untuk pengguna target salah.';
+                } else if (error.code === 'auth/user-not-found') {
+                    errorMessage = 'Gagal: Pengguna target tidak ditemukan.';
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMessage = 'Terlalu banyak permintaan. Coba lagi nanti.';
+                }
+                
+                setStatusMessage(statusDiv, errorMessage, 'red');
+                console.error("Admin Override Error:", error);
+                
+            } finally {
+                button.disabled = false;
+            }
+        });
+        // --- END: Tab Pengguna: Admin Override (Fitur Baru) ---
+
+        // --- Tab Pengguna: Kontrol Tabel ---
         document.getElementById('showDisabledUsers').addEventListener('change', renderUserTable);
         document.getElementById('showCoachesOnly').addEventListener('change', renderUserTable);
         document.getElementById('syncCountBtn').addEventListener('click', syncStudentCount);
